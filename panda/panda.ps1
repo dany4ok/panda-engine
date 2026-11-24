@@ -258,8 +258,10 @@ function Install-OpenCodeLayer {
     if (Test-Path -LiteralPath $pl) { Copy-Item $pl ($pl + '.bak-panda-' + $stamp) -Recurse -Force }
     Copy-Item (Join-Path $script:Repo 'config\opencode.json') $cfg -Force
     Copy-Item (Join-Path $script:Repo 'AGENT_RULES.md') $rules -Force
-    if (-not (Test-Path -LiteralPath $pl)) { Copy-Item (Join-Path $script:Repo 'plugins') $pl -Recurse -Force }
-    # Match the live setup: absolute instructions path to the copied rules file.
+    # Always refresh the bundled plugins, even when a plugins/ folder already exists.
+    New-Item -ItemType Directory -Force -Path $pl | Out-Null
+    Copy-Item (Join-Path $script:Repo 'plugins\*') $pl -Recurse -Force
+    # Absolute instructions path to the bundled rules file (same content as the live setup).
     $cfgObj = Get-Content -LiteralPath $cfg -Raw -Encoding UTF8 | ConvertFrom-Json
     $cfgObj.instructions = @($rules)
     ($cfgObj | ConvertTo-Json -Depth 100) | Set-Content -LiteralPath $cfg -Encoding UTF8

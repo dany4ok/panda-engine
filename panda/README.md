@@ -37,7 +37,7 @@ The launcher calls the existing launchers and server configs, so all settings ar
 
 Only one engine can hold port 8080, so starting one model stops the previous server. Gyro-S uses its own port 47831; switching away from it also stops the Strata processes (the loader starts them on demand again). The existing `ninfer/` and `models/` folders are linked into the repo at startup so the original launcher sees downloaded artifacts in the same place.
 
-`C` copies `config/opencode.json`, `AGENT_RULES.md` and `plugins/` into `%USERPROFILE%\.config\opencode\`, after timestamped backups of all three, and rewrites `instructions` to the absolute path of the copied rules file (matching the live setup). All three model IDs are present there.
+`C` copies `config/opencode.json`, `AGENT_RULES.md` and the bundled `plugins/` into `%USERPROFILE%\.config\opencode\`, after timestamped backups of all three. The bundled plugins are refreshed even when a `plugins/` folder already exists, and `instructions` is rewritten to the absolute path of the copied rules file (identical in content to the live setup). All three model IDs are present there.
 
 ## Files
 

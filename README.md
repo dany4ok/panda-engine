@@ -4,6 +4,7 @@ Public snapshot of the local setup we built and benchmarked on an **RTX 5070 Ti 
 
 ## What this repo contains
 
+- `START-PANDA.bat`, `panda/` — **Panda Engine**, the unified terminal launcher for all three models: Inkling 2 Mini (IQ1_M / Q2_K_XL through NInfer), MiniCPM-V 4.7 and Gyro-S. It downloads models on first run, remembers the choice, has a one-key PORNIRE (`S`), and preserves the settings below. See `panda/README.md`.
 - `start.ps1`, `START.bat` — interactive launcher for the NInfer engine (128k context, vision, DSpark off, 10-minute rolling t/s stats, watchdog that stops the server when the terminal closes).
 - `START-MINI.bat` — starts the MiniCPM fallback server (set `POLY_DIR` to your Poly-strata install; default here is the original machine path).
 - `bench.ps1`, `run/metrics-sampler.ps1` — benchmark and live `/metrics` sampler.
@@ -53,6 +54,6 @@ Some files in `benchmarks/` still contain absolute paths from the original machi
 
 1. Download the NInfer Windows CUDA 13.4 release and extract it into `ninfer/`.
 2. Download the GGUF/NInfer artifacts into `models/`.
-3. Copy `config/opencode.json` to `~/.config/opencode/opencode.json` and `AGENT_RULES.md` and `plugins/` next to it.
-4. Run `START.bat`, choose `1`, press Enter for defaults.
+3. Copy `config/opencode.json` to `~/.config/opencode/opencode.json` and `AGENT_RULES.md` and `plugins/` next to it — or run Panda Engine and press `C` to do all of this with backups.
+4. Run `START-PANDA.bat` for the unified launcher (first run asks which models to download, then remembers the choice), or `START.bat`, choose `1`, press Enter for defaults.
 5. Run the A–F probes with `benchmarks/scripts/run_probe.ps1`, e.g. `-Model ninfer/inkling-2-mini -NoSub -Task A -Batch myrun`. The script derives its harness root from its own location, so `tasks/`, `config/` and `scripts/` are found automatically; pass `-OpencodeExe` if the bundled desktop CLI is not present (otherwise `opencode` from PATH is used).
