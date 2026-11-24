@@ -36,6 +36,19 @@ $problems = @(
  @{n=22; q='sirul 1,11,21,1211,111221: urmatorul termen'; p='\b312211\b'},
  @{n=23; q='un om spune: tatal acestui om din fotografie e fiul tatalui meu. Cine e in fotografie?'; p='\bfiu|\bson|\bbaiat\b'}
 )
+# dedicated 10-problem set used by the output-cap probe (includes the photo riddle as #4)
+$capProblems = @(
+ @{n=1; q='grila 3x3 de patrate unitare: total patrate'; p='\b14\b'},
+ @{n=2; q='melc 10m, urca 3m ziua, aluneca 2m noaptea, zile'; p='\b8\b'},
+ @{n=3; q='sirul 1,11,21,1211,111221, urmatorul'; p='\b312211\b'},
+ @{n=4; q='tatal acestui om e fiul tatalui meu, cine e in fotografie'; p='\bfiu|\bson|\bbaiat\b'},
+ @{n=5; q='5 masini, 5 obiecte, 5 minute; 100 masini, 100 obiecte, minute'; p='\b5\b'},
+ @{n=6; q='8 bile, una mai grea, cantariri pe balanta'; p='\b2\b'},
+ @{n=7; q='e 91 prim? da sau nu'; p='\bnu\b|\bno\b'},
+ @{n=8; q="in cuvantul 'eleven', cate litere e?"; p='\b3\b'},
+ @{n=9; q='triunghi 3,4,5, aria'; p='\b6\b'},
+ @{n=10; q='azi marti, peste 100 de zile'; p='\bjoi\b|\bthursday\b'}
+)
 $sys = 'Esti un asistent precise. Raspunde doar cu raspunsul final, scurt, fara explicatii.'
 $variants = @('low','medium','high','xhigh','max')
 $batches = @($problems[0..7], $problems[8..15], $problems[16..22])
@@ -66,6 +79,7 @@ foreach ($v in $variants) {
     foreach ($b in $batches) {
       $qs = ($b | ForEach-Object { "$($_.n)) $($_.q)" }) -join "`n"
       $messages = @(@{role='system';content=$sys}, @{role='user';content="Raspunde la fiecare. O linie per raspuns, format N) raspuns.`n$qs"})
+      $sw=[Diagnostics.Stopwatch]::StartNew()
       try {
         $x = Invoke-Chat $v $messages $MaxTokens
         $u = $x.usage; $c = $x.choice
@@ -74,8 +88,8 @@ foreach ($v in $variants) {
         if ($u.completion_tokens_details) { $rea += $u.completion_tokens_details.reasoning_tokens }
         if ($c.finish_reason -eq 'length') { $trunc++ }
       } catch {
-        # a failed batch means every answer in it is wrong, not just one
-        $tot += 0
+        # a failed batch means every answer in it is wrong, not just one; keep its elapsed time
+        $sw.Stop(); $tot += $sw.ElapsedMilliseconds
         foreach ($p in $b) { $wrong += "$($p.n):[ERR]" }
       }
     }
@@ -107,33 +121,46 @@ foreach ($v in $variants) {
   $nums=@(); foreach ($ln in ([string]$x.choice.message.content -split "`n")) { if ($ln.Trim() -match '^\d+$') { $nums += [int]$ln.Trim() } }
   $ok=0; for ($i=0; $i -lt $nums.Count -and $i -lt 200; $i++) { if ($nums[$i] -eq $i+1) { $ok++ } else { break } }
   $dups = $nums.Count - ($nums | Select-Object -Unique).Count
-  'COUNT {0} OK={1}/200 LINES={2} DUPS={3} MS={4} OUT={5} FIN={6}' -f $v, $ok, $nums.Count, $dups, $x.ms, $x.usage.completion_tokens, $x.choice.finish_reason
+  $rea = 0; if ($x.usage.completion_tokens_details) { $rea = $x.usage.completion_tokens_details.reasoning_tokens }
+  'COUNT {0} OK={1}/200 LINES={2} DUPS={3} MS={4} OUT={5} REASON={6} FIN={7}' -f `
+    $v, $ok, $nums.Count, $dups, $x.ms, $x.usage.completion_tokens, $rea, $x.choice.finish_reason
 }
 
-# --- method 4: needle in ~128k haystack ---
+# --- method 4: needle in ~128k haystack, cold then warm cache ---
 $half = 'The quick brown fox jumps over the lazy dog. '
 $long = ($half*5400) + ' CODUL SECRET ESTE ZX7-QM42. ' + ($half*5400) + "`n`nIgnora tot textul de mai sus. Care este codul secret? Raspunde doar cu codul."
 foreach ($v in $variants) {
   $x = Invoke-Chat $v @(@{role='user';content=$long}) 1024
-  'NEEDLE {0} HIT={1} IN={2} CACHED={3} MS={4} FIN={5}' -f `
+  'NEEDLE {0} PASS=cold HIT={1} IN={2} CACHED={3} MS={4} FIN={5}' -f `
     $v, ([string]$x.choice.message.content -match 'ZX7.QM42'), $x.usage.prompt_tokens, $x.usage.prompt_tokens_details.cached_tokens, $x.ms, $x.choice.finish_reason
+  $w = Invoke-Chat $v @(@{role='user';content=$long}) 1024
+  'NEEDLE {0} PASS=warm HIT={1} IN={2} CACHED={3} MS={4} FIN={5}' -f `
+    $v, ([string]$w.choice.message.content -match 'ZX7.QM42'), $w.usage.prompt_tokens, $w.usage.prompt_tokens_details.cached_tokens, $w.ms, $w.choice.finish_reason
 }
 
-# --- method 5: output-cap footgun, 10 problems at 6144 vs 16384 ---
-$ten = @($problems[0..9])
+# --- method 5: output-cap footgun, dedicated 10-problem set at 6144 vs 16384 ---
 foreach ($v in @('xhigh','max')) {
   foreach ($cap in @(6144,16384)) {
-    $qs = ($ten | ForEach-Object { "$($_.n)) $($_.q)" }) -join "`n"
+    $qs = ($capProblems | ForEach-Object { "$($_.n)) $($_.q)" }) -join "`n"
     $messages = @(@{role='system';content=$sys}, @{role='user';content="Raspunde la fiecare. O linie per raspuns, format N) raspuns.`n$qs"})
     $x = Invoke-Chat $v $messages $cap
-    'CAP {0} cap={1} OUT={2} REASON={3} FIN={4} MS={5} CONTENT_EMPTY={6}' -f `
-      $v, $cap, $x.usage.completion_tokens, $x.usage.completion_tokens_details.reasoning_tokens, $x.choice.finish_reason, $x.ms, ([string]::IsNullOrWhiteSpace([string]$x.choice.message.content))
+    $wrong = Grade-Batch ([string]$x.choice.message.content) $capProblems
+    $rea = 0; if ($x.usage.completion_tokens_details) { $rea = $x.usage.completion_tokens_details.reasoning_tokens }
+    'CAP {0} cap={1} SCORE={2}/10 WRONG={3} OUT={4} REASON={5} FIN={6} MS={7} CONTENT_EMPTY={8}' -f `
+      $v, $cap, (10-$wrong.Count), ($wrong -join ' | '), $x.usage.completion_tokens, $rea, $x.choice.finish_reason, $x.ms, ([string]::IsNullOrWhiteSpace([string]$x.choice.message.content))
   }
 }
 
-# --- method 6: prefill throughput ---
+# --- method 6: prefill throughput and engine limit ---
 foreach ($n in @(1000,3500,7000,10800)) {
   $txt = ($half * $n) + "`n`nIgnora textul. Ce este 7*8? Doar numarul."
   $x = Invoke-Chat 'low' @(@{role='user';content=$txt}) 256
   'PREFILL reps={0} IN={1} MS={2} TOKS={3}' -f $n, $x.usage.prompt_tokens, $x.ms, [math]::Round($x.usage.prompt_tokens/($x.ms/1000.0))
+}
+try {
+  $tooLong = ($half * 12500) + "`n`nIgnora textul. Ce este 7*8? Doar numarul."
+  $null = Invoke-Chat 'low' @(@{role='user';content=$tooLong}) 64
+  'LIMIT reps=12500 ACCEPTED (unexpected)'
+} catch {
+  'LIMIT reps=12500 REJECTED detail=$($_.ErrorDetails.Message)'
 }

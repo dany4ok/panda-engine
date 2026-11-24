@@ -22,8 +22,12 @@ METHOD
 3. Loop / endurance probe: 'write numbers 1..200, one per line'.
 4. Context probe: needle 'CODUL SECRET ESTE ZX7-QM42' inserted at ~50% depth
    of a 129652-token haystack; question at the end, max_tokens=1024.
-5. Output-cap probe: 10 problems with max_tokens=6144 vs 16384.
-6. Prefill measurement at 12k / 42k / 84k / 129k tokens.
+   A second identical request measures the warm-prefix cache.
+5. Output-cap probe: a dedicated 10-problem set (grila 3x3, melc, sirul,
+   fotografie, 5 masini, 8 bile, 91 prim, eleven, triunghi 3-4-5,
+   marti+100) with max_tokens=6144 vs 16384.
+6. Prefill measurement at 12k / 42k / 84k / 129k tokens, plus a rejected
+   request at 12500 repetitions to confirm the 131072-token engine limit.
 
 ACCURACY (4 runs, 92 answers per variant)
 -----------------------------------------
@@ -42,14 +46,16 @@ high 3231/23.3 = 139, xhigh 2646/18.9 = 140, max 3717/26.8 = 139.
 reasoning_effort changes how many tokens are thought, not how fast they
 are generated.
 
-`high` is penalised by two events in the same run (8 wrong answers total):
-a 7-problem batch came back empty (finish_reason=length) after consuming all
-16384 tokens in reasoning, plus one wrong answer on problem 19. In the other
-three runs it was perfect. It is not weak, it is unstable on large batches.
+`high` has 8 wrong answers, all recorded in aggregated log B (7 empty
+answers from a batch that hit finish_reason=length after consuming all
+16384 tokens in reasoning, plus one wrong answer on problem 19). Log A was
+perfect. Each log aggregates 2 runs and the individual per-run split was
+not kept, so both events cannot be attributed to a single run.
 
 The most frequently missed problem is '8 balls, one heavier: minimum
-weighings on a balance' (correct answer: 2). low missed it 3 times, medium
-once, high once, max once, xhigh never.
+weighings on a balance' (correct answer: 2). low missed it 3 times,
+medium once, high twice (one wrong plus the empty batch), max once,
+xhigh never.
 
 SPEED
 -----
@@ -72,11 +78,12 @@ xhigh had zero truncations.
 
 OUTPUT-CAP FOOTGUN (confirmed)
 ------------------------------
-With max_tokens=6144 on a 10-problem batch, both xhigh and max consumed all
+With max_tokens=6144 on the 10-problem set, both xhigh and max consumed all
 6142 tokens in reasoning and emitted no final answer (finish_reason=length,
 content=""). With max_tokens=16384 both answered; xhigh scored 10/10 and
-max 9/10 (it called the person in the photo a daughter instead of a son).
-Reasoning effort without output headroom produces an empty reply.
+max 9/10 - it called the person in the photo (problem 4 of that set) a
+daughter instead of a son. Reasoning effort without output headroom
+produces an empty reply.
 
 128k CONTEXT
 ------------
@@ -110,7 +117,8 @@ RECOMMENDATIONS
    of xhigh.
 3. `low` is fastest and cheapest (108 tok/answer) but misses logic traps.
 4. Avoid `max`: slowest and most expensive with no accuracy gain.
-5. Be careful with `high`: perfect in 3 of 4 runs, empty reply in the 4th.
+5. Be careful with `high`: 8 wrong answers in one aggregated log (7 empty
+   plus 1 wrong), the other log perfect; per-run attribution was not kept.
 6. Do not send 20+ problems in one prompt to high/xhigh. Keep batches <= 8
    and max_tokens >= 16384 so a high-effort answer can actually be emitted.
 
