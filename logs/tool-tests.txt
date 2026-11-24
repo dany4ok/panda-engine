@@ -1,0 +1,20 @@
+TOOL-CALLING TESTS (long history: 8 read/tool cycles, then write)
+================================================================
+Without extra flags:
+  run1: finish=length, 1 tool_call + 11743 text characters
+  run2: finish=length, 0 content, 14113 reasoning characters
+
+With --structured-output:
+  run1: finish=tool_calls, clean
+  run2: finish=length, 1 tool_call + 12051 text characters
+  run3: finish=stop, raw marker in text, 113 characters
+  run4: finish=length, 0 content, 13709 reasoning characters
+
+With --structured-output --lenient-assistant-history:
+  run1: finish=stop, raw marker in text, 882 characters
+  run2: finish=tool_calls, but empty argument {"path":""}
+  run3: finish=length, raw marker in text, 8739 characters
+
+Conclusion: tool calling works in short requests (clean single- and multi-turn, finish=tool_calls), but is unstable in long agentic sessions. This is not a configuration bug: neither structured-output, nor lenient-assistant-history, nor penalties eliminate marker leakage into the text. It is a behavior of the Inkling 2 Mini model.
+
+Direct API with a defined tool: valid finish=tool_calls, regardless of reasoning_effort, penalties or post_thinking.

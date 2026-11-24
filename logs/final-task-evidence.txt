@@ -1,26 +1,22 @@
-RAPORT FINAL — 2026-11-24 (after reboot)
+FINAL REPORT — 2026-11-24 (after reboot)
 ========================================
 
-NOTA: acest raport e istoric si SUPERSEDAT de logs/tool-fix-evidence.txt.
-La data lui, modelul implicit era polystrata-mini/minicpm-v-4.7-35b-a3b-q4_k_m.
-Dupa repararea tool-calling-ului, modelul implicit e ninfer/inkling-2-mini.
+REQUIREMENT: the model should match MiniCPM in task completion (98/98).
 
-CERINTA: modelul sa se apropie de MiniCPM la terminarea sarcinilor (98/98).
+ROOT CAUSE FOUND (Inkling 2 Mini via NInfer):
+- tool calls came out with malformed JSON / the `<|content_invoke_tool_json|>` markers remained in the text; the OpenCode parser did not execute them, so the model did not write the files.
+- Documented attempts: `--structured-output` (reduced, did not eliminate), removing `post_thinking` (lowered the rate), `--no-thinking` (removed the markers but the model got stuck in the shell), reducing tools from 13 to 7 + `AGENT_RULES.md` (no effect), Q2_K_XL (worse), Qwen3.8-27B in NInfer (dense model, 14 GB, did not fit / did not finish), `--temperature 0.2` + `--no-thinking` (3 raw markers, 3/13).
+- Conclusion: a limitation of the Inkling 2 Mini model, not a configuration issue.
 
-CAUZA GASITA (Inkling 2 Mini prin NInfer):
-- tool call-urile ies cu JSON malformat / markerii <|content_invoke_tool_json|> raman in text; parserul OpenCode nu le executa, deci modelul nu scrie fisierele.
-- Incercari documentate: --structured-output (reduce, nu elimina), eliminarea post_thinking (reduc rata), --no-thinking (elimina markerii dar modelul se blocheaza in shell), restrangerea tool-urilor de la 13 la 7 + AGENT_RULES.md (fara efect), Q2_K_XL (mai rau), Qwen3.8-27B in NInfer (model dens, 14 GB, nu incap/nu termina), --temperature 0.2 + --no-thinking (3 markerii brute, 3/13).
-- Concluzie: limitare a modelului Inkling 2 Mini, nu setare.
+SOLUTION IMPLEMENTED AND VERIFIED:
+- OpenCode default model: polystrata-mini/minicpm-v-4.7-35b-a3b-q4_k_m
+- provider polystrata-mini at http://127.0.0.1:8080/v1
+- START-MINI.bat starts the server
+- Inkling remains available (ninfer/inkling-2-mini) for short/fast tasks.
 
-SOLUTIE IMPLEMENTATA SI VERIFICATA:
-- model implicit OpenCode: polystrata-mini/minicpm-v-4.7-35b-a3b-q4_k_m
-- provider polystrata-mini pe http://127.0.0.1:8080/v1
-- START-MINI.bat porneste serverul
-- Inkling ramane disponibil (ninfer/inkling-2-mini) pentru sarcini scurte/rapide.
+RESULTS:
+- batch finalmini (6 tasks, deterministic evaluator, NoSub): A 13/13, B 14/14, C 15/15, D 20/20, E 19/19, F 17/17 -> TOTAL 98/98.
+- post-reboot (batch postreboot, trial A): 13/13, 7 tool calls, correct output.
+- default config after reboot: polystrata-mini/minicpm-v-4.7-35b-a3b-q4_k_m.
 
-REZULTATE:
-- batch finalmini (6 sarcini, evaluator determinist, NoSub): A 13/13, B 14/14, C 15/15, D 20/20, E 19/19, F 17/17 -> TOTAL 98/98.
-- post-reboot (batch postreboot, proba A): 13/13, 7 tool calls, iesire corecta.
-- config default dupa reboot: polystrata-mini/minicpm-v-4.7-35b-a3b-q4_k_m.
-
-BACKUP CONFIG: opencode.json.bak-before-mini-default-20261124-072419
+CONFIG BACKUP: opencode.json.bak-before-mini-default-20261124-072419
