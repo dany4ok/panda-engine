@@ -50,7 +50,7 @@ NOT lowered for this benchmark. Log files (panda engine\logs):
 
 A separate exploratory run (not part of these results) showed these three quants
 do answer at the same 131072 context with host expert residency instead of device:
-  iq4xs host: gen 54.3 t/s, read 656.9 t/s
+  iq4xs host: gen 54.3 t/s, read 658.9 t/s
   q3kxl host: gen 66.4 t/s, read 1090.7 t/s
   apex  host: gen 68.6 t/s, read 1317.5 t/s
 They were removed from this PC afterwards; their artifacts can be re-downloaded
