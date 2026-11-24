@@ -32,24 +32,24 @@ Gyro-S:  serve\server.py --engine strata --config strata-gyro-s.json --port 8183
 
 WHY THE THREE INKLING QUANTS FAIL
 ---------------------------------
-Not corrupt artifacts: weights load successfully (Q3_K_XL 13.0 GiB in 4.5 s,
-IQ4_XS 15.0 GiB in 5.9 s, APEX 12.4 GiB in 5.1 s). Startup then aborts in
+Not corrupt artifacts: weights load successfully (Q3_K_XL 13.0 GiB in 4.7 s,
+IQ4_XS 15.0 GiB in 6.0 s, APEX 12.4 GiB in 4.9 s). Startup then aborts in
 "initializing runtime":
 
   Inkling 2: the KV caches, histories, checkpoints and drafter state of 1
   sequence(s) of 131072 tokens need 2530 MiB beside 512 MiB for the workspace
-  and CUDA graphs, and 1115/0/1537 MiB are free after the weights; lower
+  and CUDA graphs, and 1417/0/1584 MiB are free after the weights; lower
   --max-concurrency or --max-context
 
-Free VRAM after weights: Q3_K_XL 1115 MiB, IQ4_XS 0 MiB, APEX 1537 MiB.
+Free VRAM after weights: Q3_K_XL 1417 MiB, IQ4_XS 0 MiB, APEX 1584 MiB.
 Required: 2530 MiB KV + 512 MiB workspace = 3042 MiB. Context was deliberately
 NOT lowered for this benchmark. Log files (panda engine\logs):
   final-20261124-163647-inkling-q3kxl.err.log
   final-20261124-163647-inkling-iq4xs.err.log
   final-20261124-163647-inkling-apex.err.log
 
-A separate exploratory run (not part of these results, context changed) showed
-these three quants do answer with host expert residency at 131072 context:
+A separate exploratory run (not part of these results) showed these three quants
+do answer at the same 131072 context with host expert residency instead of device:
   iq4xs host: gen 54.3 t/s, read 656.9 t/s
   q3kxl host: gen 66.4 t/s, read 1090.7 t/s
   apex  host: gen 68.6 t/s, read 1317.5 t/s
