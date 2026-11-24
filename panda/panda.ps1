@@ -283,7 +283,7 @@ function Show-Menu($s) {
     foreach ($m in $script:cat.models) { Write-Host ("  " + $m.id.PadRight(16) + " " + $m.label.PadRight(32) + $(if (Test-Model $m) {'[OK]'} else {'[-]'})) }
     Write-Host '------------------------------------------------------------'
     Write-Host '  1 Inkling IQ1_M   2 Inkling Q2_K_XL   3 MiniCPM   4 Gyro-S'
-    Write-Host '  D Download/change models    S PORNIRE (start active)'
+    Write-Host '  D Download/change models    S START (start active)'
     Write-Host '  C Install OpenCode layer    R Reset first-run    Q Exit'
     Write-Host '============================================================'
 }

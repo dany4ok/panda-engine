@@ -14,7 +14,7 @@ A single terminal launcher for the three local models configured on this machine
 Double-click `START-PANDA.bat` in the repository root.
 
 - **First run:** pick the models to download (`1,3,4`, or `A` for all, or `N` to skip). Downloads go to a `.part` file, resume with `curl -C -`, and are checked against the remote `Content-Length` and (when the server exposes a 64-hex ETag) SHA-256 before being accepted; a failed or partial download is never marked installed. The choice is saved in `%LOCALAPPDATA%\panda-engine\state.json`, so the first-run screen never appears again.
-- **Later runs:** the menu opens directly with the active model highlighted. `S` starts it (PORNIRE). `1`–`4` selects another model; if it is missing, the launcher offers to download it.
+- **Later runs:** the menu opens directly with the active model highlighted. `S` starts it (START). `1`–`4` selects another model; if it is missing, the launcher offers to download it.
 - `D` re-downloads / adds models, `C` installs the OpenCode layer, `R` replays first-run setup, `Q` exits.
 - `-AutoStart` skips the menu and starts the active model; `-ResetState` replays first-run setup; `-DryRun` prints actions without downloading or starting anything.
 
