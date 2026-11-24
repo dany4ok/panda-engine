@@ -8,6 +8,17 @@ models/
 # The meaningful benchmark data is eval.json / metrics.json (kept).
 events.jsonl
 
+# Bundled runtime binaries and local model packs (copied/downloaded on this PC).
+# Keep the small server/VRAM-guard configs that Panda actually references.
+runtime/*
+!runtime/polystrata/
+runtime/polystrata/*
+!runtime/polystrata/*.json
+!runtime/polystrata/serve/
+runtime/polystrata/serve/*
+!runtime/polystrata/serve/vram-guard.ps1
+panda/state/
+
 # Runtime state
 logs/*.log
 logs/requests/

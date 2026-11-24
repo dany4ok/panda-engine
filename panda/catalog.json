@@ -2,9 +2,15 @@
   "version": 1,
   "roots": {
     "knownInkling": "C:\\Users\\x1p\\Desktop\\inkling 2 mini",
-    "knownMini": "C:\\Users\\x1p\\Desktop\\Poly-strata",
-    "knownMiniData": "C:\\Users\\x1p\\Desktop\\PolyStrata-data",
-    "knownGyro": "C:\\Users\\x1p\\Desktop\\Strata AI\\Strata"
+    "knownMini": "C:\\Users\\x1p\\Desktop\\panda engine\\runtime\\polystrata",
+    "knownMiniData": "C:\\Users\\x1p\\Desktop\\panda engine\\models\\polystrata-data",
+    "knownGyro": "C:\\Users\\x1p\\Desktop\\panda engine\\runtime\\gyro-engine"
+  },
+  "ports": {
+    "api": 8080,
+    "infer": 8181,
+    "mini": 8182,
+    "gyro": 8183
   },
   "ninfer": {
     "releasesApi": "https://api.github.com/repos/iamwavecut/ninfer-all/releases/latest",
@@ -13,6 +19,12 @@
     "context": 131072,
     "reasoning": "low",
     "port": 8080
+  },
+  "game": {
+    "guard": "serve\\vram-guard.ps1",
+    "fastConfig": "strata-minicpmv-q4_k_m-review.json",
+    "cpuConfig": "strata-minicpmv-q4_k_m-cpu.json",
+    "log": "strata-adaptive-guard.log"
   },
   "models": [
     {
@@ -32,6 +44,30 @@
       "provider": "ninfer/inkling-2-mini"
     },
     {
+      "id": "inkling-q3kxl",
+      "kind": "inkling",
+      "label": "Inkling 2 Mini (Q3_K_XL)",
+      "artifact": "Inkling-2-Mini-UD-Q3_K_XL-ninfer-v3.ninfer",
+      "url": "https://huggingface.co/WaveCut/Inkling-2-Mini-UD-Q3_K_XL-NInfer-v3/resolve/main/Inkling-2-Mini-UD-Q3_K_XL-ninfer-v3.ninfer",
+      "provider": "ninfer/inkling-2-mini"
+    },
+    {
+      "id": "inkling-iq4xs",
+      "kind": "inkling",
+      "label": "Inkling 2 Mini (IQ4_XS)",
+      "artifact": "Inkling-2-Mini-UD-IQ4_XS-ninfer-v3.ninfer",
+      "url": "https://huggingface.co/WaveCut/Inkling-2-Mini-UD-IQ4_XS-NInfer-v3/resolve/main/Inkling-2-Mini-UD-IQ4_XS-ninfer-v3.ninfer",
+      "provider": "ninfer/inkling-2-mini"
+    },
+    {
+      "id": "inkling-apex",
+      "kind": "inkling",
+      "label": "Inkling 2 Mini (APEX-I MiniPlus V2.1)",
+      "artifact": "Inkling-2-Mini-APEX-I-MiniPlus-V2.1-ninfer-v3.ninfer",
+      "url": "https://huggingface.co/WaveCut/Inkling-2-Mini-APEX-I-MiniPlus-V2.1-NInfer-v3/resolve/main/Inkling-2-Mini-APEX-I-MiniPlus-V2.1-ninfer-v3.ninfer",
+      "provider": "ninfer/inkling-2-mini"
+    },
+    {
       "id": "minicpm-q4km",
       "kind": "mini",
       "label": "MiniCPM-V 4.7 35B (Q4_K_M)",
@@ -40,25 +76,24 @@
         {
           "name": "MiniCPM-V-4_7-35B-A3B-Q4_K_M.gguf",
           "url": "https://huggingface.co/openbmb/MiniCPM-V-4.7-35B-A3B-gguf/resolve/main/MiniCPM-V-4_7-35B-A3B-Q4_K_M.gguf",
-          "target": "PolyStrata-data\\models\\minicpmv-Q4_K_M\\MiniCPM-V-4_7-35B-A3B-Q4_K_M.gguf"
+          "target": "polystrata-data\\models\\minicpmv-Q4_K_M\\MiniCPM-V-4_7-35B-A3B-Q4_K_M.gguf"
         },
         {
           "name": "mmproj-model-f16.gguf",
           "url": "https://huggingface.co/openbmb/MiniCPM-V-4.7-35B-A3B-gguf/resolve/main/mmproj-model-f16.gguf",
-          "target": "PolyStrata-data\\models\\minicpmv-Q4_K_M\\mmproj-model-f16.gguf"
+          "target": "polystrata-data\\models\\minicpmv-Q4_K_M\\mmproj-model-f16.gguf"
         }
       ],
       "serverConfig": "strata-minicpmv-q4_k_m.json",
-      "port": 8080
+      "port": 8182
     },
     {
       "id": "gyro-s",
       "kind": "gyro",
-      "label": "Gyro Gyro S (Strata)",
+      "label": "Gyro Gyro S (in Panda)",
       "provider": "strata/gyro-gyro-s",
-      "exe": "strata-desktop.exe",
-      "loader": "load-gyro-s.ps1",
-      "port": 47831
+      "serverConfig": "strata-gyro-s.json",
+      "port": 8183
     }
   ]
 }

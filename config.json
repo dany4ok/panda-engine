@@ -1,6 +1,6 @@
 ﻿{
-  "context": 131072,
-  "artifact": "Inkling-2-Mini-UD-IQ1_M-ninfer-v3.ninfer",
-  "reasoning": "low",
-  "port": 8080
+    "context":  131072,
+    "artifact":  "Inkling-2-Mini-UD-IQ1_M-ninfer-v3.ninfer",
+    "reasoning":  "low",
+    "port":  8181
 }

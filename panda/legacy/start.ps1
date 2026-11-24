@@ -6,7 +6,7 @@ param([switch]$AutoStart)
 $ErrorActionPreference = 'Continue'
 try { $Host.UI.RawUI.WindowTitle = 'Inkling 2 Mini - NInfer' } catch {}
 
-$Root       = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$Root       = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Definition))
 $ConfigPath = Join-Path $Root 'config.json'
 $LogDir     = Join-Path $Root 'logs'
 $RunDir     = Join-Path $Root 'run'
