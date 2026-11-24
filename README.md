@@ -18,7 +18,7 @@ Inkling 2 Mini via NInfer was fast (~150 t/s) but finished only **34/98** agenti
 
 Root cause (confirmed against upstream GitHub issues): `presence_penalty: 0.5` and `frequency_penalty: 1.0` in the OpenCode request body override NInfer's tool-safe default (see `iamwavecut/ninfer-all#118`) and break multi-tool calls; `--structured-output` additionally does not engage grammar at the Inkling tool opener (`vllm#68692/#69351`).
 
-Fix: set both penalties to **0**, drop `post_thinking`, keep `--structured-output --spec none --reasoning-loop conclude`. `reasoning_effort` is independent of the tool-calling defect: the fix was verified with `low`, and this snapshot reflects the live setting (`max`, changed by the user on 2026-11-24). The `instructions` path is deliberately relative here so the published config stays portable (the live config uses an absolute path to the same `AGENT_RULES.md`).
+Fix: set both penalties to **0**, drop `post_thinking`, keep `--structured-output --spec none --reasoning-loop conclude`. `reasoning_effort` is independent of the tool-calling defect: this snapshot uses `low`, the value with which the fix was verified; the user may change it freely (e.g. to `max`) without affecting the fix. The `instructions` path is deliberately relative here so the published config stays portable (the live config uses an absolute path to the same `AGENT_RULES.md`).
 
 Result: **98/98** tasks, zero raw markers. Full detail in `logs/tool-fix-evidence.txt`.
 
@@ -45,7 +45,7 @@ Per-task results are in `benchmarks/results/`. A–F per-task breakdown is in `l
   - `WaveCut/Inkling-2-Mini-UD-Q2_K_XL-NInfer-v3`
   - `WaveCut/Qwen3.8-27B-GSQ-RCO-IQ3_S-NInfer-v3`
 - `events.jsonl` event streams, evaluated `work/` directories and per-probe PNG captures — excluded because they contain degenerate loops, local file paths/dumps and large binary output. Reports that cite them are kept verbatim as historical records, with an explicit note wherever a figure is no longer reproducible.
-- The 23 timestamped `opencode.json.bak-*` backups and the machine-level `~/.config/opencode/AGENTS.md`; the published `config/opencode.json` is the current live snapshot (with a portable relative `instructions` path).
+- The 23 timestamped `opencode.json.bak-*` backups and the machine-level `~/.config/opencode/AGENTS.md`. The published `config/opencode.json` is a portable snapshot of the working configuration (penalties 0, `reasoning_effort: low`); the live value of `reasoning_effort` is a user preference and may differ.
 
 Some files in `benchmarks/` still contain absolute paths from the original machine (notably `HARNESS.md`); adapt them if you reuse the harness. API keys in `config/opencode.json` are placeholders (`*-local-token`), not real secrets.
 
