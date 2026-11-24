@@ -1,0 +1,113 @@
+================================================================================
+BENCHMARK A/B — Inkling 2 Mini (NInfer) vs Hy4 Flash
+Roluri: Reviewer / Reality Checker — subagenti OpenCode reali, cu unelte
+Data: 2026-11-24
+Protocol: replica exacta a benchmarkului MiniCPM-V vs Hy4 Flash
+          (BENCHMARK-miniCPM-vs-Hy4Flash.txt din Default Project)
+================================================================================
+
+1. MODELELE TESTATE
+--------------------------------------------------------------------------------
+Inkling 2 Mini:
+  - ID OpenCode: ninfer/inkling-2-mini
+  - Endpoint: http://127.0.0.1:8080/v1 (NInfer, artefact UD-IQ1_M)
+  - reasoning_effort=low, frequency_penalty=0, presence_penalty=0
+  - Decode masurat prin HTTP direct: 142,7 / 144,5 / 148,0 tok/s
+Hy4 Flash:
+  - ID OpenCode: opencode/hy4-flash-free
+  - Endpoint cloud, nu expune metrici de inferenta
+
+2. METODOLOGIE
+--------------------------------------------------------------------------------
+- 5 probe identice (P1 cart, P2 orders/pricing/search/auth, P3 atlas vizual,
+  P4 inventory multi-modul, P5 atlas animatie + off-by-one), reluate din
+  C:\Users\x1p\AppData\Local\Temp\opencode\ab-bench\probe1..5
+- GT privat neschimbat, fixat inainte de rulare: GT_AB_PRIVATE.json (18 defecte)
+  si RC_CLAIM_TRUTH.json (14 afirmatii false / 11 corecte)
+- Prompturi canonice identice pentru ambele modele, din ab-bench\_instr\
+  (review_probeN.md, rc_synth_probeN.md)
+- Subagent "general" cu model fortat explicit prin parametru, intrare identica
+- 20 de subagenti (5 probe x 2 etape x 2 modele). Fiecare a scris un raport
+  separat si timestamp-uri START/END prin shell.
+- Scorarea: manuala determinista pe baza GT-ului; niciun evaluator LLM tertiar.
+
+3. REZULTATE CALITATE — REVIEWER (defecte prinse din 18)
+--------------------------------------------------------------------------------
+                    P1    P2    P3    P4    P5    TOTAL      RATA
+Inkling 2 Mini      3/3   4/4   2/3   5/5   3/3   17/18      94,4 %
+Hy4 Flash           3/3   4/4   3/3   5/5   3/3   18/18     100 %
+(MiniCPM, vechi)    3/3   4/4   1/3   5/5   3/3   16/18      88,9 %
+
+Singura diferenta: P3 (D8). Ambele modele au prins D9 si D10 (afirmatiile
+false din NOTES.md) si au evitat capcana clamp-ului corect.
+
+4. REZULTATE CALITATE — REALITY CHECKER SINTETIC (afirmatii evaluate corect)
+--------------------------------------------------------------------------------
+                    P1    P2    P3    P4    P5    TOTAL      RATA
+Inkling 2 Mini      5/5   5/5   3/5   5/5   5/5   23/25      92 %
+Hy4 Flash           4/5   5/5   4/5   5/5   5/5   23/25      92 %
+(MiniCPM, vechi)    1/1   2/2   3/4   3/3   4/4   13/14      92,9 %
+
+NOTA de corectie (2026-11-24): tabelul initial conta 24/25 pentru ambele
+modele. GT-ul RC_CLAIM_TRUTH.json marcheaza insa P3 afirmatia 4 (PASS
+"frame_rect computes correct 16x16 rectangles for every index") ca FALSE,
+deoarece atlasul e 64x66 si indexul 15 depaseste continutul real. Ambele
+modele au CONFIRMAT acea afirmatie, deci fiecare a pierdut un punct in plus.
+
+Greseli diferite:
+  - Inkling: P3 afirmatia 1 — a CONFIRMAT ca "clamp-ul e nesigur pentru tipuri
+    mixte", desi GT-ul o marcheaza false (clamp-ul canonic
+    max(low, min(value, high)) e corect). A repetat o afirmatie falsa din
+    NOTES.md in loc sa o conteste. Plus P3 afirmatia 4 (vectorul de mai sus).
+  - Hy4: P1 afirmatia 5 — a CONTESTAT o afirmatie corecta ("no integration or
+    security issues"), exact ambiguitatea semnalata si in benchmarkul vechi.
+    Plus P3 afirmatia 4.
+
+5. VITEZA (timestamp-uri START/END scrise de fiecare subagent)
+--------------------------------------------------------------------------------
+                    Reviewer total / median    RC total / median    TOTAL
+Inkling 2 Mini      82,6 s / 14,3 s            56,7 s / 8,2 s       139,3 s
+Hy4 Flash           207,4 s / 37,7 s           263,5 s / 49,5 s     470,9 s
+
+Inkling e de ~2,5x mai rapid la Reviewer, ~4,7x la RC, ~3,4x pe total.
+Nu sunt incluse timpii de generare ai orchestratorului.
+
+6. DE CE A PICAT INKLING LA PROBA 3 (ambele etape)
+--------------------------------------------------------------------------------
+Reviewer, P3 — defectul D8 (anomalia vizuala):
+  atlas.png are 64x66 px. 15 sprite-uri albastre au 8x8 px; cel rosu (index 5,
+  rand 1 / col 1) are 8x10 px si e decalat cu 1 px. Validatorul determinist
+  check_atlas_frames.py raporteaza area spread 72% > 45%, VERDICT: FAIL.
+  Inkling a vazut ca imaginea e 64x66 si ca NOTES.md minte, dar a interpretat
+  diferența ca "2 randuri extra de continut" si NU a etichetat patratul rosu
+  ca defect. Hy4 a masurat pixelii (8x10 fata de 8x8) si a rulat validatorul.
+
+Reality Checker, P3 — doua greseli:
+  (a) Afirmatia 1: raportul de verificat spunea ca "clamp-ul e nesigur"
+      (afirmatie falsa, pusa acolo ca capcana). Inkling a CONFIRMAT-O, desi
+      codul este implementarea standard si nu exista niciun test sau cale de
+      cod care sa arate o problema. Hy4 a CHALLENGE-uit corect, cu executie
+      determinista (clamp(5,0,10)=5 etc.).
+  (b) Afirmatia 4: "frame_rect computes correct 16x16 rectangles for every
+      index" e marcata false in GT pentru ca atlasul e 64x66, iar indexul 15
+      depaseste zona de continut. Ambele modele au CONFIRMAT-o; niciunul nu a
+      legat afirmatia de anomalia de dimensiune pe care o observasera deja.
+
+7. LIMITARI
+--------------------------------------------------------------------------------
+- O singura rulare per proba; benchmarkul vechi avea repetitii doar pentru P3.
+- Scorurile au fost atribuite de agentul coordonator pe baza GT-ului fixat,
+  fara evaluator LLM independent.
+- Latenta masurata e timp de subagent (START->END in raport), nu TTFT end-to-end.
+- Hy4 nu expune tokeni / tok/s; Inkling da tok/s prin API.
+
+8. ARTIFACTE
+--------------------------------------------------------------------------------
+- Rapoartele brute si timestamp-urile:
+  C:\Users\x1p\AppData\Local\Temp\opencode\ab-bench-new\
+- GT si prompturi:
+  C:\Users\x1p\AppData\Local\Temp\opencode\ab-bench-eval\
+  C:\Users\x1p\AppData\Local\Temp\opencode\ab-bench\_instr\
+- Benchmarkul de referinta:
+  C:\Users\x1p\Documents\Default Project\BENCHMARK-miniCPM-vs-Hy4Flash.txt
+================================================================================
