@@ -1,0 +1,30 @@
+const state = { hp: 100, maxHp: 100, xp: 0, level: 1 };
+let mode = 'idle';
+const canvas = document.getElementById('stage');
+const ctx = canvas.getContext('2d');
+const atlas = new Image();
+atlas.src = './assets/atlas.png';
+const hpEl = document.getElementById('hp');
+const xpEl = document.getElementById('xp');
+const lvEl = document.getElementById('lv');
+const hpbar = document.getElementById('hpbar');
+const xpbar = document.getElementById('xpbar');
+const runBtn = document.getElementById('run');
+const hurtBtn = document.getElementById('hurt');
+runBtn.addEventListener('click', () => { mode = (mode === 'run') ? 'idle' : 'run'; });
+hurtBtn.addEventListener('click', () => { mode = 'hurt'; setTimeout(() => { mode = 'idle'; }, 300); });
+let tick = 0;
+function frame(){
+  tick++;
+  let f = 0;
+  if (mode === 'run') f = (tick % 2 === 0) ? 1 : 2;
+  else if (mode === 'hurt') f = 3;
+  else f = 0;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(atlas, f*16, 0, 16, 16, 100, 100, 48, 48);
+  hpEl.textContent = state.hp; xpEl.textContent = state.xp; lvEl.textContent = state.level;
+  hpbar.style.width = (state.hp/state.maxHp*100) + '%';
+  xpbar.style.width = (state.xp%100) + '%';
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
