@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "roots": {
+    "knownInkling": "C:\\Users\\x1p\\Desktop\\inkling 2 mini",
+    "knownMini": "C:\\Users\\x1p\\Desktop\\Poly-strata",
+    "knownMiniData": "C:\\Users\\x1p\\Desktop\\PolyStrata-data",
+    "knownGyro": "C:\\Users\\x1p\\Desktop\\Strata AI\\Strata"
+  },
+  "ninfer": {
+    "releasesApi": "https://api.github.com/repos/iamwavecut/ninfer-all/releases/latest",
+    "assetMatch": "ninfer-windows-x64-cuda13.4-*120a*.7z.001",
+    "exe": "ninfer-serve.exe",
+    "context": 131072,
+    "reasoning": "low",
+    "port": 8080
+  },
+  "models": [
+    {
+      "id": "inkling-iq1m",
+      "kind": "inkling",
+      "label": "Inkling 2 Mini (IQ1_M)",
+      "artifact": "Inkling-2-Mini-UD-IQ1_M-ninfer-v3.ninfer",
+      "url": "https://huggingface.co/WaveCut/Inkling-2-Mini-UD-IQ1_M-NInfer-v3/resolve/main/Inkling-2-Mini-UD-IQ1_M-ninfer-v3.ninfer",
+      "provider": "ninfer/inkling-2-mini"
+    },
+    {
+      "id": "inkling-q2kxl",
+      "kind": "inkling",
+      "label": "Inkling 2 Mini (Q2_K_XL)",
+      "artifact": "Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer",
+      "url": "https://huggingface.co/WaveCut/Inkling-2-Mini-UD-Q2_K_XL-NInfer-v3/resolve/main/Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer",
+      "provider": "ninfer/inkling-2-mini"
+    },
+    {
+      "id": "minicpm-q4km",
+      "kind": "mini",
+      "label": "MiniCPM-V 4.7 35B (Q4_K_M)",
+      "provider": "polystrata-mini/minicpm-v-4.7-35b-a3b-q4_k_m",
+      "files": [
+        {
+          "name": "MiniCPM-V-4_7-35B-A3B-Q4_K_M.gguf",
+          "url": "https://huggingface.co/openbmb/MiniCPM-V-4.7-35B-A3B-gguf/resolve/main/MiniCPM-V-4_7-35B-A3B-Q4_K_M.gguf",
+          "target": "PolyStrata-data\\models\\minicpmv-Q4_K_M\\MiniCPM-V-4_7-35B-A3B-Q4_K_M.gguf"
+        },
+        {
+          "name": "mmproj-model-f16.gguf",
+          "url": "https://huggingface.co/openbmb/MiniCPM-V-4.7-35B-A3B-gguf/resolve/main/mmproj-model-f16.gguf",
+          "target": "PolyStrata-data\\models\\minicpmv-Q4_K_M\\mmproj-model-f16.gguf"
+        }
+      ],
+      "serverConfig": "strata-minicpmv-q4_k_m.json",
+      "port": 8080
+    },
+    {
+      "id": "gyro-s",
+      "kind": "gyro",
+      "label": "Gyro Gyro S (Strata)",
+      "provider": "strata/gyro-gyro-s",
+      "exe": "strata-desktop.exe",
+      "loader": "load-gyro-s.ps1",
+      "port": 47831
+    }
+  ]
+}
