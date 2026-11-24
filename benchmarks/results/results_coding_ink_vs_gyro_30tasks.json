@@ -1,0 +1,36 @@
+{
+  "date": "2026-11-24",
+  "harness": "Panda Engine unified API, Python functions/bug fixes, executable tests",
+  "ink_artifact": "Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer",
+  "method": {
+    "tasks": 30,
+    "runs_per_task_condition": 4,
+    "task_runs_per_condition": 120,
+    "requests_per_condition": 120,
+    "conditions": 5,
+    "total_requests": 600,
+    "max_tokens": 8192,
+    "temperature_override": null,
+    "test_cases_per_condition": 580
+  },
+  "results": {
+    "ink_low": {"passed_task_runs": 116, "total_task_runs": 120, "passed_cases": 576, "total_cases": 580, "wall_ms": 307835, "output_tokens": 34930, "reasoning_tokens": 27220, "aggregate_tok_s": 113.5, "failures": {"count_vowels": 4}},
+    "ink_medium": {"passed_task_runs": 116, "total_task_runs": 120, "passed_cases": 576, "total_cases": 580, "wall_ms": 324665, "output_tokens": 45973, "reasoning_tokens": 38182, "aggregate_tok_s": 141.6, "failures": {"count_vowels": 4}},
+    "ink_xhigh": {"passed_task_runs": 116, "total_task_runs": 120, "passed_cases": 576, "total_cases": 580, "wall_ms": 559970, "output_tokens": 79576, "reasoning_tokens": 71643, "aggregate_tok_s": 142.1, "failures": {"count_vowels": 4}},
+    "ink_max": {"passed_task_runs": 114, "total_task_runs": 120, "passed_cases": 574, "total_cases": 580, "wall_ms": 499230, "output_tokens": 71154, "reasoning_tokens": 63389, "aggregate_tok_s": 142.5, "failures": {"count_vowels": 4, "merge_intervals": 2}},
+    "gyro_medium": {"passed_task_runs": 115, "total_task_runs": 120, "passed_cases": 575, "total_cases": 580, "wall_ms": 252905, "output_tokens": 22165, "reasoning_tokens": null, "aggregate_tok_s": 87.6, "failures": {"count_vowels": 4, "capitalize_words": 1}}
+  },
+  "review_probe": {
+    "tasks": 6,
+    "runs_per_condition": 1,
+    "scores": {"ink_low": "5/6", "ink_medium": "5/6", "ink_xhigh": "5/6", "ink_max": "5/6", "gyro_medium": "5/6"},
+    "shared_miss": "Recursive f(n)=n*f(n-2) incorrectly classified as OK instead of BUG"
+  },
+  "interpretation": "Ink low matched Ink medium/xhigh on this narrow coding suite. Four runs per task do not prove equivalence on large repository work. Gyro medium scored one fewer passed task-run than low/medium/xhigh; this difference is too small for a strong general claim.",
+  "panda_state_after_test": {
+    "saved_active": "inkling-q2kxl",
+    "route": {"port": 8181, "model": "inkling-q2kxl"},
+    "backend_reachable_confirmed": false,
+    "note": "Manual NInfer restart attempt was cancelled after identifying the ninfer junction points to runtime/ninfer."
+  }
+}

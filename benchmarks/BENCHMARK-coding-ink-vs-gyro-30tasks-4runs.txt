@@ -1,0 +1,87 @@
+Extended coding benchmark - Inkling 2 Mini reasoning levels vs Gyro-S medium
+Date: 2026-11-24
+Harness: Panda Engine, Python functions and bug-fixes graded by execution
+
+This extended report supersedes the preliminary single-pass comparison in
+BENCHMARK-coding-ink-vs-gyro.txt for accuracy conclusions. Gyro-S was tested
+ONLY at medium, as requested. Ink artifact: Q2_K_XL. Ink requests used
+reasoning_effort low/medium/xhigh/max; all variants had the same 30 tasks,
+4 generated solutions per task. Gyro medium used the same tasks and tests.
+
+METHOD
+------
+- 30 Python tasks: 20 function implementations and 10 bug fixes.
+- 4 independent model outputs per task and per condition: 120 task-runs and
+  120 API requests per condition; 600 requests total (4 Ink conditions plus
+  Gyro medium).
+- Each answer was saved as Python and executed against fixed tests. Score
+  reports both whole-task pass (every case must pass) and individual cases.
+- Each request used max_tokens=8192, no temperature override.
+- One additional six-snippet OK/BUG reviewer probe was run once per condition.
+  It was separate from the 30-task repeated coding score.
+- The benchmark elapsed times below sum model-request wall time; model
+  switching/loading and analysis are not included.
+
+RESULTS: 30 TASKS x 4 RUNS
+--------------------------
+Condition        Whole task-runs   Test cases   Request wall time   Output tokens   Reason tokens
+Ink low          116/120 (96.7%)   576/580      307.8 s (5:08)      34,930          27,220
+Ink medium       116/120 (96.7%)   576/580      324.7 s (5:25)      45,973          38,182
+Ink xhigh        116/120 (96.7%)   576/580      560.0 s (9:20)      79,576          71,643
+Ink max          114/120 (95.0%)   574/580      499.2 s (8:19)      71,154          63,389
+Gyro medium      115/120 (95.8%)   575/580      252.9 s (4:13)      22,165          not reported by API
+
+Observed task-level failures (number of failed outputs out of 4):
+- count_vowels (T12): 4/4 for all five conditions; this task accounts for
+  four of the five failed individual cases per condition.
+- merge_intervals (T11): Ink max 2/4; other conditions 0/4.
+- capitalize_words (T15): Gyro medium 1/4; Ink conditions 0/4.
+All other task outputs passed all tests in these runs.
+
+Separate reviewer/check probe (6 short snippets, one request per condition):
+Ink low/medium/xhigh/max: 5/6 each. Gyro medium: 5/6. Every condition
+misclassified the recursive function `f(n) = n * f(n-2)` as OK rather than
+BUG. This is one probe, not a repeated review benchmark.
+
+INTERPRETATION
+--------------
+- On these 30 short, self-contained Python tasks, Ink low, medium and xhigh
+  tied exactly at 116/120 task-runs and 576/580 test cases. The extra
+  reasoning of medium/xhigh produced no observed accuracy gain over low.
+- Ink max was slightly worse (114/120) and also consumed more time/tokens
+  than low.
+- Gyro medium scored 115/120, one fewer passed output than the three tied
+  Ink variants, and 575/580 cases. The sample is too small to call that a
+  meaningful intelligence difference. In this test, low was sufficient to
+  match Ink medium/xhigh; this does NOT establish that low is sufficient for
+  large repository-level coding or difficult independent review.
+- Gyro used less output (22,165 tokens vs Ink low's 34,930) and finished
+  sooner in aggregate. Ink decode was faster per token: ~113.5-142.5 tok/s
+  across variants vs Gyro ~87.6 tok/s by aggregate wall time. Token count and
+  request complexity affect end-to-end time; do not read tok/s as quality.
+- The reviewer probe showed the same miss for all conditions, so there is no
+  observed reviewer advantage for more Ink reasoning or Gyro medium here.
+
+LIMITATIONS / ACCURACY CAVEATS
+------------------------------
+This is a fixed, small benchmark of short functions, not a real repository
+patch benchmark. Four generations per task are repeated samples, not 120
+independent task types. The tests are deterministic but not exhaustive; the
+count_vowels prompt/test may be underspecified about accented vowels, and
+only failures are summarized here (generated code and per-request transcripts
+were not persisted). The one-shot reviewer probe is too small to estimate
+review quality. Results support the narrow statement that Ink low matched
+Ink medium/xhigh on this suite, not a general claim about coding ability.
+
+SYSTEM STATE
+------------
+Panda's saved active model and route were restored to Inkling Q2_K_XL. The
+normal launcher did not relaunch NInfer automatically. A manual NInfer
+restart was attempted, but the executable path lookup used the wrong folder
+(the `ninfer` path is a junction to `runtime\ninfer`); the follow-up restart
+was cancelled. Therefore the route points to Ink on port 8181, but service
+availability after this test was NOT confirmed. No claim is made that the
+backend is currently running.
+
+The preliminary one-pass report remains for historical comparison; use this
+extended multi-run report for the current coding recommendation.
