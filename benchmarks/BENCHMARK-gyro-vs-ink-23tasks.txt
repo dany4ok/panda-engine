@@ -1,0 +1,83 @@
+Gyro-S vs Inkling 2 Mini - 23-task reasoning comparison
+Date: 2026-11-24
+Harness: Panda Engine, unified API http://127.0.0.1:8080/v1
+
+This is a direct comparison on the SAME 23 problems used by
+BENCHMARK-ink-reasoning-effort-1h.txt, with the same grading and batching.
+
+SETUP
+-----
+- Gyro-S selected through Panda Engine (model 7, gyro-s), bundled engine on
+  internal port 8183. The API reports model id
+  'qwen3.8-flash-next-gyro-gyro-s'.
+- After the run Panda was restored to Inkling Q2_K_XL (artifact
+  Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer, internal port 8181, API id
+  'inkling-2-mini').
+- %LOCALAPPDATA%\panda-engine\state.json was backed up to
+  state.json.bak-before-gyro-test and restored afterwards.
+- Caveat: Panda's legacy start.ps1 did not relaunch ninfer on restore;
+  infer-serve.exe had to be started manually with Panda's exact flags.
+  Always confirm GET /v1/models before running.
+
+METHOD (identical for both models)
+----------------------------------
+- 23 objective problems (arithmetic, classic traps, logic, sequences),
+  each answer graded against a per-problem regex.
+- 3 batches of 8/8/7 problems, fixed system prompt, one answer per line in
+  the format 'N) answer'.
+- 2 runs per variant = 46 graded answers, 6 requests per variant.
+- max_tokens=16384, no temperature override. Tested gyro at medium (its
+  default) and xhigh, and ink at medium and xhigh.
+- Single-request calibration: gyro 65 tokens in 1575 ms (~41 tok/s),
+  ink 83 tokens in 708 ms (~117 tok/s). This is dominated by request
+  startup and is NOT representative of batch throughput.
+
+RESULTS (46 answers per variant)
+--------------------------------
+Model / variant   Score        Pct     Wall clock   Tokens   tok/s   Trunc
+Gyro-S medium     46/46        100%    33.9 s       2970     87.5    0
+Gyro-S xhigh      44/46        95.7%   82.9 s       6559     79.2    0
+Ink Q2_K_XL med   45/46        97.8%   65.4 s       9254     141.4   0
+Ink Q2_K_XL xhigh 39/46        84.8%   196.3 s      27217    138.7   1
+
+Wrong answers:
+- Gyro-S medium: none.
+- Gyro-S xhigh: #17 snail -> 7 days (correct 8), #22 look-and-say ->
+  311221 (correct 312211).
+- Ink medium: #20 5 machines -> '1 minut' (correct 5).
+- Ink xhigh: problems 17-23 came back empty (finish_reason=length, one
+  truncation) after the batch exhausted its 16384-token budget in reasoning.
+
+INTERPRETATION
+--------------
+Gyro-S is NOT faster per generated token: ink sustains ~138-141 tok/s while
+gyro manages ~79-87 tok/s. Gyro reaches a final answer sooner on this set
+only because it thinks much less: 2970 vs 9254 tokens at medium and
+6559 vs 27217 at xhigh. The 1.9x / 2.4x wall-clock advantage is therefore
+specific to short reasoning questions and must not be generalised.
+
+Gyro-S medium was perfect and gyro xhigh got worse (44/46), so more thinking
+did not help it here. Ink Q2_K_XL xhigh suffered an empty batch, which both
+inflates its time and costs 7 answers. The earlier four-run ink benchmark
+reported xhigh 92/92 with no truncation, but was measured on a different
+artifact (likely UD-IQ1_M); the artifact matters.
+
+For tool-heavy work the published agentic comparison in README.md is the
+relevant one: Inkling after fix 298.6 s for 98 tasks vs Gyro-S 4663.5 s,
+i.e. ink is roughly 15x faster. On agentic workloads gyro is much slower.
+
+SYSTEM STATE AFTER TEST
+-----------------------
+Panda Engine restored to Inkling Q2_K_XL; router on 8080 points to 8181;
+ninfer-serve.exe running on 8181. The state backup is kept at
+state.json.bak-before-gyro-test.
+
+RAW DATA
+--------
+results/results_gyro_vs_ink_23tasks.json
+
+REPRODUCE
+---------
+1. Select the model in Panda Engine (S / model number), confirm /v1/models.
+2. Run benchmarks/scripts/gyro_vs_ink.ps1 with the reported model id.
+3. Switch Panda back and run it again for the other model.
