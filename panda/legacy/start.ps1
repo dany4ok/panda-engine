@@ -7,6 +7,13 @@ $ErrorActionPreference = 'Continue'
 try { $Host.UI.RawUI.WindowTitle = 'Inkling 2 Mini - NInfer' } catch {}
 
 $Root       = Split-Path -Parent $MyInvocation.MyCommand.Definition
+if (-not (Test-Path -LiteralPath (Join-Path $Root 'config.json'))) {
+    $parentRoot = Split-Path -Parent $Root
+    if (-not (Test-Path -LiteralPath (Join-Path $parentRoot 'config.json'))) {
+        $parentRoot = Split-Path -Parent $parentRoot
+    }
+    if (Test-Path -LiteralPath (Join-Path $parentRoot 'config.json')) { $Root = $parentRoot }
+}
 $ConfigPath = Join-Path $Root 'config.json'
 $LogDir     = Join-Path $Root 'logs'
 $RunDir     = Join-Path $Root 'run'
