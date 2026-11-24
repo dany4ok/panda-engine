@@ -164,3 +164,17 @@ try {
 } catch {
   'LIMIT reps=12500 REJECTED detail=$($_.ErrorDetails.Message)'
 }
+
+# --- method 7: all 23 problems in one prompt, 3 passes for xhigh ---
+$allQs = ($problems | ForEach-Object { "$($_.n)) $($_.q)" }) -join "`n"
+foreach ($pass in 1..3) {
+  $messages = @(@{role='system';content=$sys}, @{role='user';content="Raspunde la fiecare. O linie per raspuns, format N) raspuns.`n$allQs"})
+  try {
+    $x = Invoke-Chat 'xhigh' $messages $MaxTokens
+    $rea = 0; if ($x.usage.completion_tokens_details) { $rea = $x.usage.completion_tokens_details.reasoning_tokens }
+    'RUNAWAY xhigh pass={0} OUT={1} REASON={2} FIN={3} MS={4} CONTENT_EMPTY={5}' -f `
+      $pass, $x.usage.completion_tokens, $rea, $x.choice.finish_reason, $x.ms, ([string]::IsNullOrWhiteSpace([string]$x.choice.message.content))
+  } catch {
+    'RUNAWAY xhigh pass={0} ERR={1}' -f $pass, $_.Exception.Message
+  }
+}

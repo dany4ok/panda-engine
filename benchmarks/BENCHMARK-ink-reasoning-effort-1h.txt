@@ -28,6 +28,8 @@ METHOD
    marti+100) with max_tokens=6144 vs 16384.
 6. Prefill measurement at 12k / 42k / 84k / 129k tokens, plus a rejected
    request at 12500 repetitions to confirm the 131072-token engine limit.
+7. Runaway probe: all 23 problems in one prompt at max_tokens=16384,
+   3 passes for xhigh, to reproduce the empty-reply failure.
 
 ACCURACY (4 runs, 92 answers per variant)
 -----------------------------------------
@@ -62,8 +64,10 @@ SPEED
 Decode throughput is flat across variants: ~140 tok/s.
 Prompt processing (prefill): ~3.3-3.9k tok/s (84k tokens in 25.1 s,
 42k in 11.6 s, 129k in 33.4 s).
-Prompt caching works: the identical 129652-token prompt dropped from
-~45-50 s cold to ~7.0 s with 129651 cached tokens.
+Prompt caching works: the identical 129652-token prompt took ~45-50 s on a
+cold prefix for low, medium, high and xhigh, and 7.0 s with 129651 cached
+tokens for max. max was not measured cold, so no cold-vs-warm comparison
+is claimed for it.
 
 LOOPS / RUNAWAY
 ---------------
@@ -72,9 +76,9 @@ zero duplicates. No infinite loops on repetitive tasks.
 Some repetition in reasoning was observed (29 repeated 12-word shingles for
 high, 10 for xhigh in one run) but did not degenerate.
 The real risk is reasoning runaway: on a single prompt containing all 23
-problems, xhigh hit the 16384-token cap with empty content in 2 out of 3
-runs; high did the same once in 12 batches. With batches of <=8 problems,
-xhigh had zero truncations.
+problems (METHOD 7), xhigh hit the 16384-token cap with empty content in
+2 out of 3 passes; high did the same once in its 12 accuracy batches. With
+batches of <=8 problems, xhigh had zero truncations.
 
 OUTPUT-CAP FOOTGUN (confirmed)
 ------------------------------
@@ -90,7 +94,8 @@ produces an empty reply.
 Engine limit is 131072 tokens (declared and enforced). A prompt of 12500
 repetitions was rejected with context_length_exceeded.
 129652 tokens accepted; the needle at ~50% depth was retrieved by all five
-variants (5/5) in ~45-50 s cold, ~7 s with a warm prefix cache.
+variants (5/5). Cold latency was ~45-50 s for low, medium, high and xhigh;
+max was measured only on a warm prefix (7.0 s, 129651 cached tokens).
 128k is functional, not merely declared.
 
 RAW CLEAN-RUN LOG
@@ -127,7 +132,8 @@ LIMITATIONS
 Regex-based grading on 23 problems; a single engine build and flag set;
 no temperature override; one machine. The high runaway and the xhigh
 batching failure were each observed once/twice, so they are risks rather
-than deterministic per-prompt behaviour.
+than deterministic per-prompt behaviour. max cold needle latency was not
+measured; the per-run split of the 4 accuracy runs was not kept.
 
 RAW DATA
 --------

@@ -15,8 +15,8 @@
     "problems": 23,
     "batch_sizes": [8, 8, 7],
     "variants": {
-      "low":    {"score": "89/92", "pct": 96.7, "tok_per_answer": 108, "reason_per_answer": 101, "wall_ms_per_batch": 5896, "tok_per_s": 140.0, "truncations": 0},
-      "medium": {"score": "90/92", "pct": 97.8, "tok_per_answer": 201, "reason_per_answer": 195, "wall_ms_per_batch": 10964, "tok_per_s": 140.1, "truncations": 0},
+      "low":    {"score": "89/92", "pct": 96.7, "tok_per_answer": 108, "reason_per_answer": 101, "wall_ms_per_batch": 5896, "tok_per_s": 140.1, "truncations": 0},
+      "medium": {"score": "90/92", "pct": 97.8, "tok_per_answer": 201, "reason_per_answer": 195, "wall_ms_per_batch": 10964, "tok_per_s": 140.5, "truncations": 0},
       "high":   {"score": "84/92", "pct": 91.3, "tok_per_answer": 422, "reason_per_answer": 415, "wall_ms_per_batch": 23306, "tok_per_s": 138.7, "truncations": 1},
       "xhigh":  {"score": "92/92", "pct": 100.0, "tok_per_answer": 345, "reason_per_answer": 339, "wall_ms_per_batch": 18909, "tok_per_s": 140.0, "truncations": 0},
       "max":    {"score": "89/92", "pct": 96.7, "tok_per_answer": 485, "reason_per_answer": 478, "wall_ms_per_batch": 26764, "tok_per_s": 138.9, "truncations": 0}
@@ -50,6 +50,11 @@
     "problem_set": "dedicated 10 problems, photo riddle is #4",
     "cap_6144": {"xhigh": {"out": 6144, "reasoning": 6142, "finish": "length", "empty": true}, "max": {"out": 6144, "reasoning": 6142, "finish": "length", "empty": true}},
     "cap_16384": {"xhigh": {"score": "10/10", "out": 6314, "reasoning": 6255, "finish": "stop"}, "max": {"score": "9/10", "out": 2669, "reasoning": 2607, "finish": "stop", "wrong_problem": "photo riddle called a daughter instead of a son"}}
+  },
+  "runaway_all23_xhigh": {
+    "passes": 3,
+    "empty_replies": 2,
+    "max_tokens": 16384
   },
   "context_limit_check": {
     "rejected": "12500 repetitions of the filler sentence",
