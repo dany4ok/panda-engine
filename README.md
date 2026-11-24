@@ -8,7 +8,7 @@ Public snapshot of the local setup we built and benchmarked on an **RTX 5070 Ti 
 - `start.ps1`, `START.bat` — interactive launcher for the NInfer engine (128k context, vision, DSpark off, 10-minute rolling t/s stats, watchdog that stops the server when the terminal closes).
 - `START-MINI.bat` — starts the MiniCPM fallback server (set `POLY_DIR` to your Poly-strata install; default here is the original machine path).
 - `bench.ps1`, `run/metrics-sampler.ps1` — benchmark and live `/metrics` sampler.
-- `config.json`, `config/opencode.json` — engine settings and the OpenCode provider/model entries. `config/opencode.json` is the working config with two adaptations for reuse: `instructions` points at the bundled `AGENT_RULES.md` instead of an absolute path, and the `plugins/agent-journal` entry is now backed by the `plugins/` folder in this repo.
+- `config.json`, `config/opencode.json` — engine settings and the OpenCode provider/model entries. `config/opencode.json` is the working config with three adaptations for reuse: `instructions` points at the bundled `AGENT_RULES.md` instead of an absolute path, the `plugins/agent-journal` entry is backed by the `plugins/` folder in this repo, and `agents.reviewer.model` is pinned to `ninfer/inkling-2-mini` as in the live config.
 - `AGENT_RULES.md` — agent instructions used in the project config.
 - `logs/tool-fix-evidence.txt`, `logs/final-task-evidence.txt`, `logs/bench-results.txt` — root-cause write-up and measurements.
 - `benchmarks/` — harness docs and scripts, reports, validation fixtures, capture evidence, and **all** `eval.json` / `metrics.json` results from the A–F comparison. Raw `events.jsonl` transcripts are intentionally **not** included: they are ~6 MB of degenerate garbage loops and full dumps of local files, with no benchmark value. The marker evidence is summarised in `logs/tool-fix-evidence.txt`.
@@ -36,7 +36,7 @@ Per-task results are in `benchmarks/results/`. A–F per-task breakdown is in `l
 
 **Provenance of the totals:** a total is the sum of the six per-task times shown in the table, each rounded to 0.1 s from `wall_ms` in `metrics.json` — `results/inkling_ninfer/` (7,5+13,3+10,6+356,9+7,0+293,0 = 688,3 s; raw ms sum 688452), `results/fixfinal/` with task E from `results/fixE2/` (58,5+34,5+47,8+56,8+42,8+58,2 = 298,6 s; raw ms sum 298663), `results/finalmini/` (26,2+38,2+47,0+180,8+49,7+45,6 = 387,5 s; raw ms sum 387555). The 4663,5 s Gyro-S figure comes from `benchmarks/RAPORT_FINAL_BATCH2.txt`. The 34/98 figure comes from `logs/tool-fix-evidence.txt`; ~150 t/s from `logs/bench-results.txt`. The 8 raw markers before the fix are the sum of per-task counts in the pre-fix transcripts: A 1, B 1, C 1, D 3, E 1, F 1 (those transcripts are excluded from this repo; the post-fix zero-marker counts are recorded in `logs/tool-fix-evidence.txt:17-22`).
 
-**Reproducibility limits:** the totals above are recomputable from published `metrics.json`. Figures derived from artifacts listed under *Not included* — 34/98, the 8 pre-fix marker breakdown, the ~1689 s visual-verification normalization and the resulting ~7,6x ratio — are historical claims reported in `benchmarks/RAPORT_FINAL*.txt` and `logs/tool-fix-evidence.txt`; they cannot be recomputed from this repo.
+**Reproducibility limits:** the totals above and the 34/98 pass count are recomputable from published files (`metrics.json` and `benchmarks/results/inkling_ninfer/**/eval.json`). Figures derived from artifacts listed under *Not included* — the 8 pre-fix marker breakdown, the ~1689 s visual-verification normalization and the resulting ~7,6x ratio — are historical claims reported in `benchmarks/RAPORT_FINAL*.txt` and `logs/tool-fix-evidence.txt`; they cannot be recomputed from this repo.
 
 ## Not included (too large / machine-specific)
 
@@ -48,7 +48,7 @@ Per-task results are in `benchmarks/results/`. A–F per-task breakdown is in `l
 - `events.jsonl` event streams, evaluated `work/` directories and per-probe PNG captures — excluded because they contain degenerate loops, local file paths/dumps and large binary output. Reports that cite them are kept verbatim as historical records, with an explicit note wherever a figure is no longer reproducible.
 - The 23 timestamped `opencode.json.bak-*` backups and the machine-level `~/.config/opencode/AGENTS.md`. The published `config/opencode.json` is a portable snapshot of the working configuration (penalties 0, `reasoning_effort: low`); the live value of `reasoning_effort` is a user preference and may differ.
 
-Some files in `benchmarks/` still contain absolute paths from the original machine (notably `HARNESS.md`); adapt them if you reuse the harness. API keys in `config/opencode.json` are placeholders (`*-local-token`), not real secrets.
+Some files in `benchmarks/` still contain absolute paths from the original machine (notably `HARNESS.md`), and `panda/catalog.json` plus `panda/settings/` use the original machine's paths — adapt them if you reuse the harness or Panda Engine on another PC. API keys in `config/opencode.json` are placeholders (`*-local-token`), not real secrets.
 
 ## Reproduce
 

@@ -172,7 +172,11 @@ function Ensure-Model($m) {
                 try { Invoke-Download $f.url (Join-Path $base $f.target) | Out-Null }
                 catch { Write-Host ("  ERROR: " + $_.Exception.Message); return $false }
             }
-            Write-Host '  NOTE: the Strata pack/tokenizer in PolyStrata-data must exist; the server config is reused from the current setup.'
+            if (-not (Test-Model $m)) {
+                Write-Host '  ERROR: MiniCPM runtime is incomplete. Need the Poly-strata install with .venv\Scripts\python.exe, serve\server.py, strata-minicpmv-q4_k_m.json, and the expert profile + tokenizer in PolyStrata-data.'
+                Write-Host '  See panda/README.md. The model is NOT marked installed.'
+                return $false
+            }
             return $true
         }
         'gyro' {

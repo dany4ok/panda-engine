@@ -22,8 +22,8 @@ Double-click `START-PANDA.bat` in the repository root.
 
 - **NInfer engine** — latest Windows CUDA 13.4 release from `iamwavecut/ninfer-all`, multi-part `.7z` assembled and extracted into `ninfer/` (7-Zip required; a manual extraction path is printed if absent).
 - **Inkling models** — `WaveCut/Inkling-2-Mini-UD-IQ1_M-NInfer-v3` and `WaveCut/Inkling-2-Mini-UD-Q2_K_XL-NInfer-v3` on Hugging Face, stored in `models/`.
-- **MiniCPM** — `openbmb/MiniCPM-V-4.7-35B-A3B-gguf`: the Q4_K_M GGUF and mmproj into `PolyStrata-data/models/minicpmv-Q4_K_M/`. The Strata pack/tokenizer and `strata-minicpmv-q4_k_m.json` are reused from the existing Poly-strata install.
-- **Gyro-S** — Strata desktop must already be installed; the model itself is downloaded by Strata on first load via the existing `load-gyro-s.ps1` loader. Because it is fetched on demand, Gyro is not recorded in the launcher's `downloaded` list.
+- **MiniCPM** — `openbmb/MiniCPM-V-4.7-35B-A3B-gguf`: the Q4_K_M GGUF and mmproj into `PolyStrata-data/models/minicpmv-Q4_K_M/`. The rest of the runtime (`.venv`, `serve/server.py`, `engine-poly`, expert profile, tokenizer) must come from an existing Poly-strata install; the server config is snapshotted at `panda/settings/strata-minicpmv-q4_k_m.json` with the original machine's paths and must be adapted on another PC. The launcher refuses to mark MiniCPM as installed unless that runtime is present.
+- **Gyro-S** — Strata desktop must already be installed; the model itself is downloaded by Strata on first load via the loader. The loader is snapshotted at `panda/settings/load-gyro-s.ps1` (with the original machine's paths) and uses `multiple=false`, `vision=yes` on port 47831. Because the model is fetched on demand, Gyro is not recorded in the launcher's `downloaded` list.
 
 When the current Inkling/Poly-strata/Strata installs are present, the launcher detects and reuses them (junctions for `ninfer/` and `models/`) instead of downloading again.
 
@@ -43,4 +43,5 @@ Only one engine can hold port 8080, so starting one model stops the previous ser
 
 - `panda/panda.ps1` — menu, download/state logic, start/stop orchestration.
 - `panda/catalog.json` — model URLs, engine paths and setting values.
+- `panda/settings/` — snapshots of `strata-minicpmv-q4_k_m.json` and `load-gyro-s.ps1`, the exact server/loader settings used on this machine.
 - `START-PANDA.bat` — double-click entry point.
