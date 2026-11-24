@@ -1,0 +1,66 @@
+Panda Engine - all 7 models: decode and prefill speed at configured context
+Date: 2026-11-24
+Hardware: RTX 5070 Ti 16 GB (14.9 GiB free at test start), 23.3 GiB free RAM
+Context: 131072 for every model, exactly as set in config.json and the
+         two Poly-strata server configs. NOT changed for this run.
+Method: one model at a time, started with the same flags Panda Engine uses.
+        Health-polled, then a single /v1/chat/completions request with the
+        same ~430-470 token ASCII prompt, max_tokens=128.
+        gen = timings.predicted_per_second, read = timings.prompt_per_second
+        (decode and prefill tok/s reported by the engine itself).
+        Hard cap: 60 s per model, including engine startup.
+
+RESULTS
+-------
+Model                         Status    gen tok/s   read tok/s   tokens  prompt
+inkling-iq1m   (IQ1_M)        OK            150.5       2633.3      128      467
+inkling-q2kxl  (Q2_K_XL)      OK            145.0       2451.3      128      467
+inkling-q3kxl  (Q3_K_XL)      FAIL             -            -        -        -
+inkling-iq4xs  (IQ4_XS)       FAIL             -            -        -        -
+inkling-apex   (APEX V2.1)    FAIL             -            -        -        -
+minicpm-q4km   (MiniCPM 35B)  OK             98.4        178.5      128      429
+gyro-s         (Gyro-S)       OK             81.3        305.5      128      471
+
+ENGINE FLAGS (unchanged)
+------------------------
+Inkling: --model-id inkling-2-mini --max-context 131072 --kv-capacity 131072
+         --expert-residency device --vision --spec none
+         --reasoning-loop conclude --presence-penalty 0 --frequency-penalty 0
+         --structured-output --host 127.0.0.1 --port 8181
+MiniCPM: serve\server.py --engine strata --config strata-minicpmv-q4_k_m.json --port 8182
+Gyro-S:  serve\server.py --engine strata --config strata-gyro-s.json --port 8183
+
+WHY THE THREE INKLING QUANTS FAIL
+---------------------------------
+Not corrupt artifacts: weights load successfully (Q3_K_XL 13.0 GiB in 4.5 s,
+IQ4_XS 15.0 GiB in 5.9 s, APEX 12.4 GiB in 5.1 s). Startup then aborts in
+"initializing runtime":
+
+  Inkling 2: the KV caches, histories, checkpoints and drafter state of 1
+  sequence(s) of 131072 tokens need 2530 MiB beside 512 MiB for the workspace
+  and CUDA graphs, and 1115/0/1537 MiB are free after the weights; lower
+  --max-concurrency or --max-context
+
+Free VRAM after weights: Q3_K_XL 1115 MiB, IQ4_XS 0 MiB, APEX 1537 MiB.
+Required: 2530 MiB KV + 512 MiB workspace = 3042 MiB. Context was deliberately
+NOT lowered for this benchmark. Log files (panda engine\logs):
+  final-20261124-163647-inkling-q3kxl.err.log
+  final-20261124-163647-inkling-iq4xs.err.log
+  final-20261124-163647-inkling-apex.err.log
+
+A separate exploratory run (not part of these results, context changed) showed
+these three quants do answer with host expert residency at 131072 context:
+  iq4xs host: gen 54.3 t/s, read 656.9 t/s
+  q3kxl host: gen 66.4 t/s, read 1090.7 t/s
+  apex  host: gen 68.6 t/s, read 1317.5 t/s
+They were removed from this PC afterwards; their artifacts can be re-downloaded
+from the URLs in panda/catalog.json.
+
+NOTES
+-----
+- The [OK] markers in the Panda Engine menu mean "artifact installed", not
+  "engine starts". Only 4 of the 7 catalog models actually served requests.
+- Fastest at generation: inkling-iq1m (~150 t/s). Fastest at prefill:
+  inkling-iq1m (~2633 t/s). Slowest that works: gyro-s (~81 t/s gen).
+- Every backend was stopped after its test; the Panda API router on 8080 was
+  left untouched.
