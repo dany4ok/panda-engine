@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-24",
+  "pass": "preliminary, single run per task",
+  "language": "Python",
+  "grading": "executable hidden test cases",
+  "sets": {
+    "A": {"tasks": 8, "cases": 41, "description": "6 implementations + 2 bug fixes"},
+    "B": {"tasks": 7, "cases": 34, "description": "harder algorithms + subtle bugs"},
+    "C": {"tasks": 6, "description": "OK/BUG review classification, exact match"}
+  },
+  "results": {
+    "ink_low":    {"A": "8/8", "B": "6/7", "B_cases": "32/34", "C": "5/6", "total_ms": 35200, "tok_per_s": 140.1},
+    "ink_medium": {"A": "8/8", "B": "6/7", "B_cases": "32/34", "C": "5/6", "total_ms": 46700, "tok_per_s": 140.8},
+    "ink_xhigh":  {"A": "8/8", "B": "6/7", "B_cases": "32/34", "C": "5/6", "total_ms": 79400, "tok_per_s": 142.2},
+    "ink_max":    {"A": "8/8", "B": "5/7", "B_cases": "28/34", "C": "5/6", "total_ms": 64900, "tok_per_s": 141.9},
+    "gyro_medium":{"A": "8/8", "B": "6/7", "B_cases": "32/34", "C": "5/6", "total_ms": 50200, "tok_per_s": 75.6}
+  },
+  "shared_failures": ["mutable default argument items=[]", "recursive f(n)=n*f(n-2) classified as OK"],
+  "conclusion": "No accuracy advantage for gyro or for higher reasoning; ink low is fastest with equal score."
+}

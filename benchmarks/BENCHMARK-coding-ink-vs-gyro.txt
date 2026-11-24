@@ -1,0 +1,53 @@
+Coding benchmark - Inkling 2 Mini (low/medium/xhigh/max) vs Gyro-S (medium)
+Date: 2026-11-24
+Preliminary pass: one run per task. An extended multi-run pass follows in
+a separate report. Gyro-S was tested ONLY at medium, as requested.
+
+METHOD
+------
+Python coding tasks, graded by execution rather than by model self-report:
+generated code is written to a temporary module and run against hidden test
+cases. A task passes only if every case passes.
+- Set A: 8 tasks (6 implementations + 2 bug fixes), 41 cases.
+- Set B: 7 harder tasks (IPv4 validation, flatten, Kadane, Roman numerals,
+  merge intervals, mutable default argument, list mutation during iteration),
+  34 cases.
+- Set C: 6 code snippets classified OK/BUG with exact-match grading, used as
+  a reviewer/check probe.
+- One request per task, max_tokens=8192, no temperature override.
+
+RESULTS (single run)
+--------------------
+Model / effort  Set A      Set B       Set C     Wall clock   tok/s
+ink low         8/8        6/7 (32/34) 5/6       35.2 s       ~140
+ink medium      8/8        6/7 (32/34) 5/6       46.7 s       ~141
+ink xhigh       8/8        6/7 (32/34) 5/6       79.4 s       ~142
+ink max         8/8        5/7 (28/34) 5/6       64.9 s       ~142
+gyro medium     8/8        6/7 (32/34) 5/6       50.2 s       ~71-80
+
+Wall clock is the sum over all three sets.
+
+FINDINGS
+--------
+- Set A was solved perfectly by all five combinations: no differentiation.
+- Set B: gyro medium matched ink low/medium/xhigh at 6/7. Ink max was worse
+  at 5/7 (it failed Roman numeral conversion). The shared failure is the
+  mutable default argument `items=[]`, missed by all five.
+- Set C: all five scored 5/6 and all shared the same blind spot - they
+  classified `f(n) = n * f(n-2)` as OK instead of BUG.
+- Higher reasoning produced NO accuracy gain. xhigh cost 2.3x the time of
+  low for an identical score; max was both slower and less accurate.
+- Gyro medium showed no coding or review advantage over ink low/medium.
+  It generates fewer tokens (~75 tok/s vs ~140) but its wall clock lands
+  around ink medium, not below ink low.
+
+LIMITATIONS
+-----------
+Single run per task, small sample (21 tasks), short functions. This pass
+measures whether a difference exists; the extended pass measures it with
+repeated runs and more tasks.
+
+REPRODUCE
+---------
+See benchmarks/scripts/codebench_*.py / .ps1. Select the model in Panda
+Engine first and confirm GET /v1/models.
