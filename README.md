@@ -26,14 +26,14 @@ Result: **98/98** tasks, zero raw markers. Full detail in `logs/tool-fix-evidenc
 
 | Model | Tasks | Total time | Raw tool markers |
 |---|---:|---:|---:|
-| Inkling NInfer before fix | 34/98 | 688,5 s | 8 |
+| Inkling NInfer before fix | 34/98 | 688,3 s | 8 |
 | **Inkling NInfer after fix** | **98/98** | **298,6 s** | **0** |
 | MiniCPM-V 4.7 35B A3B | 98/98 | 387,5 s | 0 |
 | Gyro-S | 98/98 | 4663,5 s | 0 |
 
 Per-task results are in `benchmarks/results/`. A–F per-task breakdown is in `logs/tool-fix-evidence.txt`.
 
-**Provenance of the totals:** each total is the sum of `wall_ms` in `metrics.json` for the corresponding batch — `results/inkling_ninfer/` (688452 ms → 688,5 s), `results/fixfinal/` with task E from `results/fixE2/` (298663 ms → 298,6 s), `results/finalmini/` (387555 ms → 387,5 s). The 4663,5 s Gyro-S figure comes from `benchmarks/RAPORT_FINAL_BATCH2.txt`. The 34/98 figure comes from `logs/tool-fix-evidence.txt`; ~150 t/s from `logs/bench-results.txt`. The 8 raw markers before the fix are the sum of per-task counts in the pre-fix transcripts: A 1, B 1, C 1, D 3, E 1, F 1 (those transcripts are excluded from this repo; the post-fix zero-marker counts are recorded in `logs/tool-fix-evidence.txt:17-22`).
+**Provenance of the totals:** a total is the sum of the six per-task times shown in the table, each rounded to 0.1 s from `wall_ms` in `metrics.json` — `results/inkling_ninfer/` (7,5+13,3+10,6+356,9+7,0+293,0 = 688,3 s; raw ms sum 688452), `results/fixfinal/` with task E from `results/fixE2/` (58,5+34,5+47,8+56,8+42,8+58,2 = 298,6 s; raw ms sum 298663), `results/finalmini/` (26,2+38,2+47,0+180,8+49,7+45,6 = 387,5 s; raw ms sum 387555). The 4663,5 s Gyro-S figure comes from `benchmarks/RAPORT_FINAL_BATCH2.txt`. The 34/98 figure comes from `logs/tool-fix-evidence.txt`; ~150 t/s from `logs/bench-results.txt`. The 8 raw markers before the fix are the sum of per-task counts in the pre-fix transcripts: A 1, B 1, C 1, D 3, E 1, F 1 (those transcripts are excluded from this repo; the post-fix zero-marker counts are recorded in `logs/tool-fix-evidence.txt:17-22`).
 
 ## Not included (too large)
 
