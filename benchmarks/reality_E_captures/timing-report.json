@@ -1,0 +1,120 @@
+{
+  "errs": [],
+  "before": {
+    "t": 225,
+    "mode": "idle",
+    "hurtUntil": 0,
+    "frame": "frame0(idle)"
+  },
+  "justAfter": {
+    "t": 268,
+    "mode": "hurt",
+    "hurtUntil": 566,
+    "frame": "frame0(idle)"
+  },
+  "samples": [
+    {
+      "t": 268,
+      "mode": "hurt",
+      "hurtUntil": 566,
+      "frame": "frame0(idle)"
+    },
+    {
+      "t": 300,
+      "mode": "hurt",
+      "hurtUntil": 566,
+      "frame": "frame3(hurt)"
+    },
+    {
+      "t": 331,
+      "mode": "hurt",
+      "hurtUntil": 566,
+      "frame": "frame3(hurt)"
+    },
+    {
+      "t": 363,
+      "mode": "hurt",
+      "hurtUntil": 566,
+      "frame": "frame3(hurt)"
+    },
+    {
+      "t": 394,
+      "mode": "hurt",
+      "hurtUntil": 566,
+      "frame": "frame3(hurt)"
+    },
+    {
+      "t": 425,
+      "mode": "hurt",
+      "hurtUntil": 566,
+      "frame": "frame3(hurt)"
+    },
+    {
+      "t": 456,
+      "mode": "hurt",
+      "hurtUntil": 566,
+      "frame": "frame3(hurt)"
+    },
+    {
+      "t": 486,
+      "mode": "hurt",
+      "hurtUntil": 566,
+      "frame": "frame3(hurt)"
+    },
+    {
+      "t": 517,
+      "mode": "hurt",
+      "hurtUntil": 566,
+      "frame": "frame3(hurt)"
+    },
+    {
+      "t": 548,
+      "mode": "hurt",
+      "hurtUntil": 566,
+      "frame": "frame3(hurt)"
+    },
+    {
+      "t": 579,
+      "mode": "hurt",
+      "hurtUntil": 566,
+      "frame": "frame3(hurt)"
+    },
+    {
+      "t": 609,
+      "mode": "idle",
+      "hurtUntil": 566,
+      "frame": "frame0(idle)"
+    }
+  ],
+  "released": {
+    "t": 609,
+    "mode": "idle",
+    "hurtUntil": 566,
+    "frame": "frame0(idle)"
+  },
+  "frame3FirstMs": 74,
+  "runState": {
+    "t": 884,
+    "mode": "run",
+    "hurtUntil": 566,
+    "frame": "frame2(run-left)"
+  },
+  "hurtOverRun": {
+    "t": 920,
+    "mode": "hurt",
+    "hurtUntil": 1214,
+    "frame": "frame2(run-left)"
+  },
+  "runClickDuringHurt": {
+    "t": 950,
+    "mode": "hurt",
+    "hurtUntil": 1214,
+    "frame": "frame3(hurt)"
+  },
+  "afterHurt": {
+    "t": 1301,
+    "mode": "idle",
+    "hurtUntil": 1214,
+    "frame": "frame0(idle)"
+  }
+}

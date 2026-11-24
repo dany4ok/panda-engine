@@ -1,0 +1,41 @@
+DISCLOSURE: EVALUATOR TIMELINE AND HASHES (post-run audit)
+=====================================================================
+Data audit: 2026-11-22
+
+Fapt: evaluatorii NU au fost complet "inghetati" inainte de rularea probelor.
+Ultima proba (Mini F) s-a incheiat la 04:01:18 local (din timestampurile
+evenimentelor). Doua evaluatoare au fost modificate DUPA aceea:
+
+  tasks/A_simple/evaluate.py   2026-11-22 04:02:03   (dupa ultima proba)
+  tasks/D_game/evaluate.py     2026-11-22 04:20:06   (dupa ultima proba)
+
+Celelalte au fost finale inainte de inceperea probelor:
+  B 19:54:50, C 19:55:25, E 20:27:06, F 20:32:28,
+  D/hidden_test.mjs 20:32:21, F/hidden_extra.py 20:28:56  (toate 11-21).
+
+Ce s-a schimbat efectiv:
+- A: incrementam `bugs_remaining` doar la exceptii; corectia adauga
+  incrementul si la valori gresite. Scorul per-check al sarcinii A este
+  IDENTIC inainte si dupa (Mini A 12/13, acelasi check `slugify_separators`
+  cu expected "a-b-c-d" / got "a_b-c-d"). S-a schimbat DOAR campul
+  `bugs_remaining` (0 -> 1), care e un rezultat determinist derivat.
+- D: modificarea a fost DOAR in sirul `notes` ("11 hidden mechanics checks"
+  -> "12 hidden mechanics checks"). Niciun check nu a fost adaugat, sters
+  sau rescris; D/eval.json are 12 mech_* + 8 visual_* = 20 in ambele versiuni.
+
+Prin urmare: afirmatia din HARNESS.md/01_harness_ready.txt conform careia
+"criteriile au fost fixate inainte de executie" este PREA PUTERNICA pentru
+A si D. O formulare corecta: "criteriile au fost fixate inainte; doua corectii
+post-rulare, documentate aici, au afectat doar un contor derivat si un sir
+de documentatie, NU rezultatele per-check". Acest lucru ramane o limitare
+a pre-registrarii, nu o dovada de manipulare.
+
+SHA256 (starea finala, verificata in audit):
+925be9d7aeb41b9b68ad41ab3f2236ce0e557ddb0763173310a3703bd48edb3d  A/evaluate.py
+119125846682499be6acf797753b50a4b973440bea1b9f7070c2c72da7a577e5  B/evaluate.py
+f3b9a50a813ca01ef025f4ab78f1a2b77cd4fdedae7ee2cf6607630c025f05a4  C/evaluate.py
+dc059226e10af35fa1d3ee7dbf816a072889714783f6fc75297128575d13179d  D/evaluate.py
+e1c10b4bb910e11ac8c683df7578adf2af95ba1dac37dfba8086d54ef7419f46  D/hidden_test.mjs
+a64358847c22efc125270ed6e421dfb4fec307707f3de739048fe3411c07f722  E/evaluate.py
+25ce06127f018f1f6493dd459951afef128a891aafd96edf14024fc982ac438a  F/evaluate.py
+57c538bb325ee0300d3cf2bdca99cb65d9e5b109e750b4929400a42d827e1e16  F/hidden_extra.py

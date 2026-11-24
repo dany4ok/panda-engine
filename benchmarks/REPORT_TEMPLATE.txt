@@ -1,0 +1,73 @@
+RAPORT FINAL A/B — Gyro-S (Strata) vs MiniCPM-V 4.7 35B A3B Q4_K_M (PolyStrata)
+Scop: model de baza (default) pentru uz zilnic in OpenCode.
+
+=====================================================================
+A. CONDITII (verificate inainte de executie)
+=====================================================================
+- Aceeasi cerinta pentru ambele modele: DA (REQUIREMENT.md per sarcina).
+- Aceeasi copie curata de start: DA (tasks/<X>/seed copiat in work).
+- Aceleasi instrumente si permisiuni: DA (CLI opencode run, --auto, --format json).
+- Sesiuni OpenCode reale cu agentul principal = modelul testat: DA.
+- Subagenti dezactivati in probe: NU (Gyro 28 apeluri, Mini 4 — izolare
+  incalcata, limitare confirmata). Verificare independenta dupa: DA, prin
+  evaluator determinist (nu subagenti).
+- Config global nemodificat: DA. Proiecte reale nemodificate: DA.
+- Un singur model local activ: DA (swap cu confirmare, VRAM inregistrat).
+- Ordine alternata intre loturi: [DA/NU - de completat]
+- Limita 90 min: [de completat]
+
+=====================================================================
+B. TABEL COMPARATIV
+=====================================================================
+(generat de scripts/build_report.py in REPORT_<batch>.txt)
+
+| Metrică | Gyro-S | MiniCPM | Δ% |
+|---|---|---|---|
+| Sarcini finalizate corect | | | |
+| Teste trecute | | | |
+| Buguri ramase | | | |
+| Buguri introduse | | | |
+| Durată totală | | | |
+| Durată până la rezultat corect | | | |
+| Viteză tokeni/s | | | |
+| Apeluri instrumente | | | |
+| Reparații necesare | | | |
+| Erori / bucle | | | |
+| Consum RAM/VRAM | | | |
+
+Diferente procentuale reale: [de completat]
+Separare: calitatea codului | viteza inferentei | eficienta agentului complet.
+
+=====================================================================
+C. DETALII PE SARCINI (A-F)
+=====================================================================
+A. Programare simpla ...... [rezultat + dovezi]
+B. Programare complexa .... [rezultat + dovezi]
+C. Debugging .............. [buguri reparate/6, buguri noi]
+D. Joc (Three.js) ......... [mecanici + captura]
+E. Assets/UI .............. [atlas identic, captura, limitare generare]
+F. Sarcina agent complexa . [autonomie, interventii, reparatii]
+
+=====================================================================
+D. VERDICT
+=====================================================================
+- Programare zilnica:
+- Jocuri:
+- Debugging:
+- Cel mai rapid pana la rezultat corect:
+- Cel mai autonom:
+- Cel mai fiabil pe sesiuni lungi:
+- Merita diferenta de timp?:
+
+RECOMANDARE MODEL DEFAULT: [un singur model]
+Daca diferenta de calitate nu e demonstrata suficient: recomanda modelul mai
+eficient si marcheaza verdictul calitatii ca PROVIZORIU.
+
+=====================================================================
+E. LIMITARI / RESPINS
+=====================================================================
+- Testul concurent care foloseste endpointul MiniCPM: nu s-a putut stabili daca
+  a fost intrerupt la swap (PID-uri de server oprite); marcat EVIDENTA LIPSESC.
+- ttft / time-in-tools pot fi n/a daca stream-ul JSON nu expune timestampuri.
+- Generare vizuala: asset identic folosit pentru ambele modele.
+- [alte limitari reale]

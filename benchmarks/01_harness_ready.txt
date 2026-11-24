@@ -1,0 +1,41 @@
+STATUS: INFRASTRUCTURA GATA — ASTEPT SEMNAL PENTRU EXECUTIE
+Data: 2026-11-21 20:35
+
+Ce e construit in C:\Users\x1p\AppData\Local\Temp\opencode\gyro-mini-bench\:
+- HARNESS.md — design, fairness controls, metrici, procedura de rulare.
+- config/mini.opencode.json — config local pentru MiniCPM (nu atinge configul global).
+- scripts/run_probe.ps1 — ruleaza o proba prin `opencode run --format json --auto`.
+- scripts/parse_events.js — parser tolerant pentru tokeni/tool calls/TTFT.
+- scripts/swap_model.ps1 — swap Gyro<->Mini cu -Force, cu timpi si VRAM inregistrati.
+- scripts/evaluate_all.ps1 — agregare evaluatori independenti.
+- scripts/build_report.py — tabel comparativ cu diferente % reale.
+- REPORT_TEMPLATE.txt — structura raportului final.
+- tasks/A_simple ... F_agent — 6 sarcini cu seed, cerinta identica si evaluator cu
+  teste ASCUNSE (criterii fixate inainte, cu doua corectii post-rulare
+  documentate in EVALUATOR_CHANGELOG.txt).
+
+VALIDARE (fara GPU, in _validation/):
+- Pentru fiecare sarcina, seed-ul nemodificat ESUEAZA, iar o solutie de referinta
+  trece 100%: A 13/13, B 14/14, C 15/15 (9/9 buguri), D 20/20, E 19/19, F 17/17.
+- build_report.py verificat cu date sintetice (12 probe, tabele si delta % corecte).
+- Au fost corectate 4 buguri reale ale harness-ului in timpul validarii:
+  maparea numelor de directoare, indexul in build_report, glob-ul de probe,
+  si asteptarea corecta a 2 cadre in sarcina D.
+
+STAREA TESTULUI CONCURRENT (la 20:35):
+- ab-bench are scrieri la 20:31-20:34 (chain_hy4_probe*, chain_mini_probe*).
+- GPU: 14416/16303 MiB folosit, util 58%.
+- Endpoint MiniCPM 8080: activ. Endpoint Gyro 47831: nu raspunde.
+=> Testul concurent ruleaza INCAA. Nu am oprit nimic, nu am trimis sarcini,
+nu am modificat configul global si nu am scris in ab-bench.
+
+URMATORUL PAS (la semnalul tau):
+1. swap_model.ps1 -Target gyro -Force   (elibereaza MiniCPM, incarca Gyro-S)
+2. 6 x run_probe.ps1 pentru strata/gyro-gyro-s
+3. swap_model.ps1 -Target mini -Force
+4. 6 x run_probe.ps1 pentru polystrata-mini/minicpm-v-4.7-35b-a3b-q4_k_m
+5. evaluate_all.ps1 + build_report.py + completarea verdictului
+
+Atentie la buget: au trecut ~60 min din cele 90; restul de ~30 min pot fi
+insuficiente pentru 12 run-uri + swap-uri. Daca vrei, putem reduce la un singur
+lot (6+6 probe) si/sau rula partial, pastrand rezultatele valide.

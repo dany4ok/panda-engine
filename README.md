@@ -5,12 +5,12 @@ Public snapshot of the local setup we built and benchmarked on an **RTX 5070 Ti 
 ## What this repo contains
 
 - `start.ps1`, `START.bat` — interactive launcher for the NInfer engine (128k context, vision, DSpark off, 10-minute rolling t/s stats, watchdog that stops the server when the terminal closes).
-- `START-MINI.bat` — starts the MiniCPM fallback server.
+- `START-MINI.bat` — starts the MiniCPM fallback server (set `POLY_DIR` to your Poly-strata install; default here is the original machine path).
 - `bench.ps1`, `run/metrics-sampler.ps1` — benchmark and live `/metrics` sampler.
-- `config.json`, `config/opencode.json` — engine settings and the OpenCode provider/model entries.
+- `config.json`, `config/opencode.json` — engine settings and the OpenCode provider/model entries. `config/opencode.json` is the working config with two adaptations for reuse: `instructions` points at the bundled `AGENT_RULES.md` instead of an absolute path, and the `plugins/agent-journal` entry is now backed by the `plugins/` folder in this repo.
 - `AGENT_RULES.md` — agent instructions used in the project config.
 - `logs/tool-fix-evidence.txt`, `logs/final-task-evidence.txt`, `logs/bench-results.txt` — root-cause write-up and measurements.
-- `benchmarks/` — harness docs, reports and **all** `eval.json` / `metrics.json` / `events.jsonl` results from the A–F comparison.
+- `benchmarks/` — harness docs and scripts, reports, validation fixtures, capture evidence, and **all** `eval.json` / `metrics.json` results from the A–F comparison. Raw `events.jsonl` transcripts are intentionally **not** included: they are ~6 MB of degenerate garbage loops and full dumps of local files, with no benchmark value. The marker evidence is summarised in `logs/tool-fix-evidence.txt`.
 
 ## The fix (short version)
 
@@ -33,6 +33,8 @@ Result: **98/98** tasks, zero raw markers. Full detail in `logs/tool-fix-evidenc
 
 Per-task results are in `benchmarks/results/`. A–F per-task breakdown is in `logs/tool-fix-evidence.txt`.
 
+**Provenance of the totals:** each total is the sum of `wall_ms` in `metrics.json` for the corresponding batch — `results/inkling_ninfer/` (688,3 s), `results/fixfinal/` with task E from `results/fixE2/` (298,6 s), `results/finalmini/` (387,5 s). The 4663,5 s Gyro-S figure comes from `benchmarks/RAPORT_FINAL_BATCH2.txt`. The 34/98 figure and marker counts come from `logs/tool-fix-evidence.txt`; ~150 t/s from `logs/bench-results.txt`.
+
 ## Not included (too large)
 
 - `ninfer/` engine binaries (~GBs) — download the release from `https://github.com/iamwavecut/ninfer-all/releases/tag/2026-11-23.10` (Windows CUDA 13.4 build).
@@ -41,12 +43,12 @@ Per-task results are in `benchmarks/results/`. A–F per-task breakdown is in `l
   - `WaveCut/Inkling-2-Mini-UD-Q2_K_XL-NInfer-v3`
   - `WaveCut/Qwen3.8-27B-GSQ-RCO-IQ3_S-NInfer-v3`
 
-Local absolute paths in the configs point to this machine; adapt them if you reuse the setup. API keys in `config/opencode.json` are placeholders (`*-local-token`), not real secrets.
+Some files in `benchmarks/` still contain absolute paths from the original machine (notably `HARNESS.md`); adapt them if you reuse the harness. API keys in `config/opencode.json` are placeholders (`*-local-token`), not real secrets.
 
 ## Reproduce
 
 1. Download the NInfer Windows CUDA 13.4 release and extract it into `ninfer/`.
 2. Download the GGUF/NInfer artifacts into `models/`.
-3. Copy `config/opencode.json` to `~/.config/opencode/opencode.json`.
+3. Copy `config/opencode.json` to `~/.config/opencode/opencode.json` and `AGENT_RULES.md` and `plugins/` next to it.
 4. Run `START.bat`, choose `1`, press Enter for defaults.
-5. Run the A–F probes from `gyro-mini-bench/scripts/run_probe.ps1` with `-Model ninfer/inkling-2-mini -NoSub`.
+5. Run the A–F probes with `benchmarks/scripts/run_probe.ps1` using `-Model ninfer/inkling-2-mini -NoSub`.

@@ -1,0 +1,105 @@
+{
+  "task": "D",
+  "checks": [
+    {
+      "name": "mech_xpNeeded_1",
+      "passed": false,
+      "error": "Error: TODO xpNeeded"
+    },
+    {
+      "name": "mech_xpNeeded_3",
+      "passed": false,
+      "error": "Error: TODO xpNeeded"
+    },
+    {
+      "name": "mech_gainXp_one",
+      "passed": false,
+      "error": "Error: TODO gainXp"
+    },
+    {
+      "name": "mech_gainXp_two",
+      "passed": false,
+      "error": "Error: TODO gainXp"
+    },
+    {
+      "name": "mech_takeDamage",
+      "passed": false,
+      "error": "Error: TODO takeDamage"
+    },
+    {
+      "name": "mech_enemy_move",
+      "passed": false,
+      "error": "Error: TODO Enemy.update"
+    },
+    {
+      "name": "mech_spawnWave",
+      "passed": false,
+      "error": "Error: TODO spawnWave"
+    },
+    {
+      "name": "mech_nearest",
+      "passed": false,
+      "error": "Error: TODO nearestEnemy"
+    },
+    {
+      "name": "mech_tryAttack",
+      "passed": false,
+      "error": "Error: TODO tryAttack"
+    },
+    {
+      "name": "mech_upgrades",
+      "passed": false,
+      "error": "Error: TODO applyUpgrade"
+    },
+    {
+      "name": "mech_game_wave",
+      "passed": false,
+      "error": "Error: TODO Game.update"
+    },
+    {
+      "name": "mech_game_kill_xp",
+      "passed": false,
+      "error": "Error: TODO Game.update"
+    },
+    {
+      "name": "visual_html_loads_scene",
+      "passed": true
+    },
+    {
+      "name": "visual_html_has_hud",
+      "passed": true
+    },
+    {
+      "name": "visual_scene_imports_three",
+      "passed": true
+    },
+    {
+      "name": "visual_scene_uses_game",
+      "passed": true
+    },
+    {
+      "name": "visual_scene_loop",
+      "passed": true
+    },
+    {
+      "name": "visual_scene_renders",
+      "passed": true
+    },
+    {
+      "name": "visual_scene_updates_hud",
+      "passed": false
+    },
+    {
+      "name": "visual_vendor_intact",
+      "passed": true
+    }
+  ],
+  "passed": 7,
+  "total": 20,
+  "score": 0.35,
+  "bugs_remaining": 12,
+  "bugs_new": 1,
+  "changed_files": [],
+  "new_files": [],
+  "notes": "11 hidden mechanics checks + 8 static rendering-wiring checks. Screenshot verification is performed separately and NOT implied by static checks."
+}

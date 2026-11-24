@@ -1,0 +1,77 @@
+{
+  "task": "C",
+  "checks": [
+    {
+      "name": "bug01_no_alias_init",
+      "passed": false
+    },
+    {
+      "name": "bug02_add_aggregates",
+      "passed": false
+    },
+    {
+      "name": "bug03_remove_by_value",
+      "passed": false
+    },
+    {
+      "name": "bug04_count_total_qty",
+      "passed": false
+    },
+    {
+      "name": "bug05_coupon_case_insensitive",
+      "passed": false,
+      "error": "bad coupon"
+    },
+    {
+      "name": "bug06_boundary_ge_100",
+      "passed": false
+    },
+    {
+      "name": "bug07_coupon_is_10pct",
+      "passed": false
+    },
+    {
+      "name": "bug08_clear_resets_coupon",
+      "passed": false
+    },
+    {
+      "name": "bug09_entries_copies",
+      "passed": false
+    },
+    {
+      "name": "reg_basic_add_remove_total",
+      "passed": true
+    },
+    {
+      "name": "reg_qty_validation",
+      "passed": true
+    },
+    {
+      "name": "reg_bad_coupon_raises",
+      "passed": true
+    },
+    {
+      "name": "reg_no_discount",
+      "passed": true
+    },
+    {
+      "name": "reg_remove_missing",
+      "passed": true
+    },
+    {
+      "name": "no_unexpected_files",
+      "passed": true,
+      "unexpected": []
+    }
+  ],
+  "passed": 6,
+  "total": 15,
+  "score": 0.4,
+  "bugs_remaining": 9,
+  "bugs_new": 0,
+  "planted_bugs_total": 9,
+  "planted_bugs_fixed": 0,
+  "changed_files": [],
+  "new_files": [],
+  "notes": "9 planted bugs (SPEC.md) + 5 regressions + file audit."
+}

@@ -1,5 +1,9 @@
 # HARNESS — Benchmark A/B: Gyro-S vs MiniCPM-V ca agent principal
 
+> NOTA pentru snapshotul public: `$root`/calea `C:\Users\x1p\AppData\Local\Temp\opencode\gyro-mini-bench`
+> de mai jos este specifica masinii originale. Adaptati-o la directorul in care ati copiat
+> acest repo (`benchmarks/`); scripturile harness-ului se afla in `benchmarks/scripts/`.
+
 Scope: 6 sarcini (A-F), aceeasi cerinta pentru ambele modele, sesiuni OpenCode reale
 prin CLI (`opencode run`), evaluare independenta determinista dupa executie.
 

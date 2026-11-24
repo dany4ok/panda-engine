@@ -1,0 +1,89 @@
+BENCHMARK A/B — Gyro-S vs MiniCPM-V (agent principal)
+RAPORT DE INVESTIGARE MEDIU / BLOCARE INITIALA
+Data: 2026-11-21 19:39 (ora locala)
+Model curent al acestei sesiuni: opencode/hy4-flash-free (NU este nici Gyro-S, nici MiniCPM)
+
+=====================================================================
+1. CE AM GASEBIT (dovezi din mediu, fara modificari)
+=====================================================================
+
+A) Endpoint-urile Locale
+  - Gyro-S:   strata -> http://127.0.0.1:47831/v1   (inregistrat GLOBAL in opencode.json)
+              modelID: gyro-gyro-s. In prezent endpointul NU raspunde la /v1/models.
+  - MiniCPM:  http://127.0.0.1:8080/v1 -> RASPUNDE.
+              GET /v1/models returns: "minicpm-v-4.7-35b-a3b-q4_k_m",
+              status "loaded", n_ctx 131072, input text+image.
+              Serverul este pornit de:
+                C:\Users\x1p\Desktop\Poly-strata\serve\server.py --engine strata
+                --config ...strata-minicpmv-q4_k_m.json --port 8080
+              Procese: strata-vision.exe (PID 8772), strata-poly.exe (PID 5588).
+
+B) MiniCPM NU este inregistrat in configul GLOBAL OpenCode
+  - providerul "polystrata" (8080) are un singur model: gemma-4-26b-a4b-qat-ud-q4_k_xl.
+  - Singura modalitate de a rula MiniCPM ca "main agent" intr-o sesiune OpenCode reala
+    este un config LOCAL de workspace. Exista deja unul in
+    C:\Users\x1p\AppData\Local\Temp\opencode\ab-bench\.opencode\opencode.json
+    cu providerul "polystrata-mini" si modelul minicpm-v-4.7-35b-a3b-q4_k_m.
+    (Acesta apartine celeilalte sesiuni de test.)
+
+C) MEMORIE / GPU — constrangere hardware confirmata
+  - GPU: NVIDIA RTX 5070 Ti, 16303 MiB total.
+  - La verificare: 15696 MiB folosit / 300 MiB liber, util 36-39%.
+  - nvidia-smi compute-apps: strata-vision.exe (8772) si strata-poly.exe (5588)
+    detin GPU-ul, impreuna cu OpenCode.exe (16876).
+  - Concluzie: NU se poate incarca Gyro-S fara a elibera VRAM-ul ocupat de MiniCPM.
+    Setup-ul celeilalte sesiuni (setup_and_start.ps1) oprea explicit procesoarele
+    care tineau modelul coder-iq1_m pentru a elibera VRAM inainte de a porni MiniCPM.
+    Deci modelul se schimba prin unload -> load, conform constrangerii din cerinta.
+
+D) TEST CONCURRENT ACTIV (exact cel despre care a avertizat utilizatorul)
+  - Workspace-ul C:\Users\x1p\AppData\Local\Temp\opencode\ab-bench este ACTIV.
+  - setup_and_start.ps1 (19:35:58) a copiat probele 1-3 si a pornit serverul MiniCPM.
+  - probe4/* si probe5/* au fost scrise la 19:37:58.
+  - _instr/review_probe*.md si _instr/rc_synth_probe*.md au fost scrise la 19:39:33.
+  - In acel moment se genereaza instructiuni pentru probe de reviewer/reality-checker.
+  - Sesiunea paralela din screenshot ("MiniCPM-V vs Hy4 Flash benchmark")
+    foloseste endpointul MiniCPM si, probabil, modelul Hy4 Flash (acest model).
+  - Oprirea serverului MiniCPM sau rularea unor sarcini suplimentare pe el ar
+    invalida masuratorile celeilalte sesiuni — exact ce cerinta interzice.
+
+=====================================================================
+2. BLOCARE
+=====================================================================
+Nu pot executa benchmarkul cerut in acest moment fara a incalca doua constrangeri
+ explicite din cerinta:
+  - "Nu opri procese care nu apartin benchmarkului" / avertismentul de conflict:
+    MiniCPM este in uz activ de celalalt test.
+  - "Pot rula un singur model AI local simultan" / "Descarca primul model inainte
+    sa-l incarci pe al doilea": GPU-ul e plin; Gyro-S nu poate fi incarcat fara
+    descarcarea lui MiniCPM, care ar intrerupe testul concurent.
+
+De asemenea:
+  - Nu pot modifica configul global OpenCode (interzis), iar MiniCPM nu e inregistrat
+    global. Configul local necesar exista deja, dar apartine workspace-ului concurent.
+  - Sunt Hy4 flash Free, deci nu pot fi "swappat" in propriul model; rolul meu e de
+    orchestrator/evaluator, nu de subiect (subiectii ceruti sunt Gyro-S si MiniCPM).
+
+=====================================================================
+3. CE NU AM FACUT (intentional)
+=====================================================================
+  - Nu am oprit niciun proces.
+  - Nu am modificat configul global sau local.
+  - Nu am scris in probele 1-5 si nici in _instr (workspace concurent).
+  - Nu am trimis nicio sarcina catre endpointul 8080.
+  - Nu am schimbat modelul sesiunii curente.
+
+=====================================================================
+4. OPTIUNI PENTRU UTILIZATOR
+=====================================================================
+  1. Astept ca testul concurent sa se termine, apoi rulez benchmarkul complet
+     (16 probe: 6 sarcini x 2 modele + repetari). Am nevoie de semnalul tau.
+  2. Opresti tu sesiunea/testul concurent, eliberezi GPU-ul, apoi preiau eu
+     si rulez benchmarkul complet.
+  3. Construiesc ACUM doar infrastructura (6 sarcini, fixtures, evaluator
+     independent, colector de metrici, sablon raport) fara sa ating GPU-ul,
+     iar rulelele le execut cand slotul e liber.
+  4. Rulesc in paralel pe endpointul MiniCPM partajat — RESPINS: invalideaza
+     timpii ambelor teste, deci rezultatele nu ar fi comparabile.
+
+Status: BLOCAT — astept decizie. Nicio proba de benchmark nu a fost inca executata.

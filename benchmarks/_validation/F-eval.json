@@ -1,0 +1,95 @@
+{
+  "task": "F",
+  "checks": [
+    {
+      "name": "suite_green",
+      "passed": false,
+      "tests": 0,
+      "failures": 1,
+      "tail": "----------------------------------------------------------------------\nRan 0 tests in 0.000s\n\nNO TESTS RAN"
+    },
+    {
+      "name": "tests_untouched",
+      "passed": false,
+      "changed": [
+        "tests/__init__.py"
+      ]
+    },
+    {
+      "name": "extra_mean_empty_raises",
+      "passed": true
+    },
+    {
+      "name": "extra_percentile_0",
+      "passed": true
+    },
+    {
+      "name": "extra_percentile_100",
+      "passed": false,
+      "error": "list index out of range"
+    },
+    {
+      "name": "extra_summarize_empty",
+      "passed": false,
+      "error": "empty"
+    },
+    {
+      "name": "extra_cli_single",
+      "passed": false
+    },
+    {
+      "name": "extra_cli_negative",
+      "passed": false
+    },
+    {
+      "name": "extra_cli_help_usage",
+      "passed": false
+    },
+    {
+      "name": "fixes_md_mean",
+      "passed": false
+    },
+    {
+      "name": "fixes_md_median",
+      "passed": false
+    },
+    {
+      "name": "fixes_md_percentile",
+      "passed": false
+    },
+    {
+      "name": "fixes_md_report",
+      "passed": false
+    },
+    {
+      "name": "fixes_md_cli",
+      "passed": false
+    },
+    {
+      "name": "fixes_md_help",
+      "passed": false
+    },
+    {
+      "name": "fixes_md_nonempty",
+      "passed": false
+    },
+    {
+      "name": "minimal_diff",
+      "passed": true,
+      "unexpected": []
+    }
+  ],
+  "passed": 3,
+  "total": 17,
+  "score": 0.1765,
+  "bugs_remaining": 1,
+  "bugs_new": 6,
+  "changed_files": [
+    "BUGS.md",
+    "cli.py",
+    "report.py",
+    "stats.py"
+  ],
+  "new_files": [],
+  "notes": "6 failing seed tests + 7 hidden regressions + test-hash guard + FIXES.md root causes + minimal diff."
+}
