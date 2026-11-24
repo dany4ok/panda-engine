@@ -5,14 +5,25 @@ param(
   [switch]$NoSub,
   [string]$Variant = '',
   [ValidateRange(1,100000)][int]$TimeoutSec = 0,
-  [string]$Root = 'C:\Users\x1p\AppData\Local\Temp\opencode\gyro-mini-bench'
+  [string]$Root = '',
+  [string]$OpencodeExe = ''
 )
 $ErrorActionPreference = 'Stop'
 
+# Portable defaults: the harness tree lives in the parent of scripts/.
+if (-not $Root) { $Root = Split-Path $PSScriptRoot -Parent }
+
 # V2 CLI bundled with the desktop app: it reads the same V2 config as real sessions.
 # The V1 npm CLI cannot read the global V2 config, so it is NOT used.
-$exe = 'C:\Users\x1p\AppData\Local\Programs\ai.opencode.desktop\resources\opencode-cli.exe'
-if (-not (Test-Path $exe)) { throw "opencode-cli.exe not found: $exe" }
+# On another machine pass -OpencodeExe (or put `opencode` on PATH).
+if ($OpencodeExe) { $exe = $OpencodeExe }
+else {
+  $exe = 'C:\Users\x1p\AppData\Local\Programs\ai.opencode.desktop\resources\opencode-cli.exe'
+  if (-not (Test-Path $exe)) {
+    $cmd = Get-Command opencode -ErrorAction SilentlyContinue
+    if ($cmd) { $exe = $cmd.Source } else { throw "OpenCode CLI not found; pass -OpencodeExe" }
+  }
+}
 
 $dirMap = @{ 'A'='A_simple'; 'B'='B_complex'; 'C'='C_debug'; 'D'='D_game'; 'E'='E_assets'; 'F'='F_agent' }
 $modelSlug = ($Model -replace '[/:]','_')
@@ -30,7 +41,7 @@ Copy-Item -Path (Join-Path $taskDir 'REQUIREMENT.md') -Destination (Join-Path $w
 # (V2: "permissions": [{action:subagent, resource:*, effect:deny}]).
 $localCfg = $null
 if ($NoSub) {
-  $localCfg = if ($Model -like 'polystrata-mini*') { 'config\mini_nosub.opencode.json' } else { 'config\gyro_nosub.opencode.json' }
+  $localCfg = if ($Model -like 'polystrata-mini*') { 'config\mini_nosub.opencode.json' } else { 'config\nosub.opencode.json' }
 } elseif ($Model -like 'polystrata-mini*') {
   $localCfg = 'config\mini.opencode.json'
 }

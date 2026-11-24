@@ -26,14 +26,14 @@ Result: **98/98** tasks, zero raw markers. Full detail in `logs/tool-fix-evidenc
 
 | Model | Tasks | Total time | Raw tool markers |
 |---|---:|---:|---:|
-| Inkling NInfer before fix | 34/98 | 688,3 s | 8 |
+| Inkling NInfer before fix | 34/98 | 688,5 s | 8 |
 | **Inkling NInfer after fix** | **98/98** | **298,6 s** | **0** |
 | MiniCPM-V 4.7 35B A3B | 98/98 | 387,5 s | 0 |
 | Gyro-S | 98/98 | 4663,5 s | 0 |
 
 Per-task results are in `benchmarks/results/`. A–F per-task breakdown is in `logs/tool-fix-evidence.txt`.
 
-**Provenance of the totals:** each total is the sum of `wall_ms` in `metrics.json` for the corresponding batch — `results/inkling_ninfer/` (688,3 s), `results/fixfinal/` with task E from `results/fixE2/` (298,6 s), `results/finalmini/` (387,5 s). The 4663,5 s Gyro-S figure comes from `benchmarks/RAPORT_FINAL_BATCH2.txt`. The 34/98 figure and marker counts come from `logs/tool-fix-evidence.txt`; ~150 t/s from `logs/bench-results.txt`.
+**Provenance of the totals:** each total is the sum of `wall_ms` in `metrics.json` for the corresponding batch — `results/inkling_ninfer/` (688452 ms → 688,5 s), `results/fixfinal/` with task E from `results/fixE2/` (298663 ms → 298,6 s), `results/finalmini/` (387555 ms → 387,5 s). The 4663,5 s Gyro-S figure comes from `benchmarks/RAPORT_FINAL_BATCH2.txt`. The 34/98 figure comes from `logs/tool-fix-evidence.txt`; ~150 t/s from `logs/bench-results.txt`. The 8 raw markers before the fix are the sum of per-task counts in the pre-fix transcripts: A 1, B 1, C 1, D 3, E 1, F 1 (those transcripts are excluded from this repo; the post-fix zero-marker counts are recorded in `logs/tool-fix-evidence.txt:17-22`).
 
 ## Not included (too large)
 
@@ -51,4 +51,4 @@ Some files in `benchmarks/` still contain absolute paths from the original machi
 2. Download the GGUF/NInfer artifacts into `models/`.
 3. Copy `config/opencode.json` to `~/.config/opencode/opencode.json` and `AGENT_RULES.md` and `plugins/` next to it.
 4. Run `START.bat`, choose `1`, press Enter for defaults.
-5. Run the A–F probes with `benchmarks/scripts/run_probe.ps1` using `-Model ninfer/inkling-2-mini -NoSub`.
+5. Run the A–F probes with `benchmarks/scripts/run_probe.ps1`, e.g. `-Model ninfer/inkling-2-mini -NoSub -Task A -Batch myrun`. The script derives its harness root from its own location, so `tasks/`, `config/` and `scripts/` are found automatically; pass `-OpencodeExe` if the bundled desktop CLI is not present (otherwise `opencode` from PATH is used).

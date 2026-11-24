@@ -1,0 +1,32 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permissions": [
+    { "action": "subagent", "resource": "*", "effect": "deny" }
+  ],
+  "providers": {
+    "polystrata-mini": {
+      "name": "MiniCPM Local (bench)",
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": {
+        "baseURL": "http://127.0.0.1:8080/v1",
+        "apiKey": "mini-local-token",
+        "headerTimeout": 900000
+      },
+      "models": {
+        "minicpm-v-4.7-35b-a3b-q4_k_m": {
+          "name": "MiniCPM-V 4.7 35B A3B Q4_K_M",
+          "modelID": "minicpm-v-4.7-35b-a3b-q4_k_m",
+          "capabilities": {
+            "tools": true,
+            "input": ["text", "image"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          }
+        }
+      }
+    }
+  }
+}

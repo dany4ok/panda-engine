@@ -1,6 +1,10 @@
 RAPORT FINAL — 2026-11-24 (after reboot)
 ========================================
 
+NOTA: acest raport e istoric si SUPERSEDAT de logs/tool-fix-evidence.txt.
+La data lui, modelul implicit era polystrata-mini/minicpm-v-4.7-35b-a3b-q4_k_m.
+Dupa repararea tool-calling-ului, modelul implicit e ninfer/inkling-2-mini.
+
 CERINTA: modelul sa se apropie de MiniCPM la terminarea sarcinilor (98/98).
 
 CAUZA GASITA (Inkling 2 Mini prin NInfer):
