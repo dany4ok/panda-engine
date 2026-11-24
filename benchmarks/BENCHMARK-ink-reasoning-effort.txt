@@ -1,0 +1,71 @@
+Inkling 2 Mini (NInfer) - reasoning_effort sweep
+Date: 2026-11-24
+Hardware: RTX 5070 Ti 16 GB; engine flags unchanged
+(--presence-penalty 0 --frequency-penalty 0 --structured-output --spec none
+ --reasoning-loop conclude --expert-residency device)
+
+METHOD
+------
+All six supported values were sent to the same live server through
+/v1/chat/completions with temperature=0 and max_tokens=2048, using the same
+five fixed-criteria prompts as BENCHMARK-mini-vs-ink-reviewer-rc.txt:
+exact string, arithmetic (384), sequence (42), 3-bug JS review, JSON only.
+Only the `content` field was graded. One pass per variant.
+
+RESULTS
+-------
+Variant   Total 5 probes   Review probe   Review reasoning   Review finish   Score
+minimal   6.6 s            2.9 s          302 tok           stop            5/5
+low       6.7 s            2.9 s          289 tok           stop            5/5
+medium    9.2 s            4.9 s          609 tok           stop            5/5
+high      18.9 s           14.5 s         2046 tok          length          4/5
+xhigh     15.5 s           10.8 s         1340 tok          stop            5/5
+max       15.2 s           10.2 s         1340 tok          stop            5/5
+
+All four simple probes were answered correctly by every variant. The only
+difference was the code-review probe. `high` hit finish_reason=length at
+max_tokens=2048 after 2046 reasoning tokens and returned content="" - an empty
+reply from the point of view of an OpenCode agent. xhigh and max returned the
+same review text and the same token counts; xhigh additionally pointed out the
+operator-precedence detail in `sum / nums.length - 1`.
+
+Decode throughput was essentially flat across variants (~135-153 tok/s).
+reasoning_effort changes how many tokens are thought, not how fast they are
+generated. Prompt processing was ~550-1140 tok/s in all runs.
+
+CONFIRMED FOOTGUN (high)
+------------------------
+The `high` failure was reproduced: a second run at max_tokens=2048 again
+finished with `length` after 2046 reasoning tokens and content="". With
+max_tokens=4096 the same prompt concluded with finish_reason=stop after 3099
+reasoning tokens in 22.1 s and produced the full 3-bug review plus two extra
+validation findings. So `high` needs roughly 3k+ tokens of headroom on a
+moderately hard review; a 2k output cap makes it return nothing.
+
+RECOMMENDATIONS
+---------------
+1. Keep `low` as the default (already set in config.json and the published
+   config/opencode.json). It matches every higher variant on correctness and
+   is the fastest safe option.
+2. `minimal` saves ~0.1 s and is indistinguishable from low - no reason to switch.
+3. `medium` roughly doubles the thinking on the review probe (609 vs 289 tok)
+   and is ~40% slower with no quality gain in these probes.
+4. Avoid `high` with ordinary output caps: it reproducibly exhausts 2048 tokens
+   and emits an empty final answer. If it must be used, raise max_tokens above
+   ~4096 and guard for finish_reason=length.
+5. `xhigh` and `max` gave the most articulate review but cost ~2.3x the time of
+   low and produced identical output to each other. Reserve them for one-off
+   hard reviews, e.g. a single retry when a low-effort reviewer misses something;
+   do not set them globally on a reviewer/checker chain.
+6. Tool-calling behaviour is independent of reasoning_effort; the penalties-0
+   fix documented in README.md remains the deciding factor for agentic tasks.
+
+RAW DATA
+--------
+results/duel_mini_vs_ink/result_reasoning.json
+
+LIMITATIONS
+-----------
+One pass per variant, five short prompts, direct API calls. The `high` failure
+was reproduced once at 2048 and once at 4096 tokens. Higher effort may still
+help on longer, genuinely ambiguous reviews; this sweep does not test those.

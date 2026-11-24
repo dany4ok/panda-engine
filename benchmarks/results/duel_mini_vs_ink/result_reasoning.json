@@ -1,0 +1,348 @@
+{
+  "model": "inkling-2-mini",
+  "utc": "2026-11-24T10:46:51.475728+00:00",
+  "results": {
+    "minimal": [
+      {
+        "id": "1_follow",
+        "content": "ZEBRA-7341",
+        "finish_reason": "stop",
+        "completion_tokens": 117,
+        "reasoning_tokens": 105,
+        "seconds": 0.89,
+        "decode_tps": 149.9,
+        "prompt_tps": 620.2,
+        "error": null
+      },
+      {
+        "id": "2_math",
+        "content": "384",
+        "finish_reason": "stop",
+        "completion_tokens": 107,
+        "reasoning_tokens": 100,
+        "seconds": 0.801,
+        "decode_tps": 150.1,
+        "prompt_tps": 669.1,
+        "error": null
+      },
+      {
+        "id": "3_sequence",
+        "content": "42",
+        "finish_reason": "stop",
+        "completion_tokens": 168,
+        "reasoning_tokens": 161,
+        "seconds": 1.175,
+        "decode_tps": 152.5,
+        "prompt_tps": 667.6,
+        "error": null
+      },
+      {
+        "id": "4_review",
+        "content": "- Off-by-one loop: `i <= nums.length` reads `nums[nums.length]` (`undefined`), making `sum` NaN.\n- Wrong average formula: `sum / nums.length - 1` subtracts 1 after dividing; should be `sum / nums.length`.\n- Empty array: divides by zero and returns NaN/Infinity instead of handling empty input.\n- No input validation for non-array/non-numeric `nums`.",
+        "finish_reason": "stop",
+        "completion_tokens": 417,
+        "reasoning_tokens": 302,
+        "seconds": 2.913,
+        "decode_tps": 148.8,
+        "prompt_tps": 1143.6,
+        "error": null
+      },
+      {
+        "id": "5_json",
+        "content": "{\"ok\":true,\"n\":3}",
+        "finish_reason": "stop",
+        "completion_tokens": 106,
+        "reasoning_tokens": 87,
+        "seconds": 0.803,
+        "decode_tps": 149.4,
+        "prompt_tps": 679.0,
+        "error": null
+      }
+    ],
+    "low": [
+      {
+        "id": "1_follow",
+        "content": "ZEBRA-7341",
+        "finish_reason": "stop",
+        "completion_tokens": 111,
+        "reasoning_tokens": 99,
+        "seconds": 0.807,
+        "decode_tps": 151.4,
+        "prompt_tps": 611.7,
+        "error": null
+      },
+      {
+        "id": "2_math",
+        "content": "384",
+        "finish_reason": "stop",
+        "completion_tokens": 107,
+        "reasoning_tokens": 100,
+        "seconds": 0.849,
+        "decode_tps": 142.8,
+        "prompt_tps": 653.1,
+        "error": null
+      },
+      {
+        "id": "3_sequence",
+        "content": "42",
+        "finish_reason": "stop",
+        "completion_tokens": 168,
+        "reasoning_tokens": 161,
+        "seconds": 1.227,
+        "decode_tps": 148.9,
+        "prompt_tps": 660.4,
+        "error": null
+      },
+      {
+        "id": "4_review",
+        "content": "- Loop condition `i <= nums.length` reads out of bounds (`nums[nums.length]`), making `sum` `NaN`.\n- `sum / nums.length - 1` subtracts `1` after dividing; should be `sum / nums.length`.\n- Empty array causes division by zero and `NaN`/`Infinity`; no empty-input handling.\n- No validation that `nums` is an array of numbers.",
+        "finish_reason": "stop",
+        "completion_tokens": 398,
+        "reasoning_tokens": 289,
+        "seconds": 2.89,
+        "decode_tps": 143.3,
+        "prompt_tps": 1084.7,
+        "error": null
+      },
+      {
+        "id": "5_json",
+        "content": "{\"ok\":true,\"n\":3}",
+        "finish_reason": "stop",
+        "completion_tokens": 127,
+        "reasoning_tokens": 108,
+        "seconds": 0.951,
+        "decode_tps": 146.8,
+        "prompt_tps": 612.0,
+        "error": null
+      }
+    ],
+    "medium": [
+      {
+        "id": "1_follow",
+        "content": "ZEBRA-7341",
+        "finish_reason": "stop",
+        "completion_tokens": 117,
+        "reasoning_tokens": 105,
+        "seconds": 0.893,
+        "decode_tps": 146.2,
+        "prompt_tps": 611.6,
+        "error": null
+      },
+      {
+        "id": "2_math",
+        "content": "384",
+        "finish_reason": "stop",
+        "completion_tokens": 113,
+        "reasoning_tokens": 106,
+        "seconds": 0.909,
+        "decode_tps": 137.5,
+        "prompt_tps": 628.1,
+        "error": null
+      },
+      {
+        "id": "3_sequence",
+        "content": "42",
+        "finish_reason": "stop",
+        "completion_tokens": 184,
+        "reasoning_tokens": 177,
+        "seconds": 1.499,
+        "decode_tps": 131.1,
+        "prompt_tps": 727.6,
+        "error": null
+      },
+      {
+        "id": "4_review",
+        "content": "- Off-by-one loop (`i <= nums.length`) reads past the end and makes `sum` NaN.\n- Wrong formula: `sum / nums.length - 1` subtracts 1; should be `sum / nums.length`.\n- Empty array divides by zero; needs a guard/error.\n- No validation that `nums` is an array of numbers; bad input yields NaN/TypeError.",
+        "finish_reason": "stop",
+        "completion_tokens": 711,
+        "reasoning_tokens": 609,
+        "seconds": 4.866,
+        "decode_tps": 149.6,
+        "prompt_tps": 1083.0,
+        "error": null
+      },
+      {
+        "id": "5_json",
+        "content": "{\"ok\":true,\"n\":3}",
+        "finish_reason": "stop",
+        "completion_tokens": 151,
+        "reasoning_tokens": 132,
+        "seconds": 1.076,
+        "decode_tps": 153.7,
+        "prompt_tps": 678.2,
+        "error": null
+      }
+    ],
+    "high": [
+      {
+        "id": "1_follow",
+        "content": "ZEBRA-7341",
+        "finish_reason": "stop",
+        "completion_tokens": 120,
+        "reasoning_tokens": 108,
+        "seconds": 0.907,
+        "decode_tps": 151.7,
+        "prompt_tps": 622.6,
+        "error": null
+      },
+      {
+        "id": "2_math",
+        "content": "384",
+        "finish_reason": "stop",
+        "completion_tokens": 113,
+        "reasoning_tokens": 106,
+        "seconds": 0.88,
+        "decode_tps": 147.7,
+        "prompt_tps": 620.6,
+        "error": null
+      },
+      {
+        "id": "3_sequence",
+        "content": "42",
+        "finish_reason": "stop",
+        "completion_tokens": 203,
+        "reasoning_tokens": 196,
+        "seconds": 1.437,
+        "decode_tps": 151.4,
+        "prompt_tps": 672.5,
+        "error": null
+      },
+      {
+        "id": "4_review",
+        "content": "",
+        "finish_reason": "length",
+        "completion_tokens": 2048,
+        "reasoning_tokens": 2046,
+        "seconds": 14.502,
+        "decode_tps": 142.3,
+        "prompt_tps": 1110.3,
+        "error": null
+      },
+      {
+        "id": "5_json",
+        "content": "{\"ok\":true,\"n\":3}",
+        "finish_reason": "stop",
+        "completion_tokens": 156,
+        "reasoning_tokens": 137,
+        "seconds": 1.136,
+        "decode_tps": 150.8,
+        "prompt_tps": 602.0,
+        "error": null
+      }
+    ],
+    "xhigh": [
+      {
+        "id": "1_follow",
+        "content": "ZEBRA-7341",
+        "finish_reason": "stop",
+        "completion_tokens": 114,
+        "reasoning_tokens": 102,
+        "seconds": 0.835,
+        "decode_tps": 152.7,
+        "prompt_tps": 638.2,
+        "error": null
+      },
+      {
+        "id": "2_math",
+        "content": "384",
+        "finish_reason": "stop",
+        "completion_tokens": 147,
+        "reasoning_tokens": 140,
+        "seconds": 1.098,
+        "decode_tps": 145.7,
+        "prompt_tps": 654.1,
+        "error": null
+      },
+      {
+        "id": "3_sequence",
+        "content": "42",
+        "finish_reason": "stop",
+        "completion_tokens": 232,
+        "reasoning_tokens": 225,
+        "seconds": 1.634,
+        "decode_tps": 151.5,
+        "prompt_tps": 658.5,
+        "error": null
+      },
+      {
+        "id": "4_review",
+        "content": "- Loop bound `i <= nums.length` reads one past the end (`nums[nums.length]` is `undefined`), so `sum` becomes `NaN`.\n- Wrong formula: `sum / nums.length - 1` subtracts 1 and evaluates as `(sum/length) - 1`, not `sum/(length-1)`.\n- Empty array: division by zero (and the loop still runs) → `NaN`; no guard.\n- No validation that `nums` is an array of numbers (non-array input throws; non-numeric elements yield `NaN`).",
+        "finish_reason": "stop",
+        "completion_tokens": 1486,
+        "reasoning_tokens": 1340,
+        "seconds": 10.777,
+        "decode_tps": 139.4,
+        "prompt_tps": 1054.2,
+        "error": null
+      },
+      {
+        "id": "5_json",
+        "content": "{\"ok\":true,\"n\":3}",
+        "finish_reason": "stop",
+        "completion_tokens": 155,
+        "reasoning_tokens": 136,
+        "seconds": 1.128,
+        "decode_tps": 152.4,
+        "prompt_tps": 549.1,
+        "error": null
+      }
+    ],
+    "max": [
+      {
+        "id": "1_follow",
+        "content": "ZEBRA-7341",
+        "finish_reason": "stop",
+        "completion_tokens": 114,
+        "reasoning_tokens": 102,
+        "seconds": 0.854,
+        "decode_tps": 151.2,
+        "prompt_tps": 643.5,
+        "error": null
+      },
+      {
+        "id": "2_math",
+        "content": "384",
+        "finish_reason": "stop",
+        "completion_tokens": 147,
+        "reasoning_tokens": 140,
+        "seconds": 1.071,
+        "decode_tps": 148.7,
+        "prompt_tps": 604.4,
+        "error": null
+      },
+      {
+        "id": "3_sequence",
+        "content": "42",
+        "finish_reason": "stop",
+        "completion_tokens": 232,
+        "reasoning_tokens": 225,
+        "seconds": 1.8,
+        "decode_tps": 134.5,
+        "prompt_tps": 688.8,
+        "error": null
+      },
+      {
+        "id": "4_review",
+        "content": "- Loop bound `i <= nums.length` reads one past the end (`nums[nums.length]` is `undefined`), so `sum` becomes `NaN`.\n- Wrong formula: `sum / nums.length - 1` subtracts 1 and evaluates as `(sum/length) - 1`, not `sum/(length-1)`.\n- Empty array: division by zero (and the loop still runs) → `NaN`; no guard.\n- No validation that `nums` is an array of numbers (non-array input throws; non-numeric elements yield `NaN`).",
+        "finish_reason": "stop",
+        "completion_tokens": 1486,
+        "reasoning_tokens": 1340,
+        "seconds": 10.242,
+        "decode_tps": 146.8,
+        "prompt_tps": 1044.4,
+        "error": null
+      },
+      {
+        "id": "5_json",
+        "content": "{\"ok\":true,\"n\":3}",
+        "finish_reason": "stop",
+        "completion_tokens": 155,
+        "reasoning_tokens": 136,
+        "seconds": 1.188,
+        "decode_tps": 141.3,
+        "prompt_tps": 674.5,
+        "error": null
+      }
+    ]
+  }
+}
