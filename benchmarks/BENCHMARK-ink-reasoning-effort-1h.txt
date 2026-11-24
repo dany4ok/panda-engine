@@ -15,28 +15,37 @@ METHOD
    logic, sequences). Each answer graded automatically against a per-problem
    regex. Problems were split into 3 batches (8/8/7) with a fixed system
    prompt and the instruction 'one line per answer, format N) answer'.
-   4 runs per variant = 92 graded answers per variant.
-   max_tokens=16384 for every request.
+   4 runs per variant = 92 graded answers per variant = 12 requests per
+   variant. max_tokens=16384 for every request.
 2. Single-problem mode: the same 23 problems, one request per problem,
    max_tokens=8192 (used to check the effect of batching).
 3. Loop / endurance probe: 'write numbers 1..200, one per line'.
 4. Context probe: needle 'CODUL SECRET ESTE ZX7-QM42' inserted at ~50% depth
    of a 129652-token haystack; question at the end, max_tokens=1024.
 5. Output-cap probe: 10 problems with max_tokens=6144 vs 16384.
+6. Prefill measurement at 12k / 42k / 84k / 129k tokens.
 
 ACCURACY (4 runs, 92 answers per variant)
 -----------------------------------------
-Variant   Score        Pct     Tok/answer  Reason/answer  Avg per 8-problem batch  Truncations
-low       89/92        96.7%   108         101            ~11.8 s                  0
-medium    90/92        97.8%   201         195            ~21.9 s                  0
-high      84/92        91.3%   422         415            ~46.6 s                  1
-xhigh     92/92        100%    345         339            ~37.8 s                  0
-max       89/92        96.7%   485         478            ~53.5 s                  0
+Variant   Score        Pct     Tok/answer  Reason/answer  Wall-clock/batch  Truncations
+low       89/92        96.7%   108         101            ~5.9 s            0
+medium    90/92        97.8%   201         195            ~11.0 s           0
+high      84/92        91.3%   422         415            ~23.3 s           1
+xhigh     92/92        100%    345         339            ~18.9 s           0
+max       89/92        96.7%   485         478            ~26.8 s           0
 
-`high` is penalised by one single event: in one run a 7-problem batch came
-back empty (finish_reason=length) after consuming all 16384 tokens in
-reasoning. In the other three runs it was perfect. It is not weak, it is
-unstable on large batches.
+Each wall-clock/batch figure is averaged over 12 requests per variant
+(3 batches per run x 4 runs; batches have 8, 8 and 7 problems).
+Throughput = tokens in batch / batch wall-clock and is ~140 tok/s for
+every variant: low 826/5.9 = 140, medium 1541/11.0 = 140,
+high 3231/23.3 = 139, xhigh 2646/18.9 = 140, max 3717/26.8 = 139.
+reasoning_effort changes how many tokens are thought, not how fast they
+are generated.
+
+`high` is penalised by two events in the same run (8 wrong answers total):
+a 7-problem batch came back empty (finish_reason=length) after consuming all
+16384 tokens in reasoning, plus one wrong answer on problem 19. In the other
+three runs it was perfect. It is not weak, it is unstable on large batches.
 
 The most frequently missed problem is '8 balls, one heavier: minimum
 weighings on a balance' (correct answer: 2). low missed it 3 times, medium
@@ -44,8 +53,7 @@ once, high once, max once, xhigh never.
 
 SPEED
 -----
-Decode throughput is flat across variants: ~140 tok/s. reasoning_effort
-changes how many tokens are thought, not how fast they are generated.
+Decode throughput is flat across variants: ~140 tok/s.
 Prompt processing (prefill): ~3.3-3.9k tok/s (84k tokens in 25.1 s,
 42k in 11.6 s, 129k in 33.4 s).
 Prompt caching works: the identical 129652-token prompt dropped from
@@ -59,7 +67,7 @@ Some repetition in reasoning was observed (29 repeated 12-word shingles for
 high, 10 for xhigh in one run) but did not degenerate.
 The real risk is reasoning runaway: on a single prompt containing all 23
 problems, xhigh hit the 16384-token cap with empty content in 2 out of 3
-runs; high did the same once in 6 batches. With batches of <=8 problems,
+runs; high did the same once in 12 batches. With batches of <=8 problems,
 xhigh had zero truncations.
 
 OUTPUT-CAP FOOTGUN (confirmed)
@@ -78,12 +86,15 @@ repetitions was rejected with context_length_exceeded.
 variants (5/5) in ~45-50 s cold, ~7 s with a warm prefix cache.
 128k is functional, not merely declared.
 
-RAW CLEAN-RUN LOG (wrong answers)
-----------------------------------
-run A: low 19:[3 cantariri] | medium 19:[3 cantariri], 23:[nepotul lui]
-       high - | xhigh - | max 23:[nepotul meu], 23:[nu se poate determina unic]
-run B: low 19:[3 cantariri] x2 | medium - | high 17:[],18:[],19:[],20:[],
-       21:[],22:[],23:[] and 19:[3 cantariri] | xhigh - | max 19:[3 cantariri]
+RAW CLEAN-RUN LOG
+-----------------
+Two scripts were executed, each performing 2 runs (46 answers, 6 requests);
+together they give the 4 runs / 92 answers above. All recorded wrong answers
+fell in these two aggregated logs; the individual per-run split was not kept.
+A: low 19:[3 cantariri] | medium 19:[3 cantariri], 23:[nepotul lui]
+   high - | xhigh - | max 23:[nepotul meu], 23:[nu se poate determina unic]
+B: low 19:[3 cantariri] x2 | medium - | high 17:[],18:[],19:[],20:[],
+   21:[],22:[],23:[] and 19:[3 cantariri] | xhigh - | max 19:[3 cantariri]
 
 PROBES
 ------
@@ -109,6 +120,10 @@ Regex-based grading on 23 problems; a single engine build and flag set;
 no temperature override; one machine. The high runaway and the xhigh
 batching failure were each observed once/twice, so they are risks rather
 than deterministic per-prompt behaviour.
+
+RAW DATA
+--------
+results/results_reasoning_effort_1h.json
 
 REPRODUCE
 ---------
