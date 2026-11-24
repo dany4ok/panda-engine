@@ -153,7 +153,7 @@ ambele modele, evaluatori hash-uiti inainte de rulare, ordine alternata si
 capturi cu provenienta workdir/model. Pana atunci: △ Partially Verified.
 
 G. DOVEZI
-- results/batch1/<model>/<task>/metrics.json, eval.json, events.jsonl, work/
+- results/batch1/<model>/<task>/metrics.json, eval.json (events.jsonl si work/ EXCLUSE din repo-ul public; afirmatiile derivate din ele raman istorice, nu reproducibile public)
 - results/batch1/summary.jsonl, REPORT_batch1.txt
 - HARNESS.md, 00_environment_blocker.txt, 01_harness_ready.txt
 - _validation/make_solutions.py + solved-*-eval.json (seed-urile esueaza,

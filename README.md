@@ -18,7 +18,7 @@ Inkling 2 Mini via NInfer was fast (~150 t/s) but finished only **34/98** agenti
 
 Root cause (confirmed against upstream GitHub issues): `presence_penalty: 0.5` and `frequency_penalty: 1.0` in the OpenCode request body override NInfer's tool-safe default (see `iamwavecut/ninfer-all#118`) and break multi-tool calls; `--structured-output` additionally does not engage grammar at the Inkling tool opener (`vllm#68692/#69351`).
 
-Fix: set both penalties to **0**, keep `reasoning_effort: low`, drop `post_thinking`, keep `--structured-output --spec none --reasoning-loop conclude`.
+Fix: set both penalties to **0**, drop `post_thinking`, keep `--structured-output --spec none --reasoning-loop conclude`. `reasoning_effort` is independent of the tool-calling defect: the fix was verified with `low`, and this snapshot reflects the live setting (`max`, changed by the user on 2026-11-24). The `instructions` path is deliberately relative here so the published config stays portable (the live config uses an absolute path to the same `AGENT_RULES.md`).
 
 Result: **98/98** tasks, zero raw markers. Full detail in `logs/tool-fix-evidence.txt`.
 
@@ -35,13 +35,17 @@ Per-task results are in `benchmarks/results/`. A–F per-task breakdown is in `l
 
 **Provenance of the totals:** a total is the sum of the six per-task times shown in the table, each rounded to 0.1 s from `wall_ms` in `metrics.json` — `results/inkling_ninfer/` (7,5+13,3+10,6+356,9+7,0+293,0 = 688,3 s; raw ms sum 688452), `results/fixfinal/` with task E from `results/fixE2/` (58,5+34,5+47,8+56,8+42,8+58,2 = 298,6 s; raw ms sum 298663), `results/finalmini/` (26,2+38,2+47,0+180,8+49,7+45,6 = 387,5 s; raw ms sum 387555). The 4663,5 s Gyro-S figure comes from `benchmarks/RAPORT_FINAL_BATCH2.txt`. The 34/98 figure comes from `logs/tool-fix-evidence.txt`; ~150 t/s from `logs/bench-results.txt`. The 8 raw markers before the fix are the sum of per-task counts in the pre-fix transcripts: A 1, B 1, C 1, D 3, E 1, F 1 (those transcripts are excluded from this repo; the post-fix zero-marker counts are recorded in `logs/tool-fix-evidence.txt:17-22`).
 
-## Not included (too large)
+**Reproducibility limits:** the totals above are recomputable from published `metrics.json`. Figures derived from artifacts listed under *Not included* — 34/98, the 8 pre-fix marker breakdown, the ~1689 s visual-verification normalization and the resulting ~7,6x ratio — are historical claims reported in `benchmarks/RAPORT_FINAL*.txt` and `logs/tool-fix-evidence.txt`; they cannot be recomputed from this repo.
+
+## Not included (too large / machine-specific)
 
 - `ninfer/` engine binaries (~GBs) — download the release from `https://github.com/iamwavecut/ninfer-all/releases/tag/2026-11-23.10` (Windows CUDA 13.4 build).
 - `models/*.ninfer` — download from Hugging Face:
   - `WaveCut/Inkling-2-Mini-UD-IQ1_M-NInfer-v3`
   - `WaveCut/Inkling-2-Mini-UD-Q2_K_XL-NInfer-v3`
   - `WaveCut/Qwen3.8-27B-GSQ-RCO-IQ3_S-NInfer-v3`
+- `events.jsonl` event streams, evaluated `work/` directories and per-probe PNG captures — excluded because they contain degenerate loops, local file paths/dumps and large binary output. Reports that cite them are kept verbatim as historical records, with an explicit note wherever a figure is no longer reproducible.
+- The 23 timestamped `opencode.json.bak-*` backups and the machine-level `~/.config/opencode/AGENTS.md`; the published `config/opencode.json` is the current live snapshot (with a portable relative `instructions` path).
 
 Some files in `benchmarks/` still contain absolute paths from the original machine (notably `HARNESS.md`); adapt them if you reuse the harness. API keys in `config/opencode.json` are placeholders (`*-local-token`), not real secrets.
 

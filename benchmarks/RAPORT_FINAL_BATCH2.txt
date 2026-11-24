@@ -61,7 +61,7 @@ C. CE S-A SCHIMBAT FATA DE BATCH1
   Estimare normalizata: eliminand ~1689 s din E, Gyro ~2974 s, deci ~7,6x Mini,
   nu 11,9x. Derivarea celor 1689 s: in E/events.jsonl primele evenimente cu
   cuvinte-cheie de verificare (puppeteer/verify.js/captures/pixelMismatch)
-  apar la t=406,1 s, ultimele la t=2094,3 s -> 1688,3 s (~1689 s).
+  apar la t=406,1 s, ultimele la t=2094,3 s -> 1688,3 s (~1689 s). NOTA PUBLICARE: E/events.jsonl e exclus din repo, deci aceasta derivare NU e recalculabila public; cifrele 1689 s / 2974 s / 7,6x raman afirmatii istorice, NU dovezi reproducibile.
   ATENTIE: normalizarea e UNILATERALA — scade timpul lui Gyro, dar nu adauga
   timpul de verificare (nescris) al lui Mini. E deci o estimare a timpului
   pana la cod corect, NU un "timp pana la rezultat verificat" like-for-like.
@@ -78,7 +78,7 @@ D. LIMITARI RAMASE
    la evaluatorul static, dar doar Gyro a satisfacut cerinta explicita de
    captura din REQUIREMENT.md. Calitatea e egala pe testele ascunse, NU pe
    aceasta componenta. Capturile vechi post-hoc (reality_E_captures/) raman
-   excluse; cele din batch2 sunt in workdir-ul evaluat.
+   excluse; cele din batch2 sunt in workdir-ul evaluat. NOTA PUBLICARE: nici cele 12 PNG din batch2, nici workdir-urile evaluate NU sunt incluse in repo-ul public; afirmatia de aici despre capturi e istorica, nu verificabil public.
 3. Nicio repetare in cadrul batch2 (Mini a rulat B inainte de A, Gyro A->F);
    avem insa doua loturi cu ordine inversata intre modele.
 3b. Gyro E a emis un apel `question` desi promptul cerea "fara intrebari";
@@ -185,7 +185,7 @@ pe rezultatul constant din batch2 (0 subagenti, evaluator hash-uit, 6/6 corect),
 NU pe ipoteza ca Gyro ar fi fost rulat pe o setare diferita de medium.
 
 G. DOVEZI
-- results/batch2/**/metrics.json, eval.json, events.jsonl, work/
+- results/batch2/**/metrics.json, eval.json (events.jsonl si work/ EXCLUSE din repo-ul public; cifrele derivate din ele, inclusiv 1688,3 s si 7,6x, nu sunt reproducibile public)
 - results/batch2/summary.jsonl, REPORT_batch2.txt
 - EVALUATOR_HASHES_BEFORE_BATCH2.txt (inregistrat inainte, verificat dupa)
 - config/gyro_nosub.opencode.json, config/mini_nosub.opencode.json
