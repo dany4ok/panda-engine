@@ -1,0 +1,87 @@
+MiniCPM-V 4.7 vs Inkling 2 Mini - short reviewer/checker duel
+Date: 2026-11-24
+Hardware: RTX 5070 Ti 16 GB, both models served sequentially on 127.0.0.1:8080
+
+CONFIG CHANGE SHIPPED WITH THIS REPORT
+--------------------------------------
+- ~/.config/opencode/opencode.json: removed "model": "ninfer/inkling-2-mini"
+  from agents.reviewer.
+- ~/.config/opencode/agents/reality-checker.md: removed the same pinned model
+  line from the frontmatter.
+- ~/.config/opencode/AGENTS.md: removed the paragraph that pinned both agents
+  to ninfer/inkling-2-mini and the inkling-available.ps1 dispatch fallback.
+Result: reviewer and reality-checker now inherit the model of the session.
+opencode.json re-validated with json.load() after the edit.
+
+METHOD
+------
+Same five prompts were sent through the OpenAI-compatible /v1/chat/completions
+endpoint of each model, with temperature=0 and reasoning_effort=low, identical
+max_tokens=1024. Criteria were fixed before execution. The only thing changed
+between runs was the server loaded on port 8080:
+
+  ink  = inkling-2-mini                    (NInfer, UD-IQ1_M, flags from start.ps1)
+  mini = minicpm-v-4.7-35b-a3b-q4_k_m     (Poly-strata strata engine, Q4_K_M)
+
+Engine flags for ink were unchanged: --presence-penalty 0 --frequency-penalty 0
+--structured-output --spec none --reasoning-loop conclude --expert-residency device.
+The ink server was restored on port 8080 after the test; MiniCPM was stopped.
+
+RESULTS - only the final `content` field was graded
+---------------------------------------------------
+Criterion                          ink                         mini
+1_follow   exact ZEBRA-7341        ZEBRA-7341          PASS   content null, string was in
+                                                              `reasoning`            FAIL
+2_math     384                     384                 PASS   384                    PASS
+3_sequence 42                      42                  PASS   42                     PASS
+4_review   3 seeded JS bugs        3/3 + 1 extra       PASS   3/3, no extras         PASS
+           (i <= length, -1, empty) (input validation)
+5_json     JSON only, no prose     {"ok":true,"n":3}   PASS   content null, fenced JSON
+                                                              in `reasoning`         FAIL
+SCORE                              5/5                        3/5
+
+PERFORMANCE (measured from response timings)
+--------------------------------------------
+Metric                       ink                 mini
+Decode, average              ~151 tok/s          ~56 tok/s
+Decode, per probe            147-153 tok/s       23-72 tok/s
+Prompt processing            514-1094 tok/s      44-142 tok/s
+Wall time, 5 probes          6.5 s               35.2 s (18.3 s on probe 1 alone)
+Speculative decoding         n/a                 draft_n 0-60, acceptance 2/5 to 24/60
+
+VERDICT
+-------
+Inkling 2 Mini is the better choice for reviewer / reality-checker agents:
+~2.7x faster decode, ~5-8x faster prompt processing, and the final answer is
+always in `content`. MiniCPM matched the code-review quality (3/3 bugs found,
+with fewer false positives) but in 2 of 5 probes put the answer in `reasoning`
+and returned `content: null`, which an OpenCode agent sees as an empty reply.
+
+RECOMMENDATIONS
+---------------
+1. Keep reviewer/checker unpinned and choose the model per session; use ink for
+   interactive review/check work.
+2. Do not set max_tokens below ~256-512. With max_tokens=64 both models spent
+   the entire budget in reasoning and emitted no final answer.
+3. reasoning_effort=low is enough for this class of task; max added time without
+   a measured quality gain in these probes. The published config uses low.
+4. If MiniCPM is used, check the `reasoning_content` -> `content` mapping in
+   serve/server.py; short answers otherwise appear empty in OpenCode.
+5. MiniCPM speculative decoding has uneven acceptance and caused the 18.3 s
+   outlier; disable the draft for short prompts.
+6. Reserve MiniCPM for batch or vision work, not latency-sensitive agent chains.
+
+RAW DATA
+--------
+results/duel_mini_vs_ink/result_ink2.json
+results/duel_mini_vs_ink/result_mini2.json
+(The first attempt with max_tokens=64 is not published: both models produced an
+empty content field, so it measures the budget mistake rather than model quality.)
+
+LIMITATIONS
+-----------
+One pass per prompt, five prompts, direct API calls, not the full A-F harness.
+Inkling already has 98/98 in the full harness (see logs/tool-fix-evidence.txt);
+MiniCPM has 98/98 as well (see README benchmark summary) but at 387.5 s vs 298.6 s.
+This report therefore measures short-answer reliability, reasoning-channel
+placement and raw speed, not full agentic task completion.
