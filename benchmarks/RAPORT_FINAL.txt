@@ -1,0 +1,162 @@
+=====================================================================
+BENCHMARK A/B — Gyro-S (Strata) vs MiniCPM-V 4.7 35B A3B Q4_K_M (PolyStrata)
+ROL: AGENT PRINCIPAL IN OPENDCODE
+Batch1 — 6 sarcini x 2 modele — evaluare independenta, criterii fixate inainte
+=====================================================================
+
+AVERTISMENT DE VALIDITATE (scris dupa contestarea reality-checker):
+Acest benchmark NU a testat curat obiectul cerut — "agenti principali in
+conditii identice". Patru controale au fost incalcate: (i) bugetul de 90 min
+depasit de ~5x; (ii) un singur lot, fara alternare; (iii) izolarea agentului
+principal nu a fost impusa — subagenti 28 (Gyro) vs 4 (Mini), deci timpul
+lui Gyro include munca delegata; (iv) doi evaluatori au fost corectati dupa
+ultima proba (doar contor derivat si text, fara schimbarea check-urilor —
+vezi EVALUATOR_CHANGELOG.txt). Capturile din reality_E_captures/ sunt
+post-hoc, nelegate de workdir-urile evaluate, si NU sunt folosite ca dovada.
+Mai mult, e probabil ca swap-ul a oprit un server care apartinea testului
+concurent (EVIDENTA LIPSESC in ambele sensuri). Prin urmare cifrele de mai
+jos sunt reale ca masuratori, dar comparatia de viteza e CONFOUNDATA, iar
+recomandarea de mai jos e PROVIZORIE si conditionata de o rerulare curata.
+
+A. REZULTATUL COMPARATIV
+(sursa: metrics.json + eval.json, recalculat independent din summary.jsonl)
+
+| Metrică | Gyro-S | MiniCPM | Δ% (Mini vs Gyro) |
+|---|---|---|---|
+| Sarcini finalizate corect | 6/6 | 5/6 | -16,7% (probe) |
+| Teste trecute | 98/98 | 97/98 | -1,0% |
+| Buguri rămase | 0 | 1 | +1 bug |
+| Buguri introduse (noi) | 0 | 0 | 0% |
+| Durată totală (s) | 8977,2 | 483,3 | -94,6% |
+| Durată până la rezultat corect (s) | 8977,2 | 449,0 | -95,0% |
+| Viteză tokeni/s (media sarcinilor reușite) | 10,5 | 83,0 | +687,5% |
+| Input tokens (suma step-urilor) | 1693799 | 98729 | -94,2% |
+| Output tokens (suma step-urilor) | 87245 | 32881 | -62,3% |
+| Cache-read tokens | 6784574 | 1427340 | -79,0% |
+| Apeluri instrumente | 212 | 104 | -50,9% |
+| Reparații necesare (heuristică) | 73 | 7 | -90,4% |
+| Sarcini eșuate / timeout / exit≠0 | 0 | 1 | +1 |
+| Consum VRAM mediu max (MiB) | 14495,8 | 14270 | -1,6% |
+
+Δ% e calculat din valorile NErotunjite ale tabelului sursă, nu din cifrele
+afisate cu o zecimala (de aceea 10,5 -> 83,0 da +687,5%, nu +690%).
+
+Durata pe sarcini (s):
+  A  Gyro 926,9  / Mini 34,3
+  B  Gyro 727,0  / Mini 120,3
+  C  Gyro 443,6  / Mini 41,5
+  D  Gyro 1549,3 / Mini 223,1
+  E  Gyro 4096,7 / Mini 27,0
+  F  Gyro 1233,7 / Mini 37,1
+
+B. DETALII PE SARCINI (evaluator independent, teste ascunse)
+- A (programare simpla): Gyro 1,0 (13/13). Mini 0,9231 (12/13) — regex `\w`
+  include underscore, deci "a_b/c\\d" -> "a_b-c-d" in loc de "a-b-c-d".
+  1 bug ramas, 0 buguri noi.
+- B (multi-modul + teste): ambele 1,0 (14/14). Integrare si teste scrise de model OK.
+- C (debugging): ambele 1,0 (15/15), 9/9 buguri plantate reparate, 0 regresiuni.
+- D (joc Three.js): ambele 1,0 (20/20) = 12 verificari mecanici + 8 verificari
+  STATICE de wiring. Jocul nu a fost rulat intr-un browser in timpul probei.
+- E (assets/UI): ambele 1,0 (19/19) = 7 verificari integritate atlas (inclusiv
+  atlas nemodificat) + 10 verificari STATICE de wiring + 2 fisiere protejate.
+  Fara captura de ecran in timpul probei.
+- F (agent multi-etapa): ambele 1,0 (17/17), cele 6 teste seed esuate devin
+  verzi, testele nemodificate (hash), FIXES.md cu cauze radacina, diff minim.
+
+C. LATENTA, TOKENI SI AUTONOMIE
+- Tokenii sunt SUMELA incrementelor din toate evenimentele `step_finish`
+  (nu valoarea ultimului step). Gyro A: 32 step-i, 11070 output, 6778 reasoning.
+  Gyro E: 86 step-i, 32706 output, 28414 reasoning. Mini A: 10 step-i, 2947
+  output. Mini E: 7 step-i, 2599 output.
+- TTFT: Gyro 0 ms la toate sarcinile (timestampurile nu permit masurarea);
+  Mini 821-1029 ms (A 971, B 959, C 889, D 1029, E 821, F 832). Deci TTFT e
+  masurabil DOAR pentru MiniCPM; pentru Gyro e "n/a", nu 0 real.
+- Consolele arata ca timpul e consumat intre `step_finish` si urmatorul
+  `step_start` (gaps 100-765 s), adica in generare, nu in instrumente
+  (timestampurile tool-urilor sunt aproape identice cu step_finish).
+- Subagenti: Gyro 28 apeluri (A 4, B 4, C 2, D 3, E 9, F 6), Mini 4 (B 2, D 2).
+  Deci izolarea "doar agentul principal" NU a fost perfecta pentru niciun model;
+  timpii lui Gyro includ semnificativ munca delegata. Comparatia e confundata,
+  mai ales la A si E.
+- Reasoning: Gyro 62111 tokeni inregistrati, Mini 0 in jurnal — dar Mini e model
+  de rationament (un apel direct catre 8080 returneaza `reasoning_content`,
+  cu `content: null`). "0" e un artifact de contabilizare, NU dovada absentei
+  rationamentului. Comparatia pe reasoning-tokeni nu e valida.
+
+D. LIMITARI (raportate explicit)
+1. Bugetul de 90 de minute a fost depasit (~8 h). Gyro-S singur a durat 8977 s;
+   sarcina E 4097 s. Conditiile "maximum 90 min" si repetabilitatea nu au fost
+   respectate integral.
+2. Un singur lot (batch1); nicio repetare si nicio alternare a ordinii.
+3. Verificare vizuala: doar statica in timpul probei (wiring + integritate
+   atlas). Nu s-au facut capturi de ecran atunci. Calitatea vizuala e
+   PARTIAL VERIFIED / NEVERIFICATA, desi scorurile 19/19 si 20/20 sunt reale
+   pentru check-urile statice pe care le masoara.
+4. Subagenti folositi de ambele modele (28 vs 4) — izolarea agentului principal
+   a fost incalcata; verdictul pe "autonomie" e afectat.
+5. Metrici absent: RAM (doar VRAM), time-in-tools (timestampuri prea apropiate),
+   timp pana la primul rezultat functional, timp pierdut in bucle (nu au existat
+   timeouturi), cache-write (0).
+6. "Reparații necesare" e heuristică (secvente edit->test), nu numar exact.
+7. Sarcina E: niciun instrument de generare vizuala pentru agenti; ACELASI atlas
+   PNG pentru ambele modele, conform cerintei.
+8. CLI: folosit V2 din desktop (opencode-cli.exe 2.3.2); CLI-ul npm V1 nu putea
+   citi configul V2. Configul global OpenCode NU a fost modificat.
+9. Swap-ul a oprit procesele serverului MiniCPM pentru eliberarea VRAM-ului.
+   Nu s-a putut stabili cu certitudine daca PID-urile apartineau testului
+   concurent; la momentul swap-ului acesta parea inactiv (fara scrieri recente,
+   GPU 4%). Afirmatia "testul concurent nu a fost intrerupt" e prin urmare
+   nesigura — o marchez ca EVIDENTA LIPSESC, nu ca fapt.
+10. In timpul executiei au fost corectate patru defecte ale harness-ului:
+    UTF-16 vs UTF-8 la evenimente, numararea bugurilor ramase in evaluatorul A,
+    eticheta modelului in summary.jsonl si sumarea tokenilor per step.
+    Cifrele din tabel au fost recalculate dupa aceste corectii.
+11. Pre-registrarea evaluatorilor nu e absoluta: A si D au fost modificate
+    DUPA ultima proba (04:02 si 04:20). Corectiile au afectat doar un contor
+    derivat si un text, nu check-urile (Mini A ramane 12/13). Hash-urile si
+    cronologia sunt in EVALUATOR_CHANGELOG.txt.
+12. Verificarea E e slaba din punct de vedere behavioral: check-urile `ui_*`
+    tests doar prezenta unor siruri in cod (`'idle'`, `'run'`, `'hurt'`, cifrele
+    0-3). "19/19" inseamna wiring static, NU animatie/functionalitate validata.
+13. Capturile din reality_E_captures/ si capture-report.json sunt post-hoc,
+    fara workdir/model in metadata, si timestampuite in timpul rulei lui Gyro E
+    — NU pot dovedi rezultatul vizual al niciunei sarcini evaluate. Excluse.
+14. Dovezile inclina spre faptul ca serverul oprit la swap apartinea testului
+    concurent (scrieri in ab-bench la 20:39-20:40, inainte de swap-ul de la
+    20:43). Deci conditia "Nu opri procese care nu apartin benchmarkului" e
+    probabil incalcata, nu doar nesigura.
+
+E. VERDICT
+- Programare zilnica: Gyro-S are calitate perfecta (6/6), MiniCPM 5/6. Dar
+  Gyro e de ~18,6x mai lent. MiniCPM ofera rezultate practic echivalente cu
+  94,6% mai putin timp.
+- Jocuri: ambele corecte pe mecanici; MiniCPM de ~7x mai rapid la sarcina D.
+- Debugging: ambele 9/9 buguri reparate, 0 regresiuni; MiniCPM de ~10,7x mai rapid.
+- Cel mai rapid pana la rezultat corect: MiniCPM (-95,0% wall-clock), DAR
+  masurarea e confundata: Gyro a delegat 28 de subagenti vs 4 la Mini, deci
+  timpul nu masoara doar agentul principal asa cum cere cerinta.
+- Cel mai autonom: MiniCPM (104 vs 212 apeluri, 7 vs 73 reparatii), desi a folosit
+  4 subagenti; Gyro a folosit 28. Concluzie slaba, nu demonstration curata.
+- Cel mai fiabil pe sesiuni lungi: Gyro-S are 0 erori si 0 buguri, dar latenta
+  extrema il face impractical; MiniCPM are o greseala minora si 1 sarcina esuata.
+- Merita diferenta de timp? NU. Gyro a durat de ~18,6x mai mult timp decat Mini
+  (8977,2 s vs 483,3 s, adica Mini e cu 94,6% mai rapid) pentru ~1-2% calitate,
+  cu izolare mai proasta a agentului principal; nu se justifica.
+
+F. RECOMANDARE (PROVIZORIE / CONDITIONATA)
+Model implicit propus pentru uz zilnic: MiniCPM-V 4.7 35B A3B Q4_K_M.
+Recomandarea e directionala, NU certificata: Gyro e de ~18,6x mai lent si cu
+1 sarcina mai putin corecta, dar comparatia main-agent e confundata, nu a fost
+repetata, nu a alternat ordinea, iar verificarea vizuala nu a fost facuta in
+probe. Confirmarea cere o rerulare curata cu: subagenti dezactivati pentru
+ambele modele, evaluatori hash-uiti inainte de rulare, ordine alternata si
+capturi cu provenienta workdir/model. Pana atunci: △ Partially Verified.
+
+G. DOVEZI
+- results/batch1/<model>/<task>/metrics.json, eval.json, events.jsonl, work/
+- results/batch1/summary.jsonl, REPORT_batch1.txt
+- HARNESS.md, 00_environment_blocker.txt, 01_harness_ready.txt
+- _validation/make_solutions.py + solved-*-eval.json (seed-urile esueaza,
+  solutiile de referinta trec 100%)
+- swap_gyro.log, swap_mini.log, swaps.jsonl
+=====================================================================

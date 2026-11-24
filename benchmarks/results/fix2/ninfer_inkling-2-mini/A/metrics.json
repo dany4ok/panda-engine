@@ -1,0 +1,32 @@
+﻿{
+    "events":  9,
+    "first_event_ms":  1795494053459,
+    "last_event_ms":  1795494188207,
+    "ttft_ms":  336,
+    "first_text_ms":  1795494053795,
+    "tool_calls":  2,
+    "tool_names":  {
+                       "read":  2
+                   },
+    "edit_calls":  0,
+    "test_calls":  0,
+    "repair_attempts_heuristic":  null,
+    "tokens":  {
+                   "input":  13174,
+                   "output":  72,
+                   "reasoning":  16395,
+                   "cache_read":  25867,
+                   "cache_write":  0
+               },
+    "note":  "null means the JSON event stream did not expose that metric; no values were estimated.",
+    "model":  "ninfer/inkling-2-mini",
+    "task":  "A",
+    "batch":  "fix2",
+    "wall_ms":  300043,
+    "start_iso":  "2026-11-24T04:18:33.3328466Z",
+    "end_iso":  "2026-11-24T04:23:33.5654588Z",
+    "exit_code":  -1,
+    "timed_out":  true,
+    "vram_max_mib":  14927,
+    "vram_avg_mib":  14919.9
+}

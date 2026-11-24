@@ -1,0 +1,32 @@
+{
+  "task": "A",
+  "checks": [
+    {
+      "name": "module_imports",
+      "passed": false,
+      "error": "expected an indented block after function definition on line 1 (string_utils.py, line 2)"
+    },
+    {
+      "name": "no_unnecessary_new_files",
+      "passed": true,
+      "files": []
+    },
+    {
+      "name": "only_target_file_modified",
+      "passed": true,
+      "changed": [
+        "string_utils.py"
+      ]
+    }
+  ],
+  "passed": 2,
+  "total": 3,
+  "score": 0.6667,
+  "bugs_remaining": 0,
+  "bugs_new": 0,
+  "changed_files": [
+    "string_utils.py"
+  ],
+  "new_files": [],
+  "notes": "slugify cases + truncate regression + unnecessary-change audit."
+}

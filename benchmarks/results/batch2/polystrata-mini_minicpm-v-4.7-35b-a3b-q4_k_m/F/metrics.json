@@ -1,0 +1,36 @@
+﻿{
+    "events":  38,
+    "first_event_ms":  1795317671058,
+    "last_event_ms":  1795317728077,
+    "ttft_ms":  1442,
+    "first_text_ms":  1795317672500,
+    "tool_calls":  16,
+    "tool_names":  {
+                       "read":  8,
+                       "glob":  1,
+                       "edit":  5,
+                       "shell":  1,
+                       "write":  1
+                   },
+    "edit_calls":  6,
+    "test_calls":  1,
+    "repair_attempts_heuristic":  1,
+    "tokens":  {
+                   "input":  3994,
+                   "output":  3992,
+                   "reasoning":  0,
+                   "cache_read":  110788,
+                   "cache_write":  0
+               },
+    "note":  "null means the JSON event stream did not expose that metric; no values were estimated.",
+    "model":  "polystrata-mini/minicpm-v-4.7-35b-a3b-q4_k_m",
+    "task":  "F",
+    "batch":  "batch2",
+    "wall_ms":  58506,
+    "start_iso":  "2026-11-22T03:21:09.5987869Z",
+    "end_iso":  "2026-11-22T03:22:09.7689915Z",
+    "exit_code":  0,
+    "timed_out":  false,
+    "vram_max_mib":  13640,
+    "vram_avg_mib":  13083.4
+}

@@ -1,0 +1,1 @@
+When changing files, use the `edit` or `write` tools directly. Do not use `shell` to edit files, generate patches with python here-documents, or inspect the same file more than twice. After at most two shell commands, make the file changes with `edit`/`write`, run the requested tests once, and finish. Do not repeat exploration steps.

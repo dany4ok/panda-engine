@@ -1,0 +1,32 @@
+﻿{
+    "events":  12,
+    "first_event_ms":  1795497424902,
+    "last_event_ms":  1795497511295,
+    "ttft_ms":  null,
+    "first_text_ms":  null,
+    "tool_calls":  0,
+    "tool_names":  {
+
+                   },
+    "edit_calls":  0,
+    "test_calls":  0,
+    "repair_attempts_heuristic":  null,
+    "tokens":  {
+                   "input":  null,
+                   "output":  null,
+                   "reasoning":  null,
+                   "cache_read":  null,
+                   "cache_write":  null
+               },
+    "note":  "null means the JSON event stream did not expose that metric; no values were estimated.",
+    "model":  "ninfer/qwen3.8-27b",
+    "task":  "A",
+    "batch":  "qwen3",
+    "wall_ms":  86847,
+    "start_iso":  "2026-11-24T05:17:04.4927248Z",
+    "end_iso":  "2026-11-24T05:18:33.3822178Z",
+    "exit_code":  null,
+    "timed_out":  false,
+    "vram_max_mib":  1054,
+    "vram_avg_mib":  1030.5
+}

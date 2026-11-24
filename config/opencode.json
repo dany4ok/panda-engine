@@ -1,0 +1,657 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "ninfer/inkling-2-mini",
+  "instructions": [
+    "C:\\Users\\x1p\\Desktop\\inkling 2 mini\\AGENT_RULES.md"
+  ],
+  "permissions": [
+    { "action": "generate_image", "resource": "*", "effect": "deny" },
+    { "action": "generate_video", "resource": "*", "effect": "deny" },
+    { "action": "webfetch", "resource": "*", "effect": "deny" },
+    { "action": "websearch", "resource": "*", "effect": "deny" },
+    { "action": "question", "resource": "*", "effect": "deny" },
+    { "action": "skill", "resource": "*", "effect": "deny" },
+    { "action": "execute", "resource": "*", "effect": "deny" }
+  ],
+  "providers": {
+    "strata": {
+      "name": "Strata Local",
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": {
+        "baseURL": "http://127.0.0.1:47831/v1",
+        "apiKey": "strata-local-token",
+        "headerTimeout": 900000,
+        "chunkTimeout": 120000
+      },
+      "models": {
+        "gyro-gyro-s": {
+          "name": "Gyro Gyro S",
+          "modelID": "gyro-gyro-s",
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          },
+          "settings": {
+            "cache": {
+              "warming": false
+            }
+          },
+          "body": {
+            "reasoning_effort": "medium"
+          },
+          "variants": [
+            {
+              "id": "xhigh",
+              "name": "Deep reasoning (validate alternatives)",
+              "body": {
+                "reasoning_effort": "xhigh"
+              }
+            },
+            {
+              "id": "medium",
+              "name": "Balanced reasoning (default)",
+              "body": {
+                "reasoning_effort": "medium"
+              }
+            },
+            {
+              "id": "low",
+              "name": "Brief reasoning",
+              "body": {
+                "reasoning_effort": "low"
+              }
+            },
+            {
+              "id": "budget8192",
+              "name": "Thinking cap 8192 tokens",
+              "body": {
+                "reasoning_budget_tokens": 8192
+              }
+            },
+            {
+              "id": "budget4096",
+              "name": "Thinking cap 4096 tokens",
+              "body": {
+                "reasoning_budget_tokens": 4096
+              }
+            },
+            {
+              "id": "off",
+              "name": "No thinking (trivial transformations only)",
+              "body": {
+                "chat_template_kwargs": {
+                  "enable_thinking": false
+                }
+              }
+            }
+          ]
+        },
+        "inkling-2-mini-sq-10": {
+          "name": "Inkling 2 Mini SQ-10 (128K, Strata)",
+          "modelID": "inkling-2-mini-sq-10",
+          "capabilities": {
+            "tools": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          },
+          "settings": {
+            "cache": {
+              "warming": false
+            }
+          },
+          "body": {
+            "reasoning_effort": "max"
+          },
+          "variants": [
+            {
+              "id": "minimal",
+              "name": "Minimal thinking",
+              "body": {
+                "reasoning_effort": "minimal"
+              }
+            },
+            {
+              "id": "low",
+              "name": "Low thinking",
+              "body": {
+                "reasoning_effort": "low"
+              }
+            },
+            {
+              "id": "medium",
+              "name": "Medium thinking",
+              "body": {
+                "reasoning_effort": "medium"
+              }
+            },
+            {
+              "id": "high",
+              "name": "High thinking",
+              "body": {
+                "reasoning_effort": "high"
+              }
+            },
+            {
+              "id": "xhigh",
+              "name": "Very high thinking",
+              "body": {
+                "reasoning_effort": "xhigh"
+              }
+            },
+            {
+              "id": "max",
+              "name": "Maximum thinking (default)",
+              "body": {
+                "reasoning_effort": "max"
+              }
+            }
+          ]
+        },
+        "inkling-2-mini-sq-20": {
+          "name": "Inkling 2 Mini SQ-20 (128K, Strata)",
+          "modelID": "inkling-2-mini-sq-20",
+          "capabilities": {
+            "tools": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          },
+          "settings": {
+            "cache": {
+              "warming": false
+            }
+          },
+          "body": {
+            "reasoning_effort": "max"
+          },
+          "variants": [
+            {
+              "id": "minimal",
+              "name": "Minimal thinking",
+              "body": {
+                "reasoning_effort": "minimal"
+              }
+            },
+            {
+              "id": "low",
+              "name": "Low thinking",
+              "body": {
+                "reasoning_effort": "low"
+              }
+            },
+            {
+              "id": "medium",
+              "name": "Medium thinking",
+              "body": {
+                "reasoning_effort": "medium"
+              }
+            },
+            {
+              "id": "high",
+              "name": "High thinking",
+              "body": {
+                "reasoning_effort": "high"
+              }
+            },
+            {
+              "id": "xhigh",
+              "name": "Very high thinking",
+              "body": {
+                "reasoning_effort": "xhigh"
+              }
+            },
+            {
+              "id": "max",
+              "name": "Maximum thinking (default)",
+              "body": {
+                "reasoning_effort": "max"
+              }
+            }
+          ]
+        },
+        "inkling-2-mini-ud-iq1_s": {
+          "name": "Inkling 2 Mini UD-IQ1_S (128K, Strata)",
+          "modelID": "inkling-2-mini-ud-iq1_s",
+          "capabilities": {
+            "tools": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          },
+          "settings": {
+            "cache": {
+              "warming": false
+            }
+          },
+          "body": {
+            "reasoning_effort": "max"
+          },
+          "variants": [
+            {
+              "id": "minimal",
+              "name": "Minimal thinking",
+              "body": {
+                "reasoning_effort": "minimal"
+              }
+            },
+            {
+              "id": "low",
+              "name": "Low thinking",
+              "body": {
+                "reasoning_effort": "low"
+              }
+            },
+            {
+              "id": "medium",
+              "name": "Medium thinking",
+              "body": {
+                "reasoning_effort": "medium"
+              }
+            },
+            {
+              "id": "high",
+              "name": "High thinking",
+              "body": {
+                "reasoning_effort": "high"
+              }
+            },
+            {
+              "id": "xhigh",
+              "name": "Very high thinking",
+              "body": {
+                "reasoning_effort": "xhigh"
+              }
+            },
+            {
+              "id": "max",
+              "name": "Maximum thinking (default)",
+              "body": {
+                "reasoning_effort": "max"
+              }
+            }
+          ]
+        },
+        "inkling-2-mini-ud-iq2_xxs": {
+          "name": "Inkling 2 Mini UD-IQ2_XXS (128K, Strata)",
+          "modelID": "inkling-2-mini-ud-iq2_xxs",
+          "capabilities": {
+            "tools": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          },
+          "settings": {
+            "cache": {
+              "warming": false
+            }
+          },
+          "body": {
+            "reasoning_effort": "max"
+          },
+          "variants": [
+            {
+              "id": "minimal",
+              "name": "Minimal thinking",
+              "body": {
+                "reasoning_effort": "minimal"
+              }
+            },
+            {
+              "id": "low",
+              "name": "Low thinking",
+              "body": {
+                "reasoning_effort": "low"
+              }
+            },
+            {
+              "id": "medium",
+              "name": "Medium thinking",
+              "body": {
+                "reasoning_effort": "medium"
+              }
+            },
+            {
+              "id": "high",
+              "name": "High thinking",
+              "body": {
+                "reasoning_effort": "high"
+              }
+            },
+            {
+              "id": "xhigh",
+              "name": "Very high thinking",
+              "body": {
+                "reasoning_effort": "xhigh"
+              }
+            },
+            {
+              "id": "max",
+              "name": "Maximum thinking (default)",
+              "body": {
+                "reasoning_effort": "max"
+              }
+            }
+          ]
+        },
+        "coder-iq1_m": {
+          "name": "Coder IQ1 M",
+          "modelID": "coder-iq1_m",
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          },
+          "settings": {
+            "cache": {
+              "warming": false
+            }
+          }
+        }
+      }
+    },
+    "ninfer": {
+      "name": "NInfer Inkling 2 Mini",
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": {
+        "baseURL": "http://127.0.0.1:8080/v1",
+        "apiKey": "ninfer-local-token",
+        "headerTimeout": 900000,
+        "chunkTimeout": 120000
+      },
+      "models": {
+        "qwen3.8-27b": {
+          "name": "Qwen3.8 27B (NInfer, agentic)",
+          "modelID": "qwen3.8-27b",
+          "capabilities": {
+            "tools": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 65536,
+            "output": 16384
+          },
+          "settings": {
+            "cache": {
+              "warming": false
+            }
+          },
+          "body": {
+            "reasoning_effort": "low"
+          }
+        },
+        "inkling-2-mini": {
+          "name": "Inkling 2 Mini (NInfer, 128K, vision)",
+          "modelID": "inkling-2-mini",
+          "capabilities": {
+            "tools": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          },
+          "settings": {
+            "cache": {
+              "warming": false
+            }
+          },
+          "body": {
+            "reasoning_effort": "low",
+            "frequency_penalty": 0,
+            "presence_penalty": 0
+          },
+          "variants": [
+            {
+              "id": "minimal",
+              "name": "Minimal thinking",
+              "body": {
+                "reasoning_effort": "minimal"
+              }
+            },
+            {
+              "id": "low",
+              "name": "Low thinking",
+              "body": {
+                "reasoning_effort": "low"
+              }
+            },
+            {
+              "id": "medium",
+              "name": "Medium thinking",
+              "body": {
+                "reasoning_effort": "medium"
+              }
+            },
+            {
+              "id": "high",
+              "name": "High thinking",
+              "body": {
+                "reasoning_effort": "high"
+              }
+            },
+            {
+              "id": "xhigh",
+              "name": "Very high thinking",
+              "body": {
+                "reasoning_effort": "xhigh"
+              }
+            },
+            {
+              "id": "max",
+              "name": "Maximum thinking (default)",
+              "body": {
+                "reasoning_effort": "max"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "polystrata-mini": {
+      "name": "MiniCPM Local",
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": {
+        "baseURL": "http://127.0.0.1:8080/v1",
+        "apiKey": "mini-local-token",
+        "headerTimeout": 900000
+      },
+      "models": {
+        "minicpm-v-4.7-35b-a3b-q4_k_m": {
+          "name": "MiniCPM-V 4.7 35B A3B Q4_K_M",
+          "modelID": "minicpm-v-4.7-35b-a3b-q4_k_m",
+          "capabilities": {
+            "tools": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          }
+        }
+      }
+    },
+    "ollama": {
+      "name": "Ollama",
+      "settings": {
+        "baseURL": "http://127.0.0.1:11434/v1"
+      },
+      "models": {
+        "hf.co/unsloth/gemma-4-26B-A4B-it-GGUF:UD-IQ4_XS": {
+          "name": "Gemma 4 26B A4B (Ollama)",
+          "modelID": "hf.co/unsloth/gemma-4-26B-A4B-it-GGUF:UD-IQ4_XS",
+          "capabilities": {
+            "tools": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 131072,
+            "output": 65536
+          },
+          "variants": [
+            {
+              "id": "high",
+              "body": {
+                "reasoning_effort": "high"
+              }
+            },
+            {
+              "id": "low",
+              "body": {
+                "reasoning_effort": "low"
+              }
+            },
+            {
+              "id": "medium",
+              "body": {
+                "reasoning_effort": "medium"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "polystrata": {
+      "name": "PolyStrata Local",
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": {
+        "baseURL": "http://127.0.0.1:8080/v1",
+        "headerTimeout": 900000
+      },
+      "models": {
+        "gemma-4-26b-a4b-qat-ud-q4_k_xl": {
+          "name": "Gemma 4 26B A4B (PolyStrata)",
+          "modelID": "gemma-4-26b-a4b-qat-ud-q4_k_xl",
+          "capabilities": {
+            "tools": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 131072,
+            "output": 65536
+          },
+          "variants": [
+            {
+              "id": "high",
+              "body": {
+                "reasoning_effort": "high"
+              }
+            },
+            {
+              "id": "low",
+              "body": {
+                "reasoning_effort": "low"
+              }
+            },
+            {
+              "id": "medium",
+              "body": {
+                "reasoning_effort": "medium"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "experimental": {
+    "background_compaction": true,
+    "subagent_depth": 1
+  },
+  "plugins": [
+    "./plugins/agent-journal"
+  ],
+  "agents": {
+    "reviewer": {
+      "description": "Independent local reviewer for specification compliance and technical quality",
+      "mode": "subagent",
+      "system": "You are an INDEPENDENT reviewer. You did not implement the work. Compare the final implementation against the ORIGINAL user requirements verbatim, then assess technical quality against the existing architecture. Do not invent architectural requirements. Never edit files. Report findings by severity with concrete evidence from the files you read, and clearly separate confirmed problems from missing evidence. If the task involves images, you MUST open each relevant image with the read tool; if you cannot view it, write CANNOT VERIFY VISUALS and return Partially Verified, never Verified. Treat a claimed fix as a hypothesis to test, not a confirmed fact: actively look for defects instead of confirming success. Never reclassify a visual defect as intentional design based on code or prompt text; judge the pixels themselves.",
+      "permissions": [
+        { "action": "edit", "resource": "*", "effect": "deny" },
+        { "action": "write", "resource": "*", "effect": "deny" },
+        { "action": "patch", "resource": "*", "effect": "deny" },
+        { "action": "shell", "resource": "*", "effect": "deny" }
+      ]
+    },
+    "evidence-collector": {
+      "permissions": [
+        { "action": "subagent", "resource": "*", "effect": "deny" },
+        { "action": "edit", "resource": "*", "effect": "deny" }
+      ]
+    },
+    "game-designer": {
+      "permissions": [
+        { "action": "subagent", "resource": "*", "effect": "deny" },
+        { "action": "edit", "resource": "*", "effect": "deny" }
+      ]
+    },
+    "level-designer": {
+      "permissions": [
+        { "action": "subagent", "resource": "*", "effect": "deny" },
+        { "action": "edit", "resource": "*", "effect": "deny" }
+      ]
+    }
+  },
+  "mcp": {}
+}

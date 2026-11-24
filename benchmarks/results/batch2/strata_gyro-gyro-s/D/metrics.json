@@ -1,0 +1,36 @@
+﻿{
+    "events":  133,
+    "first_event_ms":  1795318151796,
+    "last_event_ms":  1795319773310,
+    "ttft_ms":  1738,
+    "first_text_ms":  1795318153534,
+    "tool_calls":  43,
+    "tool_names":  {
+                       "read":  9,
+                       "shell":  22,
+                       "write":  6,
+                       "edit":  5,
+                       "execute":  1
+                   },
+    "edit_calls":  11,
+    "test_calls":  23,
+    "repair_attempts_heuristic":  11,
+    "tokens":  {
+                   "input":  18264,
+                   "output":  12330,
+                   "reasoning":  27742,
+                   "cache_read":  1678794,
+                   "cache_write":  0
+               },
+    "note":  "null means the JSON event stream did not expose that metric; no values were estimated.",
+    "model":  "strata/gyro-gyro-s",
+    "task":  "D",
+    "batch":  "batch2",
+    "wall_ms":  1623832,
+    "start_iso":  "2026-11-22T03:29:10.3326658Z",
+    "end_iso":  "2026-11-22T03:56:15.3646404Z",
+    "exit_code":  0,
+    "timed_out":  false,
+    "vram_max_mib":  15021,
+    "vram_avg_mib":  14838.1
+}

@@ -1,0 +1,27 @@
+# Large engine binaries and model artifacts (download separately)
+ninfer/
+models/
+*.ninfer
+*.gguf
+
+# Raw agent transcripts: contain degenerate garbage loops and full local file dumps.
+# The meaningful benchmark data is eval.json / metrics.json (kept).
+events.jsonl
+
+# Runtime state
+logs/*.log
+logs/requests/
+run/*.pid
+*.zip
+*.7z
+*.7z.001
+
+# Python / Node caches
+__pycache__/
+*.pyc
+node_modules/
+
+# Editor / OS
+.vscode/
+.DS_Store
+Thumbs.db

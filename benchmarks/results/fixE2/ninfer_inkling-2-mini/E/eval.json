@@ -1,0 +1,89 @@
+{
+  "task": "E",
+  "checks": [
+    {
+      "name": "atlas_size_64x16",
+      "passed": true
+    },
+    {
+      "name": "atlas_four_frames",
+      "passed": true
+    },
+    {
+      "name": "atlas_no_empty_frame",
+      "passed": true
+    },
+    {
+      "name": "atlas_distinct_idle_run",
+      "passed": true
+    },
+    {
+      "name": "atlas_distinct_idle_hurt",
+      "passed": true
+    },
+    {
+      "name": "atlas_run_frames_differ",
+      "passed": true
+    },
+    {
+      "name": "atlas_unmodified_shared_asset",
+      "passed": true
+    },
+    {
+      "name": "ui_uses_all_four_frames",
+      "passed": true
+    },
+    {
+      "name": "ui_state_machine_idle",
+      "passed": true
+    },
+    {
+      "name": "ui_state_machine_run",
+      "passed": true
+    },
+    {
+      "name": "ui_state_machine_hurt",
+      "passed": true
+    },
+    {
+      "name": "ui_raf_loop",
+      "passed": true
+    },
+    {
+      "name": "ui_hud_hp",
+      "passed": true
+    },
+    {
+      "name": "ui_hud_xp",
+      "passed": true
+    },
+    {
+      "name": "ui_hud_lv",
+      "passed": true
+    },
+    {
+      "name": "ui_draws_canvas",
+      "passed": true
+    },
+    {
+      "name": "ui_buttons_wired",
+      "passed": true
+    },
+    {
+      "name": "unchanged_index.html",
+      "passed": true
+    },
+    {
+      "name": "unchanged_styles.css",
+      "passed": true
+    }
+  ],
+  "passed": 19,
+  "total": 19,
+  "score": 1.0,
+  "bugs_remaining": 0,
+  "bugs_new": 0,
+  "changed_files": [],
+  "new_files": [],
+  "notes": "Shared identical atlas for both models; no visual generation tool available. Static wiring checks do NOT replace screenshot verification, done separately."
+}

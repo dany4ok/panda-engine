@@ -1,0 +1,28 @@
+FIX TOOL-CALLING INKLING 2 MINI — 2026-11-24
+==============================================
+
+CAUZA (confirmata de GitHub):
+- NInfer PR #118 (merged): presence_penalty > 0 penalizeaza tokenii repetati ai tool-call-urilor; requestul cu tool-uri trebuie sa aiba presence_penalty 0. Noi trimiteam explicit 0.5 (si frequency 1.0), anuland protectia engine-ului.
+- vLLM issue #68692 / PR #69351: <|content_invoke_tool_json|> nu era recunoscut ca sfarsit de reasoning, deci --structured-output nu pornea gramatica pentru JSON-ul tool-call-ului -> JSON malformat / marker in text.
+- ai-dynamo/frontend-crates PR #616: parserul respingea JSON compact.
+- Strata PR #6774: istoria cu tool-uri trebuie sa contina thinking-ul gol fortat.
+
+FIX APLICAT:
+- OpenCode body ninfer/inkling-2-mini: frequency_penalty=0, presence_penalty=0 (in loc de 1.0 / 0.5), reasoning_effort=low, fara post_thinking.
+- start.ps1 / bench.ps1: --presence-penalty 0 --frequency-penalty 0 --structured-output --reasoning-loop conclude --spec none.
+- model implicit OpenCode: ninfer/inkling-2-mini.
+- backup: opencode.json.bak-before-toolfix-20261124-100429, opencode.json.bak-before-inkling-default-20261124-101850.
+
+REZULTAT (batch fixfinal, harness gyro-mini-bench, NoSub, evaluator determinist):
+A 13/13  wall 58.5s  raw markers 0
+B 14/14  wall 34.5s  raw markers 0
+C 15/15  wall 47.8s  raw markers 0
+D 20/20  wall 56.8s  raw markers 0
+E 19/19  wall 42.8s (rerun fixE2, timed_out=False) raw markers 0
+F 17/17  wall 58.2s  raw markers 0
+TOTAL: 98/98
+
+Inainte: 34/98 cu markerii <|content_invoke_tool_json|> in text.
+Dupa: 98/98, zero markerii, acelasi model Inkling 2 Mini prin NInfer.
+
+NOTA: PC-ul NU a fost oprit (conform cerintei utilizatorului).

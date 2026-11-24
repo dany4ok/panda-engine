@@ -1,0 +1,194 @@
+=====================================================================
+BENCHMARK A/B — Gyro-S vs MiniCPM-V 4.7 35B A3B Q4_K_M — RERULARE CURATA (batch2)
+Subiect: agent principal in OpenCode. Ordine inversata fata de batch1 (Mini primul).
+=====================================================================
+
+A. CONTROALE VERIFICATE INAINTE/IN TIMPUL EXECUTIEI
+- Subagenti: 0 la ambele modele (deny V2 in config local: {action:subagent,
+  resource:*, effect:deny}). Verificat din toate cele 12 metrics.json.
+- Evaluatori: hash-uri SHA256 inregistrate in EVALUATOR_HASHES_BEFORE_BATCH2.txt
+  inainte de prima proba; EVALUATOR_HASHES_AFTER_BATCH2.txt (scris dupa) contine
+  exact aceleasi 9 hash-uri - verificat prin comparatie directa si prin
+  recomputare SHA256 pentru toate cele 9 fisiere.
+- Ordine alternata: batch1 = Gyro primul; batch2 = Mini primul.
+- Aceleasi seed-uri, cerinte, prompt, instrumente si limite de context.
+- Swap secvential: Mini -> Gyro, cu VRAM eliberat intre (vezi swaps.jsonl).
+- Configul global OpenCode NU a fost modificat DE MINE in timpul loturilor
+  batch1/batch2. Utilizatorul l-a modificat la 2026-11-22 08:19:28 local,
+  intre low_test si medium_test (vezi sectiunea H).
+
+B. TABEL COMPARATIV (sursa: 12 x metrics.json + eval.json, summary.jsonl)
+
+| Metrică | Gyro-S | MiniCPM | Δ% (Mini vs Gyro) |
+|---|---|---|---|
+| Sarcini finalizate corect | 6/6 | 6/6 | 0% |
+| Teste trecute | 98/98 | 98/98 | 0% |
+| Buguri ramase / introduse | 0 / 0 | 0 / 0 | 0% |
+| TTFT mediu (ms; interval) | 3991 (1340-10451) | 1494 (1252-1700) | -62,6% |
+| Durată totală (s) | 4663,5 | 392,0 | -91,6% |
+| Durată până la rezultat corect (s, BRUT ne-normalizat) | 4663,5 | 392,0 | -91,6% |
+| Viteză tokeni/s (sarcini reușite) | 17,4 | 67,4 | +288,4% |
+| Input tokens | 59761 | 34699 | -41,9% |
+| Output tokens | 34538 | 27072 | -21,6% |
+| Cache-read tokens | 3228438 | 839552 | -74,0% |
+| Apeluri instrumente | 154 | 77 | -50,0% |
+| Reparații (heuristică) | 46 | 6 | -87,0% |
+| Erori / timeout / exit≠0 | 0 | 0 | 0% |
+| VRAM mediu max (MiB) | 15375,7 | 13721 | -10,8% |
+
+Durata pe sarcini (s):
+  A  Gyro 117,9 / Mini 41,6      B  Gyro 90,0 / Mini 62,3
+  C  Gyro 65,7 / Mini 53,9       D  Gyro 1623,8 / Mini 138,6
+  E  Gyro 2111,8 / Mini 37,2     F  Gyro 654,2 / Mini 58,5
+
+C. CE S-A SCHIMBAT FATA DE BATCH1
+- Calitate: ambele modele ajung la 6/6 si 98/98. Mini a corectat singur
+  eroarea de la A (underscore) din batch1 — era nondeterminism.
+- Viteza: Gyro scade de la 8977 s la 4664 s (-48%) odata cu eliminarea
+  delegarii, dar ramane de 11,9x mai lent decat Mini (era 18,6x).
+- A/B/C: subagentii explicau aproape toata diferenta (927->118, 727->90,
+  444->66 s). La D/E timpul ramane urias: 1624 s si 2112 s.
+- IPOTEZA (inferenta din golurile de timestamp, NU masurare directa — lipsesc
+  time-in-tools si time-lost-in-loops): cauza reziduala D/E ar putea fi
+  reasoning loops + context reloaded (1,68M si 0,92M cache-read tokens),
+  16 editari la E, si un eveniment `retry` de 207 s la D. Nu o afirm ca fapt.
+  Nu e delegare. IMPORTANT: la E o parte din timp (~1689 s din 2112 s) a fost
+  munca de verificare vizuala CERUTA explicit de REQUIREMENT.md (Gyro a instalat
+  puppeteer-core si a facut capturi pixel-match; D cerea de asemenea deschiderea
+  in browser). Mini a SARIT aceasta cerinta, desi evaluatorul static i-a dat
+  19/19 si 20/20. Deci comparatia de timp pe D+E (3735,6 s = 80% din timpul Gyro)
+  NU e like-for-like pe metrica primara "timp pana la rezultat corect SI VERIFICAT".
+  Estimare normalizata: eliminand ~1689 s din E, Gyro ~2974 s, deci ~7,6x Mini,
+  nu 11,9x. Derivarea celor 1689 s: in E/events.jsonl primele evenimente cu
+  cuvinte-cheie de verificare (puppeteer/verify.js/captures/pixelMismatch)
+  apar la t=406,1 s, ultimele la t=2094,3 s -> 1688,3 s (~1689 s).
+  ATENTIE: normalizarea e UNILATERALA — scade timpul lui Gyro, dar nu adauga
+  timpul de verificare (nescris) al lui Mini. E deci o estimare a timpului
+  pana la cod corect, NU un "timp pana la rezultat verificat" like-for-like.
+  Cifrele brute raman afisate si trebuie citite cu aceasta rezerva.
+
+D. LIMITARI RAMASE
+1. INCALCARE a restrictiei "Maximum 90 minute": batch2 singur a durat ~78 min
+   doar probele Gyro, iar intregul benchmark (ambele loturi + low_test) mult
+   mai mult. Aceasta e o neconformitate de proces, nu un defect al cifrelor.
+2. CORECTIE: Gyro a facut capturi provenientiate in timpul probei (12 PNG in
+   results/batch2/strata_gyro-gyro-s/E/captures/, plus un harness puppeteer/Edge
+   si pixel-match pe cele 4 cadre), iar la D a folosit CDP. MiniCPM NU a facut
+   nicio verificare vizuala. Deci exista O ASIMETRIE: ambele primesc 19/19 de
+   la evaluatorul static, dar doar Gyro a satisfacut cerinta explicita de
+   captura din REQUIREMENT.md. Calitatea e egala pe testele ascunse, NU pe
+   aceasta componenta. Capturile vechi post-hoc (reality_E_captures/) raman
+   excluse; cele din batch2 sunt in workdir-ul evaluat.
+3. Nicio repetare in cadrul batch2 (Mini a rulat B inainte de A, Gyro A->F);
+   avem insa doua loturi cu ordine inversata intre modele.
+3b. Gyro E a emis un apel `question` desi promptul cerea "fara intrebari";
+   a fost anulat automat in mod non-interactiv, deci 0 interventii reale.
+3c. Metrici cerute si ABSENTE: RAM peak, time-in-tools, timp pana la primul
+   rezultat functional, timp pierdut in bucle. TTFT e prezent in tabel.
+   "Erori" inseamna doar sarcini esuate/timeout/exit!=0, nu bucle detectate.
+4. Incidente istorice din batch1 (evaluatori corectati post-rulare, posibila
+    oprire a serverului concurent) NU se aplica acestui lot — hashes-urile si
+    conditiile de mai sus sunt verificate pentru batch2.
+
+E. VERDICT (cele 7 intrebari, explicit)
+1. Mai bun pentru programare zilnica: MiniCPM — calitate egala pe teste, de
+   11,9x mai rapid.
+2. Mai bun pentru jocuri: ambele 20/20 la D; Mini de 11,7x mai rapid (138,6 s
+   vs 1623,8 s), dar Gyro a facut si verificare vizuala CDP suplimentara.
+3. Mai bun la debugging: ambele 9/9 buguri reparate, 0 regresiuni; Mini de
+   1,22x mai rapid (53,9 s vs 65,7 s — diferenta mica). Corectie: cifra de
+   8,2x aparuta intr-o versiune anterioara era un mix intre loturi.
+4. Mai rapid pana la rezultat corect: MiniCPM. Brut 392,0 s vs 4663,5 s
+   (-91,6%), dar normalizat pentru verificarea vizuala neegală ~392 s vs
+   ~2974 s (~7,6x). Directia e sigura, magnitudinea bruta e umflata.
+5. Mai autonom: MiniCPM — 77 instrumente si 6 reparatii vs 154 si 46 la Gyro;
+   0 interventii umane la ambele.
+6. Mai fiabil pe sesiuni lungi: MiniCPM in acest setup — 0 erori, timp
+   previzibil; Gyro a avut un retry de 207 s la D si TTFT maxim 10,4 s la
+   F (la E a fost 7,6 s).
+   Gyro e robust ca rezultat (0 buguri), dar imprevizibil ca latenta.
+7. Merita diferenta de timp? NU - calitate egala pe testele ascunse, cost de
+   ~7,6x dupa normalizare (pana la ~11,9x brut). Verdictul e provizoriu pe
+   componenta vizuala, unde Gyro a facut verificarea ceruta si Mini nu.
+Test suplimentar (variant low, oprit la 3x timpul Mini): D cu low = 269 s
+(1,94x Mini) si 20/20 corect; E cu low a depasit 112 s si a fost oprit. Deci
+low reduce mult timpul la D (20/20 corect). La E, testul cu low a fost OPRIT
+   de limita externa de 112 s desi evaluarea muncii partiale era deja 19/19 —
+   deci NU putem concluziona ca buclele persista; doar ca sarcina nu a incaut
+   in 3x timpul Mini. Nu tragem concluzie de failure din acest timeout.
+
+F. RECOMANDARE
+Model implicit pentru uz zilnic in OpenCode: MiniCPM-V 4.7 35B A3B Q4_K_M.
+Verdictul e mai puternic decat in batch1 pe controlul subagentilor si pe
+   pre-registrare, dar NU e certificat: in conditii curate (0 subagenti,
+evaluatori pre-hash-uiti si verificati, ordin alternat) ambele modele au
+calitate perfecta pe testele ascunse, iar MiniCPM e de ~7,6x mai rapid dupa
+   normalizarea muncii de verificare (11,9x brut).
+Rezerve: (a) Gyro a facut verificare vizuala reala, Mini nu — deci "calitate
+egala" e valida doar pe teste, nu pe componenta vizuala; (b) metrici de timp
+cerute (RAM, time-in-tools) nu au fost colectati. Verdict PROVIZORIU pe
+calitatea vizuala si pe acele metrici absente, nu pe subtanta comparatiei.
+NOTA: sectiunea H arata variabilitatea dintre loturi (subagenti, verificare
+vizuala, retry) si faptul ca `#medium` e identic cu defaultul; nu sustine o
+atribuire a diferentei de timp unei setari de reasoning. Cifrele din tabelul
+principal raman cele masurate in batch2.
+
+H. COMPARATIE ISTORICA PENTRU GYRO-S (toate loturile, aceleasi sarcini)
+Sursa: results/<lot>/strata_gyro-gyro-s/<sarcina>/metrics.json + eval.json.
+
+| Lot | Configurare | A | B | C | D | E | F | Total |
+|---|---|---|---|---|---|---|---|---|
+| batch1 | default implicit + subagenti (4/4/2/3/9/6) | 926,9 | 727,0 | 443,6 | 1549,3 | 4096,7 | 1233,7 | 8977,2 |
+| batch2 | default implicit, 0 subagenti | 117,9 | 90,0 | 65,7 | 1623,8 | 2111,8 | 654,2 | 4663,5 |
+| low_test | `#low`, 0 subagenti (doar D,E; limite 3x) | - | - | - | 269,1 | 112,1* | - | - |
+| medium_test | `#medium`, 0 subagenti (limite 3x / 5x) | 64,8 | 90,2 | 70,2 | 200,1 | 186,0* | 293,0* | 904,3** |
+| MiniCPM batch2 | default, 0 subagenti | 41,6 | 62,3 | 53,9 | 138,6 | 37,2 | 58,5 | 392,0 |
+
+* = proces oprit de limita externa; la E evaluarea muncii partiale era deja 1.0,
+la F era 0,5882 (10/17). ** = totalul include cele doua limite, deci NU e un
+timp de finalizare comparabil.
+
+Tokeni reasoning (Gyro-S), aceleasi sarcini:
+  batch1: A 6778, B 4572, C 4633, D 12317, E 28414, F 5397
+  batch2: A 2868, B 3221, C 2762, D 27742, E 11771, F 4235
+  low_test: D 9637, E 3899
+  medium_test: A 880, B 2269, C 1968, D 8313, E 4787, F 1849
+
+Observatii (fapte, nu cauze):
+- eliminarea subagentilor (batch1 -> batch2) a taiat timpul la A/B/C de
+  6,8-8,1x, dar NU la D (1549 -> 1624 s, usor mai rau) si nici la F doar partial.
+- `#medium` NU e o setare distincta de default. Configul global curent are
+  `body.reasoning_effort: "medium"` ca default, iar variantul `medium` e identic
+  si etichetat "Balanced reasoning (default)"; AGENTS.md confirma ca medium e
+  defaultul masurat. Deci comparatia batch2 vs medium_test NU izoleaza un efect
+  de reasoning effort.
+- Configul global a fost MODIFICAT de utilizator la 2026-11-22 08:19:28 local,
+  intre low_test si medium_test. Sectiunea A e valabila doar pentru faptul ca
+  EU nu l-am modificat in timpul batch1/batch2; afirmatia generala trebuie
+  corectata cu aceasta precizare.
+- `#low` la D: 269,1 s, mai lent decat `#medium` (200,1 s), si cu MAI MULTI
+  tokeni reasoning (9637 vs 8313). Aici rulata care a gandit mai mult a fost
+  mai lenta — directia asteptata, dar o singura pereche nu permite o concluzie
+  generala despre relatia dintre cantitatea de reasoning si timp.
+- Diferenta de la D (1623,8 -> 200,1 s) e insotita de schimbari de continut:
+  batch2 D a avut 43 tool calls, 1,68M cache-read, un retry de 207 s si
+  verificare CDP; medium_test D a avut 17 tool calls, 0 capturi si 0 retry.
+  Nu e acelasi volum de munca, deci nu o putem atribui setarii de reasoning.
+- E si F din medium_test au atins plafoanele x5; F nu era terminat. Comparatia
+  de timp pe E/F ramane invalida, asa cum e documentat in sectiunea D.
+
+Implicatie pentru verdict: datele NU permit atribuirea diferentelor de timp
+unei setari de reasoning. Ele arata variabilitate mare intre rulari si diferente
+de continut (subagenti, verificare vizuala, retry). Cifrele 11,9x / 7,6x raman
+cele masurate in batch2, cu rezervele deja notate. Recomandarea MiniCPM se bazeaza
+pe rezultatul constant din batch2 (0 subagenti, evaluator hash-uit, 6/6 corect),
+NU pe ipoteza ca Gyro ar fi fost rulat pe o setare diferita de medium.
+
+G. DOVEZI
+- results/batch2/**/metrics.json, eval.json, events.jsonl, work/
+- results/batch2/summary.jsonl, REPORT_batch2.txt
+- EVALUATOR_HASHES_BEFORE_BATCH2.txt (inregistrat inainte, verificat dupa)
+- config/gyro_nosub.opencode.json, config/mini_nosub.opencode.json
+- swaps.jsonl, run_gyro_batch2.log; ordinea Mini din batch2 e data de
+  start_iso in metrics.json (run_mini.log apartine batch1, nu batch2)
+=====================================================================

@@ -1,0 +1,93 @@
+{
+  "task": "F",
+  "checks": [
+    {
+      "name": "suite_green",
+      "passed": false,
+      "tests": 6,
+      "failures": 6,
+      "tail": "ine 10, in test_median\n    self.assertEqual(median([3, 1, 2]), 2)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 1 != 2\n\n======================================================================\nFAIL: test_percentile (tests.test_stats.StatsTests.test_percentile)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\x1p\\AppData\\Local\\Temp\\opencode\\gyro-mini-bench\\results\\inkling_ninfer\\ninfer_inkling-2-mini\\F\\work\\tests\\test_stats.py\", line 13, in test_percentile\n    self.assertEqual(percentile([1, 2, 3, 4], 50), 2)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 3 != 2\n\n----------------------------------------------------------------------\nRan 6 tests in 0.021s\n\nFAILED (failures=5, errors=1)"
+    },
+    {
+      "name": "tests_untouched",
+      "passed": true,
+      "changed": []
+    },
+    {
+      "name": "extra_mean_empty_raises",
+      "passed": true
+    },
+    {
+      "name": "extra_percentile_0",
+      "passed": true
+    },
+    {
+      "name": "extra_percentile_100",
+      "passed": false,
+      "error": "list index out of range"
+    },
+    {
+      "name": "extra_summarize_empty",
+      "passed": false,
+      "error": "empty"
+    },
+    {
+      "name": "extra_cli_single",
+      "passed": false
+    },
+    {
+      "name": "extra_cli_negative",
+      "passed": false
+    },
+    {
+      "name": "extra_cli_help_usage",
+      "passed": false
+    },
+    {
+      "name": "fixes_md_mean",
+      "passed": false
+    },
+    {
+      "name": "fixes_md_median",
+      "passed": false
+    },
+    {
+      "name": "fixes_md_percentile",
+      "passed": false
+    },
+    {
+      "name": "fixes_md_report",
+      "passed": false
+    },
+    {
+      "name": "fixes_md_cli",
+      "passed": false
+    },
+    {
+      "name": "fixes_md_help",
+      "passed": false
+    },
+    {
+      "name": "fixes_md_nonempty",
+      "passed": false
+    },
+    {
+      "name": "minimal_diff",
+      "passed": true,
+      "unexpected": []
+    }
+  ],
+  "passed": 4,
+  "total": 17,
+  "score": 0.2353,
+  "bugs_remaining": 6,
+  "bugs_new": 5,
+  "changed_files": [
+    "BUGS.md",
+    "cli.py",
+    "report.py",
+    "stats.py"
+  ],
+  "new_files": [],
+  "notes": "6 failing seed tests + 7 hidden regressions + test-hash guard + FIXES.md root causes + minimal diff."
+}

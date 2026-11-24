@@ -1,0 +1,40 @@
+==============================================================================
+BENCHMARK A/B — Gyro-S vs MiniCPM-V ca agent principal (batch: batch2)
+==============================================================================
+Probe gasite: Gyro-S=6, MiniCPM=6
+Delta % = (MiniCPM - Gyro-S) / Gyro-S * 100. Valorile lipsa raman n/a.
+Durata pana la corect include DOAR sarcinile verifyate; sarcinile esuate
+NU sunt considerate mai rapide pentru ca modelul s-a oprit devreme.
+
+| Metrică | Gyro-S | MiniCPM | Δ% |
+|---|---|---|---|
+| Sarcini finalizate corect | 6/6 | 6/6 | n/a |
+| Teste trecute | 98/98 | 98/98 | 0.0% |
+| Buguri ramase | 0 | 0 | n/a |
+| Buguri introduse (noi) | 0 | 0 | n/a |
+| Durata totala (s) | 4663.5 | 392.0 | -91.6% |
+| Durata pana la rezultat corect (s) | 4663.5 | 392.0 | -91.6% |
+| Viteza tokeni/s (pe sarcini reusite) | 17.4 | 67.4 | 288.4% |
+| Input tokens | 59761 | 34699 | -41.9% |
+| Output tokens | 34538 | 27072 | -21.6% |
+| Cache-read tokens | 3228438 | 839552 | -74.0% |
+| Apeluri instrumente | 154 | 77 | -50.0% |
+| Reparatii necesare | 46 | 6 | -87.0% |
+| Sarcini eșuate / timeout / exit≠0 | 0 | 0 | n/a |
+| Consum VRAM mediu max (MiB) | 15375.7 | 13721 | -10.8% |
+
+Sarcini esuate Gyro-S: -
+Sarcini esuate MiniCPM: -
+
+Verdict (de completat dupa verificarea independenta):
+  - Care e mai bun pentru programare zilnica? [DE COMPLETAT]
+  - Care e mai bun pentru jocuri? [DE COMPLETAT]
+  - Care e mai bun la debugging? [DE COMPLETAT]
+  - Care e mai rapid pana la rezultat corect? [DE COMPLETAT]
+  - Care lucreaza mai autonom? [DE COMPLETAT]
+  - Care e mai fiabil pe sesiuni lungi? [DE COMPLETAT]
+  - Merita diferenta de timp pentru modelul mai bun calitativ? [DE COMPLETAT]
+
+NOTA: acest tabel e generat automat; claim-urile modelelor nu sunt
+acceptate ca dovada. Verdictul final se scrie doar dupa ce evaluatorul
+determinist si review-ul independent confirma rezultatele.
