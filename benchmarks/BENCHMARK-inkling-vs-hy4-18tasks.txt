@@ -1,0 +1,124 @@
+================================================================================
+BENCHMARK A/B - Inkling 2 Mini (NInfer) vs Hy4 Flash
+Test de capacitate: 18 sarcini concrete, 3 runde paralele, verificare determinista
+Data: 2026-11-24
+Durata totala: ~6 minute (limita stabilita: 15 minute)
+================================================================================
+
+1. MODELELE TESTATE
+--------------------------------------------------------------------------------
+Inkling 2 Mini:
+  - ID OpenCode: ninfer/inkling-2-mini
+  - Varianta: default (fara override)
+Hy4 Flash:
+  - ID OpenCode: opencode/hy4-flash-free
+  - Varianta: high (mostenita din configul sesiunii OpenCode)
+
+Caveat: variantele nu sunt identice; comparatia nu e perfect controlata pe acest punct.
+
+2. METODOLOGIE
+--------------------------------------------------------------------------------
+- 3 runde x 6 sarcini = 18 sarcini identice, aceleasi prompturi verbatim.
+- Doua sesiuni OpenCode create in paralel (ownWork + returnResult), una per model.
+- Timpii masurati din createdAt / completedAt ai mesajelor assistant.
+- Verificare determinista: codul generat a fost executat in Python contra
+  cazurilor de test declarate; raspunsurile numerice au fost calculate in
+  prealabil; numarul de cuvinte a fost numarat programatic.
+- Niciun evaluator LLM tertiar. Scorarea e manuala, pe baza raspunsului corect
+  stabilit inainte de rulare.
+- Pre-test separat (3 sarcini: numar de 'r', longest_unique_run, explicatie):
+  ambele modele corecte pe deterministic, hy4 mai bun la explicatie;
+  hy4 11,7 s vs ink 14,6 s.
+
+3. REZULTATE PER SARCINA
+--------------------------------------------------------------------------------
+Sarcina                          | Asteptat        | ink          | hy4
+---------------------------------+-----------------+--------------+-------------
+T1  aritmetica                   | 367             | 367 PASS     | 391 FAIL
+T2  ordine logicica              | D C B A E       | PASS         | D B C A E FAIL
+T3  merge_intervals (4 cazuri)   | liste unite     | PASS         | PASS
+T4  debug sum_even               | total += n      | PASS         | PASS
+T5  JSON strict, fara alt text   | 4 chei exacte   | FAIL*        | PASS
+T6  palindrom >= 7 litere        | palindrom       | anasana PASS | deasupra FAIL
+T7  medie aritmetica             | 28              | PASS         | PASS
+T8  premisa falsa (Bennu/aur)    | respingere      | PASS         | PASS (mai precis)
+T9  hashcripto 250-300 cuvinte   | 250-300         | 232 FAIL     | 274 PASS
+T10 tren/pod                     | 40 s            | PASS         | PASS
+T11 parse_log (3 cazuri)         | 3 tuple corecte | FAIL         | PASS
+T12 SQL/NoSQL 200-250 cuvinte    | 200-250         | 129 FAIL     | 213 PASS
+T13 procente/puteri              | 312             | PASS         | PASS
+T14 principiul cutiei            | 3               | PASS         | PASS
+T15 is_anagram (4 cazuri)        | T,F,T,T         | FAIL         | PASS
+T16 rezumare fix 40 cuvinte      | 40              | 40 PASS      | 40 PASS
+T17 al 3-lea prim 6k-1           | 17              | PASS         | PASS
+T18 recall din document          | Timisoara|mesaj | PASS         | PASS
+--------------------------------------------------------------------------------
+* T5: obiectul JSON e valid si are cheile corecte, dar ink l-a inclus intr-un
+  code fence desi promptul cerea "fara niciun alt text" -> penalizat.
+  T18: ink a adaugat eticheta "MESAJ:" in plus fata de formatul cerut;
+  continutul fiind corect, nu a fost penalizat.
+
+4. SCOR TOTAL
+--------------------------------------------------------------------------------
+                    PASS    RATA
+Inkling 2 Mini      13/18   72,2 %
+Hy4 Flash           15/18   83,3 %
+
+5. VITEZA (timp de generare per runda)
+--------------------------------------------------------------------------------
+Runda                       | ink      | hy4      | mai rapid
+----------------------------+----------+----------+-----------------
+R1 (raspunsuri scurte)      | 27,5 s   |  9,0 s   | hy4 (~3x)
+R2 (texte lungi)            | 11,3 s   | 49,5 s   | ink (~4x)
+R3 (mix)                    | 16,0 s   | 35,9 s   | ink (~2,2x)
+----------------------------+----------+----------+-----------------
+TOTAL                       | 54,8 s   | 94,4 s   | ink (~42%)
+
+Observatie: hy4 e foarte rapid pe raspunsuri scurte, dar timpul creste
+puternic odata cu lungimea iesirii. Ink e mai constant.
+
+6. ANALIZA EROARILOR
+--------------------------------------------------------------------------------
+Inkling 2 Mini:
+  - T1, T2 au fost corecte; greselile apar incod si in respectarea constrangerilor.
+  - T11: regexul ^...Z\s+(\w+)\s+ prinde "mesaj" ca nivel desi modelul declara
+    (None, None). Executia confirma FAIL.
+  - T15: functia compara stringurile normalizate direct, fara sorted();
+    ("abc","bca") da False, desi modelul declara True. Executia confirma FAIL.
+  - T9 si T12: depaseste/subdimensioneaza bugetul de cuvinte (232 vs 250-300,
+    129 vs 200-250).
+  - T8 si T15: se autocorecteaza in mijlocul raspunsului ("carbonat de... nu -"),
+    respectiv ofera doua implementari contradictorii.
+
+Hy4 Flash:
+  - T1: 391 = doar 17x23; a omis +456/8 - 3^4.
+  - T2: D B C A E pune B inaintea lui C, desi B trebuie imediat dupa C.
+  - T6: "deasupra" e cuvant romanesc, dar NU e palindrom.
+  - Eroarea de la T1/T2 e izolata de restul performantei: aceleasi model
+    rezolva corect T13, T14, T17 (probleme mai grele) in rundele urmatoare.
+
+7. CONCLUZIE
+--------------------------------------------------------------------------------
+- Calitate: hy4 castiga (15/18 vs 13/18), mai ales la cod si la constrangeri
+  de format/lungime.
+- Viteza: ink castiga pe total (54,8 s vs 94,4 s), in special pe iesiri lungi.
+- Recomandare: hy4 pentru cod si output cu constrangeri stricte; ink pentru
+  raspunsuri scurte rapide, cu verificare umana.
+
+8. LIMITARI
+--------------------------------------------------------------------------------
+- O singura rulare per sarcina; nu exista repetitii pentru stabilitate.
+- Hy4 nu expune metrici de inferenta (tok/s); timpii sunt timpi de generare
+  ai mesajului, nu TTFT end-to-end.
+- Varianta hy4 = high, varianta ink = default (vezi sectiunea 1).
+- Prompturile au fost scrise in romana; nu a fost testata capacitatea in alte limbi.
+
+9. ARTIFACTE
+--------------------------------------------------------------------------------
+Scripturi de verificare (executate local):
+  C:\Users\x1p\AppData\Local\Temp\opencode\bench_verify.py
+  C:\Users\x1p\AppData\Local\Temp\opencode\bench2_r1_verify.py
+  C:\Users\x1p\AppData\Local\Temp\opencode\bench2_r2_verify.py
+  C:\Users\x1p\AppData\Local\Temp\opencode\bench2_r3_verify.py
+Sesiunile OpenCode si raspunsurile brute sunt in istoricul sesiunii curente.
+================================================================================
