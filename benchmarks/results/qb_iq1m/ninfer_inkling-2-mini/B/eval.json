@@ -1,0 +1,82 @@
+{
+  "task": "B",
+  "checks": [
+    {
+      "name": "total_sum",
+      "passed": true
+    },
+    {
+      "name": "total_empty",
+      "passed": true
+    },
+    {
+      "name": "search_author_ci",
+      "passed": true
+    },
+    {
+      "name": "search_title_ci",
+      "passed": true
+    },
+    {
+      "name": "search_sorted",
+      "passed": true
+    },
+    {
+      "name": "search_no_match",
+      "passed": true
+    },
+    {
+      "name": "place_ok",
+      "passed": true
+    },
+    {
+      "name": "place_missing_raises",
+      "passed": true
+    },
+    {
+      "name": "place_qty_raises",
+      "passed": true
+    },
+    {
+      "name": "cancel_ok",
+      "passed": true
+    },
+    {
+      "name": "cancel_missing_raises",
+      "passed": true
+    },
+    {
+      "name": "demo_end_to_end",
+      "passed": true,
+      "stdout": "TOTAL 80.0\nSEARCH ['Clean Code']\nCOUNT 1",
+      "stderr": ""
+    },
+    {
+      "name": "model_tests_ge5_and_pass",
+      "passed": true,
+      "test_files": [
+        "test_basic.py"
+      ],
+      "tests": 12
+    },
+    {
+      "name": "no_unexpected_files",
+      "passed": true,
+      "unexpected": []
+    }
+  ],
+  "passed": 14,
+  "total": 14,
+  "score": 1.0,
+  "bugs_remaining": 0,
+  "bugs_new": 0,
+  "changed_files": [
+    "catalog.py",
+    "models.py",
+    "orders.py"
+  ],
+  "new_files": [
+    "test_basic.py"
+  ],
+  "notes": "11 hidden integration/edge checks + demo end-to-end + >=5 model tests."
+}

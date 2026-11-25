@@ -1,0 +1,84 @@
+{
+  "task": "B",
+  "checks": [
+    {
+      "name": "total_sum",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "name": "total_empty",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "name": "search_author_ci",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "name": "search_title_ci",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "name": "search_sorted",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "name": "search_no_match",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "name": "place_ok",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "name": "place_missing_raises",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "name": "place_qty_raises",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "name": "cancel_ok",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "name": "cancel_missing_raises",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "name": "demo_end_to_end",
+      "passed": false,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"[local-repo]\\benchmarks\\results\\qb_q2kxl\\ninfer_inkling-2-mini\\B\\work\\demo.py\", line 22, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"[local-repo]\\benchmarks\\results\\qb_q2kxl\\ninfer_inkling-2-mini\\B\\work\\demo.py\", line 14, in main\n    o = s.place(c, \"2\", 2)\n  File \"[local-repo]\\benchmarks\\results\\qb_q2kxl\\ninfer_inkling-2-mini\\B\\work\\orders.py\", line 12, in place\n    raise NotImplementedError\nNotImplementedError"
+    },
+    {
+      "name": "model_tests_exist",
+      "passed": false,
+      "error": "no test_*.py found"
+    },
+    {
+      "name": "no_unexpected_files",
+      "passed": true,
+      "unexpected": []
+    }
+  ],
+  "passed": 1,
+  "total": 14,
+  "score": 0.0714,
+  "bugs_remaining": 12,
+  "bugs_new": 1,
+  "changed_files": [],
+  "new_files": [],
+  "notes": "11 hidden integration/edge checks + demo end-to-end + >=5 model tests."
+}
