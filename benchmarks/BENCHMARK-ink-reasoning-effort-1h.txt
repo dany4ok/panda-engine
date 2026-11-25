@@ -1,0 +1,144 @@
+Inkling 2 Mini (NInfer) - reasoning_effort sweep, extended 1-hour run
+Date: 2026-11-24
+Server: live local NInfer on http://127.0.0.1:8080/v1, model id 'inkling-2-mini'
+Engine flags unchanged from BENCHMARK-ink-reasoning-effort.txt
+(--presence-penalty 0 --frequency-penalty 0 --structured-output --spec none
+ --reasoning-loop conclude --expert-residency device)
+
+This run supersedes the one-pass sweep: more probes, 4 independent runs per
+variant, plus loop and 128k-context probes. No temperature override was sent;
+engine defaults were used for all requests.
+
+METHOD
+------
+1. Accuracy set: 23 fixed objective problems (arithmetic, classic traps,
+   logic, sequences). Each answer graded automatically against a per-problem
+   regex. Problems were split into 3 batches (8/8/7) with a fixed system
+   prompt and the instruction 'one line per answer, format N) answer'.
+   4 runs per variant = 92 graded answers per variant = 12 requests per
+   variant. max_tokens=16384 for every request.
+2. Single-problem mode: the same 23 problems, one request per problem,
+   max_tokens=8192 (used to check the effect of batching).
+3. Loop / endurance probe: 'write numbers 1..200, one per line'.
+4. Context probe: needle 'CODUL SECRET ESTE ZX7-QM42' inserted at ~50% depth
+   of a 129652-token haystack; question at the end, max_tokens=1024.
+   A second identical request measures the warm-prefix cache.
+5. Output-cap probe: a dedicated 10-problem set (grila 3x3, melc, sirul,
+   fotografie, 5 masini, 8 bile, 91 prim, eleven, triunghi 3-4-5,
+   marti+100) with max_tokens=6144 vs 16384.
+6. Prefill measurement at 12k / 42k / 84k / 129k tokens, plus a rejected
+   request at 12500 repetitions to confirm the 131072-token engine limit.
+7. Runaway probe: all 23 problems in one prompt at max_tokens=16384,
+   3 passes for xhigh, to reproduce the empty-reply failure.
+
+ACCURACY (4 runs, 92 answers per variant)
+-----------------------------------------
+Variant   Score        Pct     Tok/answer  Reason/answer  Wall-clock/batch  Truncations
+low       89/92        96.7%   108         101            ~5.9 s            0
+medium    90/92        97.8%   201         195            ~11.0 s           0
+high      84/92        91.3%   422         415            ~23.3 s           1
+xhigh     92/92        100%    345         339            ~18.9 s           0
+max       89/92        96.7%   485         478            ~26.8 s           0
+
+Each wall-clock/batch figure is averaged over 12 requests per variant
+(3 batches per run x 4 runs; batches have 8, 8 and 7 problems).
+Throughput = tokens in batch / batch wall-clock and is ~140 tok/s for
+every variant: low 826/5.9 = 140, medium 1541/11.0 = 140,
+high 3231/23.3 = 139, xhigh 2646/18.9 = 140, max 3717/26.8 = 139.
+reasoning_effort changes how many tokens are thought, not how fast they
+are generated.
+
+`high` has 8 wrong answers, all recorded in aggregated log B (7 empty
+answers from a batch that hit finish_reason=length after consuming all
+16384 tokens in reasoning, plus one wrong answer on problem 19). Log A was
+perfect. Each log aggregates 2 runs and the individual per-run split was
+not kept, so both events cannot be attributed to a single run.
+
+The most frequently missed problem is '8 balls, one heavier: minimum
+weighings on a balance' (correct answer: 2). low missed it 3 times,
+medium once, high twice (one wrong plus the empty batch), max once,
+xhigh never.
+
+SPEED
+-----
+Decode throughput is flat across variants: ~140 tok/s.
+Prompt processing (prefill): ~3.3-3.9k tok/s (84k tokens in 25.1 s,
+42k in 11.6 s, 129k in 33.4 s).
+Prompt caching works: the identical 129652-token prompt took ~45-50 s on a
+cold prefix for low, medium, high and xhigh, and 7.0 s with 129651 cached
+tokens for max. max was not measured cold, so no cold-vs-warm comparison
+is claimed for it.
+
+LOOPS / RUNAWAY
+---------------
+Counting probe 1..200: all 5 variants returned 200/200 numbers in order,
+zero duplicates. No infinite loops on repetitive tasks.
+Some repetition in reasoning was observed (29 repeated 12-word shingles for
+high, 10 for xhigh in one run) but did not degenerate.
+The real risk is reasoning runaway: on a single prompt containing all 23
+problems (METHOD 7), xhigh hit the 16384-token cap with empty content in
+2 out of 3 passes; high did the same once in its 12 accuracy batches. With
+batches of <=8 problems, xhigh had zero truncations.
+
+OUTPUT-CAP FOOTGUN (confirmed)
+------------------------------
+With max_tokens=6144 on the 10-problem set, both xhigh and max consumed all
+6142 tokens in reasoning and emitted no final answer (finish_reason=length,
+content=""). With max_tokens=16384 both answered; xhigh scored 10/10 and
+max 9/10 - it called the person in the photo (problem 4 of that set) a
+daughter instead of a son. Reasoning effort without output headroom
+produces an empty reply.
+
+128k CONTEXT
+------------
+Engine limit is 131072 tokens (declared and enforced). A prompt of 12500
+repetitions was rejected with context_length_exceeded.
+129652 tokens accepted; the needle at ~50% depth was retrieved by all five
+variants (5/5). Cold latency was ~45-50 s for low, medium, high and xhigh;
+max was measured only on a warm prefix (7.0 s, 129651 cached tokens).
+128k is functional, not merely declared.
+
+RAW CLEAN-RUN LOG
+-----------------
+Two scripts were executed, each performing 2 runs (46 answers, 6 requests);
+together they give the 4 runs / 92 answers above. All recorded wrong answers
+fell in these two aggregated logs; the individual per-run split was not kept.
+A: low 19:[3 cantariri] | medium 19:[3 cantariri], 23:[nepotul lui]
+   high - | xhigh - | max 23:[nepotul meu], 23:[nu se poate determina unic]
+B: low 19:[3 cantariri] x2 | medium - | high 17:[],18:[],19:[],20:[],
+   21:[],22:[],23:[] and 19:[3 cantariri] | xhigh - | max 19:[3 cantariri]
+
+PROBES
+------
+count/low 200/200 4.2 s 597 tok  | count/medium 200/200 4.6 s 661 tok
+count/high 200/200 7.8 s 1107 tok | count/xhigh 200/200 7.5 s 1077 tok
+count/max 200/200 7.5 s 1083 tok
+needle at 129652 tok: low/medium/high/xhigh/max all HIT
+
+RECOMMENDATIONS
+---------------
+1. Use `xhigh` when accuracy matters: 100% here, no truncation at batch <= 8.
+2. Use `medium` for routine work: 97.8% at roughly half the tokens and time
+   of xhigh.
+3. `low` is fastest and cheapest (108 tok/answer) but misses logic traps.
+4. Avoid `max`: slowest and most expensive with no accuracy gain.
+5. Be careful with `high`: 8 wrong answers in one aggregated log (7 empty
+   plus 1 wrong), the other log perfect; per-run attribution was not kept.
+6. Do not send 20+ problems in one prompt to high/xhigh. Keep batches <= 8
+   and max_tokens >= 16384 so a high-effort answer can actually be emitted.
+
+LIMITATIONS
+-----------
+Regex-based grading on 23 problems; a single engine build and flag set;
+no temperature override; one machine. The high runaway and the xhigh
+batching failure were each observed once/twice, so they are risks rather
+than deterministic per-prompt behaviour. max cold needle latency was not
+measured; the per-run split of the 4 accuracy runs was not kept.
+
+RAW DATA
+--------
+results/results_reasoning_effort_1h.json
+
+REPRODUCE
+---------
+  powershell -ExecutionPolicy Bypass -File benchmarks/scripts/reasoning_effort_sweep.ps1 -Runs 4
