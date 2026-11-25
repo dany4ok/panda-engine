@@ -87,6 +87,9 @@ function Get-PortListenerSnapshot {
         $processIds = @($connections | ForEach-Object { [int]$_.OwningProcess } | Select-Object -Unique)
         return [pscustomobject]@{ Success = $true; ProcessIds = $processIds; Error = '' }
     } catch {
+        if ($_.FullyQualifiedErrorId -like 'CmdletizationQuery_NotFound,*') {
+            return [pscustomobject]@{ Success = $true; ProcessIds = @(); Error = '' }
+        }
         return [pscustomobject]@{ Success = $false; ProcessIds = @(); Error = $_.Exception.Message }
     }
 }
@@ -121,6 +124,18 @@ function Get-OurServerPids {
     return @()
 }
 
+function Test-OwnedServerListener([int]$ListenerPid) {
+    $owned = Get-VerifiedOwnedServer
+    if (-not $owned) { return $false }
+    if ($ListenerPid -eq [int]$script:OwnedServer.ProcessId) { return $true }
+    try {
+        $processes = @(Get-CimInstance Win32_Process -ErrorAction Stop)
+        $listener = $processes | Where-Object { [int]$_.ProcessId -eq $ListenerPid } | Select-Object -First 1
+        if (-not $listener -or [string]$listener.CommandLine -ne [string]$script:OwnedServer.CommandLine) { return $false }
+        return (Test-ProcessDescendsFrom $ListenerPid ([int]$script:OwnedServer.ProcessId) $processes)
+    } catch { return $false }
+}
+
 function Test-ProcessDescendsFrom([int]$ProcessId, [int]$AncestorId, $Processes) {
     $byId = @{}
     foreach ($process in $Processes) { $byId[[int]$process.ProcessId] = $process }
@@ -131,6 +146,10 @@ function Test-ProcessDescendsFrom([int]$ProcessId, [int]$AncestorId, $Processes)
         $seen[$current] = $true
         if (-not $byId.ContainsKey($current)) { return $false }
         $parent = [int]$byId[$current].ParentProcessId
+        if (-not $byId.ContainsKey($parent) -or -not $byId[$current].CreationDate -or
+            -not $byId[$parent].CreationDate -or $byId[$current].CreationDate -lt $byId[$parent].CreationDate) {
+            return $false
+        }
         if ($parent -eq $AncestorId) { return $true }
         $current = $parent
     }
@@ -174,8 +193,21 @@ function Stop-PidIfOurs([int]$procId) {
         $owned = Get-VerifiedOwnedServer
         if (-not $owned) { return $false }
         try {
-            $owned.Process.Kill()
-            $owned.Process.WaitForExit(5000)
+            $listeners = Get-PortListenerSnapshot
+            if (-not $listeners.Success) { return $false }
+            foreach ($listenerPid in $listeners.ProcessIds) {
+                if ([int]$listenerPid -eq $procId) { continue }
+                if (-not (Test-OwnedServerListener ([int]$listenerPid))) { return $false }
+                $listenerProcess = Get-Process -Id ([int]$listenerPid) -ErrorAction Stop
+                $null = $listenerProcess.Handle
+                if (-not (Test-OwnedServerListener ([int]$listenerPid))) { return $false }
+                $listenerProcess.Kill()
+                $null = $listenerProcess.WaitForExit(5000)
+                if (-not $listenerProcess.HasExited) { return $false }
+            }
+            $owned.Process.Refresh()
+            if (-not $owned.Process.HasExited) { $owned.Process.Kill() }
+            $null = $owned.Process.WaitForExit(5000)
             $owned.Process.Refresh()
             if (-not $owned.Process.HasExited) { return $false }
             $script:OwnedServer = $null
@@ -200,7 +232,7 @@ function Stop-PidIfOurs([int]$procId) {
             return $false
         }
         $process.Kill()
-        $process.WaitForExit(5000)
+        $null = $process.WaitForExit(5000)
         $process.Refresh()
         if (-not $process.HasExited) { return $false }
         $remainingEngines = @(Get-OurEnginePids)
@@ -236,7 +268,7 @@ function Stop-Server {
         }
     }
     $ownedPid = if ($owned) { [int]$script:OwnedServer.ProcessId } else { 0 }
-    $foreign = @($owners | Where-Object { $_ -ne $ownedPid })
+    $foreign = @($owners | Where-Object { -not (Test-OwnedServerListener ([int]$_)) })
     if ($foreign.Count) {
         Log "portul $Port este ocupat de un proces neadministrat (PID $($foreign -join ', ')); il las neatins."
         return $false
@@ -319,7 +351,7 @@ function Stop-JustStartedServerSafely($startedProcess) {
             return $false
         }
         $startedProcess.Kill()
-        $startedProcess.WaitForExit(5000)
+        $null = $startedProcess.WaitForExit(5000)
         return [bool]$startedProcess.HasExited
     } catch {
         return $false
@@ -332,7 +364,7 @@ function Start-Server([string]$cfg) {
         return $false
     }
     try { $cfgObj = Get-Content $cfg -Raw | ConvertFrom-Json; Rotate-Log $cfgObj.log } catch { }
-    $a = @($ServerPy, '--engine', 'strata', '--config', $cfg, '--port', "$Port")
+    $a = @($ServerPy, '--engine', 'strata', '--config', ('"' + $cfg + '"'), '--port', "$Port")
     $started = Start-Process -FilePath $Python -ArgumentList $a -WorkingDirectory $Root -NoNewWindow -PassThru
     if (-not $started) {
         Log 'pornirea procesului Python administrat a esuat.'
@@ -356,7 +388,7 @@ function Start-Server([string]$cfg) {
             break
         }
         if ($owned -and $snapshot.ProcessIds.Count -eq 1 -and
-            $snapshot.ProcessIds[0] -eq [int]$script:OwnedServer.ProcessId -and (Get-Health).Up) {
+            (Test-OwnedServerListener ([int]$snapshot.ProcessIds[0])) -and (Get-Health).Up) {
             $mod = 'RAPID (GPU la cerere)'
             if ($cfg -eq $GameCfg) { $mod = 'JOC (RAM/SSD, 0 experti in VRAM)' }
             Log "serverul este gata: $mod"

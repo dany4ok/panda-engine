@@ -68,6 +68,33 @@ class RouterOwnershipTests(unittest.TestCase):
         ):
             self.assertFalse(router._route_owner_valid(self.route, 8183))
 
+    def test_recorded_python_child_listener_is_accepted(self):
+        self.route["listener"] = {
+            "processId": 202, "startedUtcTicks": 2000,
+            "executablePath": r"C:\Python315\python.exe",
+            "commandLine": "python server.py",
+        }
+        identities = {101: self.identity, 202: {
+            "started_utc_ticks": 2000, "executable_path": r"C:\Python315\python.exe",
+        }}
+        commands = {101: r"backend.exe --port 8183", 202: "python server.py"}
+        with (
+            mock.patch.object(router.os, "name", "nt"),
+            mock.patch.object(router, "_process_identity", side_effect=identities.get),
+            mock.patch.object(router, "_process_command_line", side_effect=commands.get),
+            mock.patch.object(router, "_listener_pids", return_value={202}),
+            mock.patch.object(router, "_is_descendant_or_self", return_value=True),
+        ):
+            self.assertTrue(router._route_owner_valid(self.route, 8183))
+
+    def test_descendant_rejects_reused_parent_pid(self):
+        identities = {202: {"started_utc_ticks": 1000}, 101: {"started_utc_ticks": 2000}}
+        with (
+            mock.patch.object(router, "_parent_process_id", return_value=101),
+            mock.patch.object(router, "_process_identity", side_effect=identities.get),
+        ):
+            self.assertFalse(router._is_descendant_or_self(202, 101))
+
     def test_unrelated_process_taking_backend_port_is_rejected(self):
         with (
             mock.patch.object(router.os, "name", "nt"),

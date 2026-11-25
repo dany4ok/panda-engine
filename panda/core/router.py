@@ -233,8 +233,9 @@ def _process_command_line(process_id):
                     ):
                         return None
                     return ctypes.wstring_at(address, length // 2)
-                if required.value <= capacity:
+                if returned.value <= capacity:
                     return None
+                required.value = returned.value
             return None
         finally:
             kernel32.CloseHandle(handle)
@@ -331,6 +332,12 @@ def _is_descendant_or_self(process_id, root_process_id):
         parent = _parent_process_id(current)
         if parent is None or parent <= 0:
             return False
+        child_identity = _process_identity(current)
+        parent_identity = _process_identity(parent)
+        if not child_identity or not parent_identity:
+            return False
+        if int(child_identity["started_utc_ticks"]) < int(parent_identity["started_utc_ticks"]):
+            return False
         if parent == root_process_id:
             return True
         current = parent
@@ -371,8 +378,8 @@ def _route_owner_valid(route, port, connected_listener_pid=None):
         return False
     if int(root_identity["started_utc_ticks"]) != owner_ticks:
         return False
-    if ntpath.normcase(ntpath.normpath(root_identity["executable_path"])) != ntpath.normcase(
-        ntpath.normpath(str(owner.get("executablePath", "")))
+    if ntpath.normcase(os.path.realpath(root_identity["executable_path"])) != ntpath.normcase(
+        os.path.realpath(str(owner.get("executablePath", "")))
     ):
         return False
     owner_command_line = _process_command_line(owner_pid)
@@ -391,8 +398,8 @@ def _route_owner_valid(route, port, connected_listener_pid=None):
     listener_identity = _process_identity(actual_listener_pid)
     if not listener_identity:
         return False
-    if ntpath.normcase(ntpath.normpath(listener_identity["executable_path"])) != ntpath.normcase(
-        ntpath.normpath(str(listener.get("executablePath", "")))
+    if ntpath.normcase(os.path.realpath(listener_identity["executable_path"])) != ntpath.normcase(
+        os.path.realpath(str(listener.get("executablePath", "")))
     ):
         return False
 
@@ -426,7 +433,10 @@ def _route_owner_valid(route, port, connected_listener_pid=None):
     if actual_listener_pid != listener_pid or not _is_descendant_or_self(actual_listener_pid, owner_pid):
         return False
     if role == "Server":
-        return actual_listener_pid == owner_pid
+        return actual_listener_pid == owner_pid or (
+            route.get("kind") in ("mini", "gyro")
+            and ntpath.basename(listener_identity["executable_path"]).casefold() in ("python.exe", "pythonw.exe")
+        )
     if role == "InklingLauncher":
         return (
             route.get("kind") == "inkling"
@@ -579,7 +589,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Connection", "close")
         self.end_headers()
-        self.wfile.write(body)
+        if self.command != "HEAD":
+            self.wfile.write(body)
 
     def _status(self, target, name, route):
         up = False

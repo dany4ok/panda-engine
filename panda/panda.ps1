@@ -343,8 +343,12 @@ function Stop-Router {
     try {
         $remainingListeners = @(Get-NetTCPConnection -State Listen -LocalPort $apiPort -ErrorAction Stop)
     } catch {
-        Write-Host '  WARNING: Cannot verify that the Panda API port is clear; preserving its PID and route records.'
-        return $false
+        if ($_.FullyQualifiedErrorId -like 'CmdletizationQuery_NotFound,*') {
+            $remainingListeners = @()
+        } else {
+            Write-Host '  WARNING: Cannot verify that the Panda API port is clear; preserving its PID and route records.'
+            return $false
+        }
     }
     if ($remainingListeners.Count -gt 0) {
         Write-Host ("  WARNING: API port " + $apiPort + ' still has a listener; preserving route records and leaving it untouched.')
@@ -496,7 +500,9 @@ function Get-OtherRouterBackendPorts {
         try {
             $routerListeners = @(Get-NetTCPConnection -State Listen -OwningProcess ([int]$router.ProcessId) -ErrorAction Stop)
         } catch {
-            $protected += $allBackendPorts
+            if ($_.FullyQualifiedErrorId -notlike 'CmdletizationQuery_NotFound,*') {
+                $protected += $allBackendPorts
+            }
             continue
         }
         if ($routerListeners.Count -eq 0) { continue }
@@ -531,7 +537,11 @@ function Get-BackendListenerSnapshot([int]$Port) {
     try {
         $connections = @(Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction Stop)
     } catch {
-        return [pscustomobject]@{ Success = $false; Processes = @(); Error = $_.Exception.Message }
+        if ($_.FullyQualifiedErrorId -like 'CmdletizationQuery_NotFound,*') {
+            $connections = @()
+        } else {
+            return [pscustomobject]@{ Success = $false; Processes = @(); Error = $_.Exception.Message }
+        }
     }
     $processes = @()
     foreach ($ownerPid in @($connections | Select-Object -ExpandProperty OwningProcess -Unique)) {
@@ -584,6 +594,19 @@ function Test-BackendProcessSignature($Process, $Model, [int]$Port, [string]$Rol
         } catch {
             return $false
         }
+        $approvedPython = [string]::Equals($actualPath, $pythonPath, [System.StringComparison]::OrdinalIgnoreCase)
+        if (-not $approvedPython) {
+            $venvConfig = Join-Path $script:cat.roots.knownMini '.venv\pyvenv.cfg'
+            try {
+                foreach ($line in @(Get-Content -LiteralPath $venvConfig -ErrorAction Stop)) {
+                    if ($line -match '^\s*executable\s*=\s*(.+?)\s*$') {
+                        $basePython = [System.IO.Path]::GetFullPath($Matches[1])
+                        $approvedPython = [string]::Equals($actualPath, $basePython, [System.StringComparison]::OrdinalIgnoreCase)
+                        break
+                    }
+                }
+            } catch { return $false }
+        }
         $hasServerScript = ($commandLine.IndexOf('serve\server.py', [System.StringComparison]::OrdinalIgnoreCase) -ge 0) -or
             ($commandLine.IndexOf('serve/server.py', [System.StringComparison]::OrdinalIgnoreCase) -ge 0)
         $configs = if ($Role -eq 'GameGuard' -and $Model.kind -eq 'mini') {
@@ -598,7 +621,7 @@ function Test-BackendProcessSignature($Process, $Model, [int]$Port, [string]$Rol
         foreach ($config in $configs) {
             if (Test-CommandLineArgumentValue $commandLine '--config' $config) { $configMatches = $true; break }
         }
-        return ([string]::Equals($actualPath, $pythonPath, [System.StringComparison]::OrdinalIgnoreCase) -and $hasServerScript -and
+        return ($approvedPython -and $hasServerScript -and
             (Test-CommandLineArgumentValue $commandLine '--engine' 'strata') -and $configMatches -and
             (Test-CommandLineArgumentValue $commandLine '--port' ([string]$Port)))
     }
@@ -748,6 +771,10 @@ function Get-BackendProcessTree([int]$RootProcessId) {
         })
         if ($children.Count -eq 0) { break }
         foreach ($child in $children) {
+            $parent = $all | Where-Object { [int]$_.ProcessId -eq [int]$child.ParentProcessId } | Select-Object -First 1
+            if (-not $parent -or -not $parent.CreationDate -or -not $child.CreationDate -or $child.CreationDate -lt $parent.CreationDate) {
+                return [pscustomobject]@{ Success = $false; Processes = @(); Error = 'Unverifiable process ancestry.' }
+            }
             $startTicks = [long]0
             try {
                 $childProcess = Get-Process -Id ([int]$child.ProcessId) -ErrorAction Stop
@@ -848,7 +875,7 @@ function Stop-TrackedBackendOwner($Owner) {
                     Write-Host ("  [dry-run] would stop owned descendant PID " + $snapshot.ProcessId)
                 } else {
                     $currentProcess.Kill()
-                    $currentProcess.WaitForExit(5000)
+                    $null = $currentProcess.WaitForExit(5000)
                     $currentProcess.Refresh()
                     if (-not $currentProcess.HasExited) {
                         Write-Host ("  WARNING: Managed descendant PID " + $snapshot.ProcessId + ' did not exit.')
@@ -860,6 +887,9 @@ function Stop-TrackedBackendOwner($Owner) {
                 continue
             }
         } catch {
+            if (-not (Get-Process -Id ([int]$snapshot.ProcessId) -ErrorAction SilentlyContinue)) {
+                continue
+            }
             Write-Host ("  WARNING: Could not confirm descendant PID " + $snapshot.ProcessId + ' stopped.')
             return 'failed'
         }
@@ -879,7 +909,7 @@ function Stop-TrackedBackendOwner($Owner) {
             $rootProcess.Refresh()
             if ([long]$rootProcess.StartTime.ToUniversalTime().Ticks -eq [long]$Owner.StartedUtcTicks) {
                 $rootProcess.Kill()
-                $rootProcess.WaitForExit(5000)
+                $null = $rootProcess.WaitForExit(5000)
                 $rootProcess.Refresh()
                 if (-not $rootProcess.HasExited) {
                     Write-Host ("  WARNING: Managed root PID " + $Owner.ProcessId + ' did not exit.')
@@ -1311,10 +1341,18 @@ function Start-Model($m, $s, [switch]$AuthorizeGyroStop) {
                 return $false
             }
             if ([string]$existingOwner.ModelId -eq [string]$m.id) {
-                if (-not (Wait-ManagedBackendReady $m $backendPort $existingOwner)) { return $false }
-                Set-Route $m $backendPort $existingOwner
-                Write-Host ('  Panda API: http://127.0.0.1:' + $script:cat.ports.api + '/v1  ->  ' + $m.label + ' (already running)')
-                return $true
+                $matchesSettings = $true
+                if ($m.kind -eq 'mini') {
+                    $matchesSettings = (([string]$existingOwner.Role -eq 'GameGuard') -eq [bool]$s.gameMode)
+                } elseif ($m.kind -eq 'inkling') {
+                    $matchesSettings = Test-CommandLineArgumentValue ([string]$existing.CommandLine) '--max-context' ([string][int]$s.context)
+                }
+                if ($matchesSettings) {
+                    if (-not (Wait-ManagedBackendReady $m $backendPort $existingOwner)) { return $false }
+                    Set-Route $m $backendPort $existingOwner
+                    Write-Host ('  Panda API: http://127.0.0.1:' + $script:cat.ports.api + '/v1  ->  ' + $m.label + ' (already running)')
+                    return $true
+                }
             }
         }
         $gyroOwners = @(Get-GyroBackendOwners $read.Owners)
@@ -1355,7 +1393,7 @@ function Start-Model($m, $s, [switch]$AuthorizeGyroStop) {
                 ($cfg | ConvertTo-Json -Depth 5) | Set-Content -LiteralPath $cfgPath -Encoding UTF8
                 $startPs1 = Join-Path $PSScriptRoot 'legacy\start.ps1'
                 $role = 'InklingLauncher'
-                $started = Start-Process -FilePath 'powershell.exe' -WorkingDirectory $script:Repo -PassThru -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-NoExit','-File',('"' + $startPs1 + '"'),'-AutoStart')
+                $started = Start-Process -FilePath 'powershell.exe' -WorkingDirectory $script:Repo -WindowStyle Hidden -PassThru -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-NoExit','-File',('"' + $startPs1 + '"'),'-AutoStart')
             }
             'mini' {
                 $root = $script:cat.roots.knownMini
@@ -1367,17 +1405,17 @@ function Start-Model($m, $s, [switch]$AuthorizeGyroStop) {
                     }
                     $guard = Get-GameGuardPath 'guard'
                     $role = 'GameGuard'
-                    $started = Start-Process -FilePath 'powershell.exe' -WorkingDirectory $root -PassThru -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-NoExit','-File',('"' + $guard + '"'),'-Port',[string]$backendPort)
+                    $started = Start-Process -FilePath 'powershell.exe' -WorkingDirectory $root -WindowStyle Hidden -PassThru -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-NoExit','-File',('"' + $guard + '"'),'-Port',[string]$backendPort)
                 } else {
                     $python = Join-Path $root '.venv\Scripts\python.exe'
-                    $started = Start-Process -FilePath $python -WorkingDirectory $root -PassThru -ArgumentList @('serve\server.py','--engine','strata','--config',$m.serverConfig,'--port',[string]$backendPort)
+                    $started = Start-Process -FilePath $python -WorkingDirectory $root -WindowStyle Hidden -PassThru -ArgumentList @('serve\server.py','--engine','strata','--config',$m.serverConfig,'--port',[string]$backendPort)
                 }
             }
             'gyro' {
                 # Gyro-S runs from Panda's own bundled engine and pack. No Strata desktop.
                 $root = $script:cat.roots.knownMini
                 $python = Join-Path $root '.venv\Scripts\python.exe'
-                $started = Start-Process -FilePath $python -WorkingDirectory $root -PassThru -ArgumentList @('serve\server.py','--engine','strata','--config',$m.serverConfig,'--port',[string]$backendPort)
+                $started = Start-Process -FilePath $python -WorkingDirectory $root -WindowStyle Hidden -PassThru -ArgumentList @('serve\server.py','--engine','strata','--config',$m.serverConfig,'--port',[string]$backendPort)
             }
         }
         if (-not $started) {
