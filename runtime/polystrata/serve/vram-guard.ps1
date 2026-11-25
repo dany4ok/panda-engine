@@ -456,8 +456,12 @@ Log "=== adaptive guard start (doar VRAM, fara detectare de procese) ==="
 
 # Decide initial mode from VRAM: a low reading means another app already owns the GPU.
 $free = Get-FreeVramMib
-if ($null -ne $free -and $free -lt $FastToGameMs) {
-    Log "VRAM ocupata la pornire ($free MiB libere) -> mod joc (RAM/SSD)"
+if ($null -eq $free -or $free -lt $FastToGameMs) {
+    if ($null -eq $free) {
+        Log 'VRAM indisponibila la pornire -> mod joc precaut (RAM/SSD)'
+    } else {
+        Log "VRAM ocupata la pornire ($free MiB libere) -> mod joc (RAM/SSD)"
+    }
     $mode = 'game'
     $ok = Start-Server $GameCfg
 } else {

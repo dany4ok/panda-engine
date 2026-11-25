@@ -31,10 +31,18 @@ $script:GyroStopAuthorizationRequired = $false
 $script:GyroStartLeftRunning = $false
 $script:GyroStartOwnershipSaved = $false
 $script:GyroStartProcessId = 0
+$script:StateResetPending = [bool]$ResetState
 
 function Get-State {
-    if ($ResetState -and (Test-Path -LiteralPath $script:StatePath)) {
-        Remove-Item -LiteralPath $script:StatePath -Force
+    if ($script:StateResetPending) {
+        $resetMutex = Enter-BackendLifecycleLock
+        if (-not $resetMutex) { throw 'Cannot reset state while another lifecycle action is in progress.' }
+        try {
+            if (Test-Path -LiteralPath $script:StatePath) { Remove-Item -LiteralPath $script:StatePath -Force }
+            $script:StateResetPending = $false
+        } finally {
+            Exit-BackendLifecycleLock $resetMutex
+        }
     }
     if (Test-Path -LiteralPath $script:StatePath) {
         try {
@@ -63,7 +71,37 @@ function Get-State {
 function Save-State($s) {
     $dir = Split-Path -Parent $script:StatePath
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
-    ($s | ConvertTo-Json -Depth 8) | Set-Content -LiteralPath $script:StatePath -Encoding UTF8
+    $temporary = Join-Path $dir ('.state-' + [guid]::NewGuid().ToString('N') + '.tmp')
+    $backup = $temporary + '.bak'
+    try {
+        ($s | ConvertTo-Json -Depth 8) | Set-Content -LiteralPath $temporary -Encoding UTF8
+        if (Test-Path -LiteralPath $script:StatePath) {
+            [System.IO.File]::Replace($temporary, $script:StatePath, $backup)
+        } else {
+            [System.IO.File]::Move($temporary, $script:StatePath)
+        }
+    } finally {
+        if (Test-Path -LiteralPath $temporary) { Remove-Item -LiteralPath $temporary -Force -ErrorAction SilentlyContinue }
+        if (Test-Path -LiteralPath $backup) { Remove-Item -LiteralPath $backup -Force -ErrorAction SilentlyContinue }
+    }
+}
+function Update-ConsoleState([hashtable]$Changes, [string[]]$AddDownloaded = @(), [switch]$ActiveOnlyIfEmpty) {
+    $mutex = Enter-BackendLifecycleLock
+    if (-not $mutex) { throw 'Another backend lifecycle action is in progress; state was not saved.' }
+    try {
+        $latest = Get-State
+        foreach ($key in $Changes.Keys) {
+            if ($key -eq 'active' -and $ActiveOnlyIfEmpty -and $latest.active) { continue }
+            $latest.$key = $Changes[$key]
+        }
+        if ($AddDownloaded.Count) {
+            $latest.downloaded = @(@($latest.downloaded) + @($AddDownloaded) | Select-Object -Unique)
+        }
+        Save-State $latest
+        return $latest
+    } finally {
+        Exit-BackendLifecycleLock $mutex
+    }
 }
 function Find-Model($id) { @($script:cat.models) | Where-Object { $_.id -eq $id } | Select-Object -First 1 }
 function Find-Exe($dir, $name) {
@@ -144,6 +182,12 @@ function Stop-MiniBackend {
     }
 }
 function Toggle-GameMode($s) {
+    $mutex = Enter-BackendLifecycleLock
+    if (-not $mutex) { Write-Host '  ERROR: Another Panda backend lifecycle action is in progress.'; return }
+    try {
+    $latest = Get-State
+    $s.active = $latest.active
+    $s.gameMode = $latest.gameMode
     $m = Find-Model $s.active
     if (-not $m -or $m.kind -ne 'mini') {
         Write-Host '  Game mode applies to MiniCPM only. Select it first with its menu number.'
@@ -157,12 +201,16 @@ function Toggle-GameMode($s) {
     }
     $turningOn = -not [bool]$s.gameMode
     $s.gameMode = $turningOn
-    Save-State $s
+    $latest.gameMode = $turningOn
+    Save-State $latest
     Write-Host ("  MiniCPM game mode: " + $(if ($s.gameMode) {'ON (adaptive VRAM guard)'} else {'OFF (normal GPU load)'}))
     if ($s.gameMode) {
         Write-Host '  Takes effect on the next START; the running backend was not changed. The guard switches GPU <-> RAM/SSD when VRAM gets tight.'
     } else {
         Write-Host '  Standard 128K profile takes effect on the next MiniCPM START; the running backend was not changed.'
+    }
+    } finally {
+        Exit-BackendLifecycleLock $mutex
     }
 }
 function Set-Route($m, [int]$port, $Owner) {
@@ -361,11 +409,15 @@ function Stop-Router {
 function Get-RemoteInfo($url) {
     $len = [int64]0
     $sha = ''
+    $status = 0
     $lines = & curl.exe -sIL --max-time 60 $url 2>$null
+    $curlExit = $LASTEXITCODE
     foreach ($line in $lines) {
+        if ($line -match '^HTTP/\S+\s+(\d+)') { $status = [int]$Matches[1]; $len = [int64]0; $sha = '' }
         if ($line -match '^content-length:\s*(\d+)\s*$') { $len = [int64]$Matches[1] }
         if ($line -match '^etag:\s*"([0-9a-fA-F]{64})"') { $sha = $Matches[1].ToLower() }
     }
+    if ($curlExit -ne 0 -or $status -ne 200) { $len = [int64]0; $sha = '' }
     return @{ Length = $len; Sha256 = $sha }
 }
 function Invoke-Download($url, $dest) {
@@ -384,13 +436,18 @@ function Invoke-Download($url, $dest) {
         $part = $dest + '.part'
         Write-Host ("  DOWNLOAD " + $name + $(if ($info.Length -gt 0) { (" (" + [Math]::Round($info.Length/1MB,1) + " MB)") } else { '' }))
         if ($DryRun) { Write-Host '  [dry-run] skipped'; return $true }
+        if ($GuiAction -eq 'Install') {
+            $encodedPath = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($part))
+            Write-Host ("PANDA_DOWNLOAD " + $encodedPath + " " + [int64]$info.Length)
+        }
         $ok = $false
         for ($attempt = 1; $attempt -le 2; $attempt++) {
             if ($attempt -eq 2 -and (Test-Path -LiteralPath $part)) { Remove-Item -LiteralPath $part -Force }
             & curl.exe -L --fail --retry 3 -C - -o $part $url
             if ($LASTEXITCODE -eq 0) { $ok = $true; break }
-            Write-Host ("  download attempt " + $attempt + " failed (curl exit " + $LASTEXITCODE + ")")
+            Write-Host ("  WARNING: download attempt " + $attempt + " failed (curl exit " + $LASTEXITCODE + "); check network access and available disk space.")
         }
+        if ($GuiAction -eq 'Install') { Write-Host 'PANDA_DOWNLOAD_END' }
         if (-not $ok) { throw ("Download failed: " + $url) }
         $got = (Get-Item -LiteralPath $part).Length
         if ($info.Length -gt 0 -and $got -ne $info.Length) {
@@ -1289,7 +1346,7 @@ function Clear-StaleRouteIfBackendOffline {
     }
 }
 
-function Start-Model($m, $s, [switch]$AuthorizeGyroStop) {
+function Start-Model($m, $s, [switch]$AuthorizeGyroStop, [switch]$LockHeld) {
     $script:GyroStopAuthorizationRequired = $false
     $script:GyroStartLeftRunning = $false
     $script:GyroStartOwnershipSaved = $false
@@ -1299,21 +1356,25 @@ function Start-Model($m, $s, [switch]$AuthorizeGyroStop) {
         return $false
     }
     if ($DryRun) { Write-Host ('  [dry-run] would start ' + $m.label); return $true }
-    if ($m.kind -eq 'mini' -and $s.gameMode -and -not (Test-GameGuard)) {
-        Write-Host '  ERROR: Game Mode is selected, but its guard or configuration files are missing. MiniCPM was not started in standard mode.'
-        return $false
-    }
     $backendPort = Get-ModelBackendPort $m
     if ($backendPort -le 0) {
         Write-Host '  ERROR: Model has no supported backend port.'
         return $false
     }
-    $mutex = Enter-BackendLifecycleLock
-    if (-not $mutex) {
-        Write-Host '  ERROR: Another Panda backend lifecycle action is in progress.'
-        return $false
+    $mutex = $null
+    if (-not $LockHeld) {
+        $mutex = Enter-BackendLifecycleLock
+        if (-not $mutex) {
+            Write-Host '  ERROR: Another Panda backend lifecycle action is in progress.'
+            return $false
+        }
     }
     try {
+        if (-not $LockHeld) { $s = Get-State }
+        if ($m.kind -eq 'mini' -and $s.gameMode -and -not (Test-GameGuard)) {
+            Write-Host '  ERROR: Game Mode is selected, but its guard or configuration files are missing. MiniCPM was not started in standard mode.'
+            return $false
+        }
         if (-not (Start-Router -LockHeld)) { return $false }
         if ($backendPort -in @(Get-OtherRouterBackendPorts)) {
             Write-Host ("  ERROR: Backend port " + $backendPort + ' is protected because another Panda API routes to it; it was left untouched.')
@@ -1484,7 +1545,7 @@ function Start-Model($m, $s, [switch]$AuthorizeGyroStop) {
         Clear-StaleRouteIfBackendOffline
         return $false
     } finally {
-        Exit-BackendLifecycleLock $mutex
+        if ($mutex) { Exit-BackendLifecycleLock $mutex }
     }
 }
 function Preserve-GyroAfterStartFailure($Model, $Process, [string]$Reason, [switch]$AuthorizeGyroStop, [switch]$OwnershipSaved) {
@@ -1730,7 +1791,22 @@ function Invoke-GuiAction([string]$Action, [string]$SelectedModelId, [int]$Conte
                 if (-not (Start-Router)) {
                     return [pscustomobject]@{ success = $false; message = 'Panda API did not start. Check logs\panda-router.log.' }
                 }
-                return [pscustomobject]@{ success = $true; message = 'Panda API is ready.' }
+                $message = 'Panda API is ready.'
+                try {
+                    $roots = @([System.IO.Path]::GetPathRoot([System.IO.Path]::GetFullPath($script:Repo)),
+                               [System.IO.Path]::GetPathRoot([System.IO.Path]::GetFullPath($env:TEMP)),
+                               [System.IO.Path]::GetPathRoot([System.IO.Path]::GetFullPath([string]$script:cat.roots.knownMiniData))) | Select-Object -Unique
+                    foreach ($driveRoot in $roots) {
+                        $drive = [System.IO.DriveInfo]::new($driveRoot)
+                        $free = [long]$drive.AvailableFreeSpace
+                        if ($free -lt 10GB) {
+                            $message += (' Warning: only ' + [Math]::Round($free / 1GB, 1) + ' GiB free on ' + $driveRoot + '; model downloads and temporary files may require more space.')
+                        }
+                    }
+                } catch {
+                    $message += ' Free disk space could not be checked; verify space before downloading models.'
+                }
+                return [pscustomobject]@{ success = $true; message = $message }
             }
             'status' {
                 return Get-GuiStatus
@@ -1741,9 +1817,16 @@ function Invoke-GuiAction([string]$Action, [string]$SelectedModelId, [int]$Conte
                 if ($m.kind -eq 'gyro') { return [pscustomobject]@{ success = $false; message = 'Gyro-S files are bundled; no download action is available.' } }
                 $ok = Ensure-Model $m
                 if ($ok) {
+                    $mutex = Enter-BackendLifecycleLock
+                    if (-not $mutex) { return [pscustomobject]@{ success = $false; message = 'Files were installed, but state could not be saved because another action is in progress. Refresh status.' } }
+                    try {
+                    $s = Get-State
                     $tmp = @($s.downloaded) + @($m.id)
                     $s.downloaded = @($tmp | Select-Object -Unique)
                     Save-State $s
+                    } finally {
+                        Exit-BackendLifecycleLock $mutex
+                    }
                     return [pscustomobject]@{ success = $true; message = ($m.label + ' is installed. It was not started.') }
                 }
                 return [pscustomobject]@{ success = $false; message = 'Installation did not complete. Check the launcher output and model files.' }
@@ -1752,8 +1835,15 @@ function Invoke-GuiAction([string]$Action, [string]$SelectedModelId, [int]$Conte
                 $m = Find-Model $SelectedModelId
                 if (-not $m) { return [pscustomobject]@{ success = $false; message = 'Model is not in the Panda catalog.' } }
                 if (-not (Test-Model $m)) { return [pscustomobject]@{ success = $false; message = 'Install the model before setting it active.' } }
+                $mutex = Enter-BackendLifecycleLock
+                if (-not $mutex) { return [pscustomobject]@{ success = $false; message = 'Another backend lifecycle action is in progress; selection was not changed.' } }
+                try {
+                $s = Get-State
                 $s.active = $m.id
                 Save-State $s
+                } finally {
+                    Exit-BackendLifecycleLock $mutex
+                }
                 return [pscustomobject]@{ success = $true; message = ($m.label + ' is selected for the next start; the running route was not changed.') }
             }
             'setcontext' {
@@ -1800,8 +1890,12 @@ function Invoke-GuiAction([string]$Action, [string]$SelectedModelId, [int]$Conte
                 $m = Find-Model $SelectedModelId
                 if (-not $m) { return [pscustomobject]@{ success = $false; message = 'Model is not in the Panda catalog.' } }
                 if (-not (Test-Model $m)) { return [pscustomobject]@{ success = $false; message = 'Install the model before starting it.' } }
+                $mutex = Enter-BackendLifecycleLock
+                if (-not $mutex) { return [pscustomobject]@{ success = $false; message = 'Another backend lifecycle action is in progress; try again after it completes.' } }
+                try {
+                $s = Get-State
                 $oldActive = [string]$s.active
-                $started = Start-Model $m $s -AuthorizeGyroStop:$AuthorizeGyroStop
+                $started = Start-Model $m $s -AuthorizeGyroStop:$AuthorizeGyroStop -LockHeld
                 if (-not $started) {
                     if ($script:GyroStartLeftRunning) {
                         $s.active = $oldActive
@@ -1830,12 +1924,20 @@ function Invoke-GuiAction([string]$Action, [string]$SelectedModelId, [int]$Conte
                 $route = Get-Route
                 if ($route -and [string]$route.model -eq [string]$m.id -and [int]$route.port -eq (Get-ModelBackendPort $m)) {
                     $s.active = $m.id
-                    Save-State $s
+                    try { Save-State $s } catch {
+                        return [pscustomobject]@{
+                            success = $false
+                            message = ($m.label + ' is running and routed, but the active selection could not be saved: ' + $_.Exception.Message + ' Refresh status before retrying.')
+                        }
+                    }
                     return [pscustomobject]@{ success = $true; message = ($m.label + ' is healthy and routed through the Panda API.') }
                 }
                 $s.active = $oldActive
                 Save-State $s
                 return [pscustomobject]@{ success = $false; message = 'The model did not become the routed model; the previous active selection was kept.' }
+                } finally {
+                    Exit-BackendLifecycleLock $mutex
+                }
             }
             'stop' {
                 $backendsStopped = Stop-PandaEngine -AuthorizeGyroStop:$AuthorizeGyroStop
@@ -1893,7 +1995,7 @@ if (-not $s.firstRunDone) {
     }
     $s.firstRunDone = $true
     if ($s.downloaded.Count -gt 0) { $s.active = $s.downloaded[0] }
-    Save-State $s
+    $s = Update-ConsoleState @{ firstRunDone = $true; active = $s.active } @($s.downloaded) -ActiveOnlyIfEmpty
     Write-Host 'Setup saved. This screen will not appear again.'
 }
 if ($AutoStart -and $s.active) {
@@ -1908,8 +2010,8 @@ while ($true) {
             $idx = [int]$c - 1
             if ($idx -lt 0 -or $idx -ge $script:cat.models.Count) { Write-Host 'Unknown choice.'; break }
             $m = $script:cat.models[$idx]
-            $s.active = $m.id; Save-State $s
-            if (-not (Test-Model $m)) { Write-Host 'Not installed yet.'; $yn = Read-Host 'Download now? (y/N)'; if ($yn -eq 'y' -or $yn -eq 'Y') { $installed = Ensure-Model $m; if ($installed -and $m.kind -ne 'gyro') { $tmp = @($s.downloaded) + @($m.id); $s.downloaded = @($tmp | Select-Object -Unique) }; Save-State $s } }
+            $s = Update-ConsoleState @{ active = $m.id }
+            if (-not (Test-Model $m)) { Write-Host 'Not installed yet.'; $yn = Read-Host 'Download now? (y/N)'; if ($yn -eq 'y' -or $yn -eq 'Y') { $installed = Ensure-Model $m; if ($installed -and $m.kind -ne 'gyro') { $s = Update-ConsoleState @{} @($m.id) } } }
             else { $yn = Read-Host 'Start it now? (y/N)'; if ($yn -eq 'y' -or $yn -eq 'Y') { $null = Start-ModelFromConsole $m $s } }
         }
         '^[Dd]$' {
@@ -1922,10 +2024,9 @@ while ($true) {
                 if ([int]::TryParse($n.Trim(), [ref]$idx) -and $idx -ge 1 -and $idx -le $script:cat.models.Count) {
                     $m = $script:cat.models[$idx-1]
                     $installed = Ensure-Model $m
-                    if ($installed -and $m.kind -ne 'gyro') { $tmp = @($s.downloaded) + @($m.id); $s.downloaded = @($tmp | Select-Object -Unique) }
+                    if ($installed -and $m.kind -ne 'gyro') { $s = Update-ConsoleState @{} @($m.id) }
                 }
             }
-            Save-State $s
         }
         '^[Ss]$' {
             $m = Find-Model $s.active
@@ -1934,7 +2035,7 @@ while ($true) {
         '^[Gg]$' { Toggle-GameMode $s }
         '^[Oo]$' { Start-OpenCode (Find-Model $s.active) }
         '^[Cc]$' { Install-OpenCodeLayer }
-        '^[Rr]$' { $s.firstRunDone = $false; Save-State $s; Write-Host 'First-run setup will repeat on next launch.'; break }
+        '^[Rr]$' { $s = Update-ConsoleState @{ firstRunDone = $false }; Write-Host 'First-run setup will repeat on next launch.'; break }
         '^[Xx]$' {
             $stopped = Stop-PandaEngine -AuthorizeGyroStop:$AuthorizeGyroStop
             if ($script:GyroStopAuthorizationRequired -and -not $AuthorizeGyroStop) {

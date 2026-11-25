@@ -1,8 +1,16 @@
 param(
     [switch]$SkipInitialize,
-    [ValidateSet('', 'RefreshError','EmptyCatalog','Demo')]
+    [ValidateSet('', 'RefreshError','EmptyCatalog','Demo','DemoLoading','DemoDownload')]
     [string]$PreviewState = ''
 )
+
+Add-Type -TypeDefinition @'
+using System.Runtime.InteropServices;
+public static class PandaGuiConsole {
+    [DllImport("kernel32.dll")] public static extern bool FreeConsole();
+}
+'@
+[void][PandaGuiConsole]::FreeConsole()
 
 $ErrorActionPreference = 'Stop'
 $script:PandaDir = $PSScriptRoot
@@ -427,6 +435,10 @@ Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase
           <TextBlock Text="ACTION STATUS" FontSize="10" FontWeight="Bold" Foreground="#77849A" Margin="2,0,0,7"/>
           <TextBlock x:Name="ActionMessage" Text="Select a card to inspect it. Selection alone does not start or switch a model."
                      FontSize="11" Foreground="#5D6B80" TextWrapping="Wrap"/>
+          <ProgressBar x:Name="ActionProgress" Height="8" Margin="0,10,0,0" Minimum="0" Maximum="100"
+                       IsIndeterminate="True" Visibility="Collapsed" AutomationProperties.Name="Model action progress"/>
+          <TextBlock x:Name="ActionProgressText" FontSize="10" Foreground="#69768A" Margin="0,5,0,0"
+                     TextWrapping="Wrap" Visibility="Collapsed"/>
           <TextBlock Text="Installed files stay on disk when a catalog entry is removed."
                      FontSize="10" Foreground="#748196" TextWrapping="Wrap" Margin="0,14,0,0"/>
         </StackPanel>
@@ -678,6 +690,8 @@ $script:GyroHint = $script:Window.FindName('GyroHint')
 $script:UnknownRouteHint = $script:Window.FindName('UnknownRouteHint')
 $script:MissingHint = $script:Window.FindName('MissingHint')
 $script:ActionMessage = $script:Window.FindName('ActionMessage')
+$script:ActionProgress = $script:Window.FindName('ActionProgress')
+$script:ActionProgressText = $script:Window.FindName('ActionProgressText')
 $script:SettingsModelBox = $script:Window.FindName('SettingsModelBox')
 $script:ContextBox = $script:Window.FindName('ContextBox')
 $script:ReadPicturesBox = $script:Window.FindName('ReadPicturesBox')
@@ -778,6 +792,15 @@ function Update-SettingsControls {
         if ($fileNames.Count -eq 0) { $fileNames = @('Bundled Panda runtime') }
         $script:SettingsFiles.Text = $fileNames -join "`r`n"
         $script:SaveSettingsButton.IsEnabled = (-not $script:PreviewState) -and ($model.kind -in @('inkling','mini'))
+        if (-not $script:ApiStatus -and -not $script:PreviewState) {
+            $script:GameModeToggle.IsEnabled = $false
+            $script:GameModeToggle.IsChecked = $null
+            $script:ContextBox.IsEnabled = $false
+            $script:ContextBox.SelectedIndex = -1
+            $script:SaveSettingsButton.IsEnabled = $false
+            $script:GameModeState.Text = 'Saved settings are unavailable.'
+            $script:SettingsSaveMessage.Text = 'Refresh status before changing settings.'
+        }
     } finally {
         $script:LoadingSettings = $false
     }
@@ -926,9 +949,10 @@ function Set-UiBusy([bool]$IsBusy) {
     $script:FilterBox.IsEnabled = -not $IsBusy
     $script:ModelsList.IsEnabled = -not $IsBusy
     $script:SettingsModelBox.IsEnabled = -not $IsBusy
-    $script:ContextBox.IsEnabled = (-not $IsBusy) -and ($script:SettingsModelBox.SelectedItem -and $script:SettingsModelBox.SelectedItem.kind -in @('inkling','mini'))
-    $script:GameModeToggle.IsEnabled = (-not $IsBusy) -and ($script:SettingsModelBox.SelectedItem -and $script:SettingsModelBox.SelectedItem.kind -eq 'mini') -and (-not $script:PreviewState)
-    $script:SaveSettingsButton.IsEnabled = (-not $IsBusy) -and (-not $script:PreviewState) -and ($script:SettingsModelBox.SelectedItem -and $script:SettingsModelBox.SelectedItem.kind -in @('inkling','mini'))
+    $settingsAvailable = (-not $IsBusy) -and [bool]$script:ApiStatus -and (-not $script:PreviewState)
+    $script:ContextBox.IsEnabled = $settingsAvailable -and ($script:SettingsModelBox.SelectedItem -and $script:SettingsModelBox.SelectedItem.kind -in @('inkling','mini'))
+    $script:GameModeToggle.IsEnabled = $settingsAvailable -and ($script:SettingsModelBox.SelectedItem -and $script:SettingsModelBox.SelectedItem.kind -eq 'mini')
+    $script:SaveSettingsButton.IsEnabled = $settingsAvailable -and ($script:SettingsModelBox.SelectedItem -and $script:SettingsModelBox.SelectedItem.kind -in @('inkling','mini'))
     $script:HardwareRefreshButton.IsEnabled = -not $IsBusy
     $canStop = $script:ApiStatus -and $script:ApiStatus.apiRunning -and -not $script:ApiStatus.apiConflict
     $script:StopButton.IsEnabled = (-not $IsBusy) -and [bool]$canStop
@@ -1037,7 +1061,7 @@ function Invoke-ModelAction($Model) {
     switch ([string]$Model.ActionKind) {
         'Install' {
             $answer = [Windows.MessageBox]::Show(
-                ('Install ' + $Model.Name + '? This may download model files. No progress percentage or ETA is available.'),
+                ('Install ' + $Model.Name + '? This may download model files. Download progress is shown when the file size is available.'),
                 'Install model',
                 [Windows.MessageBoxButton]::YesNo,
                 [Windows.MessageBoxImage]::Question
@@ -1238,7 +1262,27 @@ function Read-ManagerResult($Pending) {
     }
     $jsonLine = @($text -split "`r?`n" | Where-Object { $_.Trim().StartsWith('{') -and $_.Trim().EndsWith('}') } | Select-Object -Last 1)
     if ($jsonLine.Count -gt 0) {
-        try { return ($jsonLine[0] | ConvertFrom-Json) } catch {}
+        try {
+            $result = $jsonLine[0] | ConvertFrom-Json
+            if (-not $result.success -and -not $result.requiresGyroStopAuthorization) {
+                $details = @($text -split "`r?`n" | Where-Object { $_ -match '^\s*(ERROR|WARNING):' } | Select-Object -Last 2)
+                if ($details.Count) {
+                    $detailText = (($details | ForEach-Object { $_.Trim() }) -join ' ')
+                    if ($detailText.Length -gt 500) { $detailText = $detailText.Substring(0, 500) }
+                    $result.message = ([string]$result.message + ' ' + $detailText)
+                }
+                if (Test-Path -LiteralPath $Pending.ErrorPath) {
+                    $errorLines = @(Get-Content -LiteralPath $Pending.ErrorPath -Tail 50 -ErrorAction SilentlyContinue |
+                        Where-Object { $_ -match '(?i)(curl:\s*\(\d+\)|error|exception|failed)' } | Select-Object -Last 1)
+                    if ($errorLines.Count) {
+                        $errorLine = $errorLines[0].Trim()
+                        if ($errorLine.Length -gt 300) { $errorLine = $errorLine.Substring($errorLine.Length - 300) }
+                        $result.message = ([string]$result.message + ' ' + $errorLine)
+                    }
+                }
+            }
+            return $result
+        } catch {}
     }
     $errorText = ''
     if (Test-Path -LiteralPath $Pending.ErrorPath) {
@@ -1261,12 +1305,16 @@ function Start-ManagerAction([string]$Action, [string]$SelectedModelId = '', [in
     $busyMessage = switch ($Action) {
         'Initialize' { 'Starting the Panda API...' }
         'Status' { 'Refreshing model and service status...' }
-        'Install' { 'Installing model. Controls are disabled while this runs; no percentage or ETA is available.' }
+        'Install' { 'Installing model. Controls are disabled while this runs.' }
         'Start' { 'Starting model and updating the route...' }
         'Stop' { 'Stopping the API and backends...' }
         default { 'Updating Panda Engine...' }
     }
     Set-ActionMessage $busyMessage
+    $script:ActionProgress.Visibility = if ($Action -in @('Install','Start')) { 'Visible' } else { 'Collapsed' }
+    $script:ActionProgressText.Visibility = $script:ActionProgress.Visibility
+    $script:ActionProgress.IsIndeterminate = $true
+    $script:ActionProgressText.Text = if ($Action -eq 'Start') { 'Loading; the backend does not report a percentage.' } else { 'Preparing; progress is unavailable until the download starts.' }
 
     $token = [guid]::NewGuid().ToString('N')
     $outPath = Join-Path $env:TEMP ('panda-engine-gui-' + $token + '.out')
@@ -1302,6 +1350,8 @@ function Start-ManagerAction([string]$Action, [string]$SelectedModelId = '', [in
         $script:ActionTimer.Start()
     } catch {
         $script:Busy = $false
+        $script:ActionProgress.Visibility = 'Collapsed'
+        $script:ActionProgressText.Visibility = 'Collapsed'
         Set-UiBusy $false
         Set-ActionMessage ('Could not start the launcher action: ' + $_.Exception.Message)
     }
@@ -1315,12 +1365,42 @@ $script:ActionTimer.Add_Tick({
         return
     }
     if (-not $script:PendingAction.Process.HasExited) {
+        if ($script:PendingAction.Action -eq 'Install') {
+            try {
+                $marker = @(Get-Content -LiteralPath $script:PendingAction.OutputPath -ErrorAction Stop |
+                    Where-Object { $_ -match '^PANDA_DOWNLOAD (?:[A-Za-z0-9+/=]+) \d+$|^PANDA_DOWNLOAD_END$' } | Select-Object -Last 1)
+                if ($marker.Count -and $marker[0] -match '^PANDA_DOWNLOAD ([A-Za-z0-9+/=]+) (\d+)$') {
+                    $partPath = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($Matches[1]))
+                    $total = [long]$Matches[2]
+                    if (Test-Path -LiteralPath $partPath) {
+                        $downloaded = [long](Get-Item -LiteralPath $partPath -ErrorAction Stop).Length
+                        if ($total -gt 0) {
+                            $percent = [Math]::Min(100, [Math]::Round(100.0 * $downloaded / $total, 1))
+                            $script:ActionProgress.IsIndeterminate = $false
+                            $script:ActionProgress.Value = $percent
+                            $script:ActionProgressText.Text = ('Current file: ' + $percent + '% (' + [Math]::Round($downloaded / 1MB, 1) + ' / ' + [Math]::Round($total / 1MB, 1) + ' MiB)')
+                        } else {
+                            $script:ActionProgress.IsIndeterminate = $true
+                            $script:ActionProgressText.Text = ('Current file: ' + [Math]::Round($downloaded / 1MB, 1) + ' MiB downloaded; total unknown.')
+                        }
+                    } else {
+                        $script:ActionProgress.IsIndeterminate = $true
+                        $script:ActionProgressText.Text = 'Preparing, verifying or extracting files; progress unavailable.'
+                    }
+                } else {
+                    $script:ActionProgress.IsIndeterminate = $true
+                    $script:ActionProgressText.Text = 'Preparing, verifying or extracting files; progress unavailable.'
+                }
+            } catch {}
+        }
         $elapsed = ([DateTime]::UtcNow - $script:PendingAction.StartedAt).TotalSeconds
         if ($elapsed -lt $script:PendingAction.TimeoutSeconds) { return }
 
         $timedOut = $script:PendingAction
         $script:ActionTimer.Stop()
         $script:PendingAction = $null
+        $script:ActionProgress.Visibility = 'Collapsed'
+        $script:ActionProgressText.Visibility = 'Collapsed'
         if ($timedOut.Action -notin @('Start','Stop')) {
             try { & taskkill.exe /PID $timedOut.Process.Id /T /F 2>$null | Out-Null } catch {}
         }
@@ -1343,6 +1423,8 @@ $script:ActionTimer.Add_Tick({
     $script:ActionTimer.Stop()
     $pending = $script:PendingAction
     $script:PendingAction = $null
+    $script:ActionProgress.Visibility = 'Collapsed'
+    $script:ActionProgressText.Visibility = 'Collapsed'
     $script:Busy = $false
     Set-UiBusy $false
     $result = Read-ManagerResult $pending
@@ -1482,7 +1564,7 @@ $script:Window.Add_ContentRendered({
         }
         Update-ApiStatus $emptyStatus
         Set-ActionMessage 'The catalog is empty. Add model entries to panda/catalog.json, then refresh.'
-    } elseif ($script:PreviewState -eq 'Demo') {
+    } elseif ($script:PreviewState -in @('Demo','DemoLoading','DemoDownload')) {
         $demoStatus = Get-DemoStatus
         Update-ApiStatus $demoStatus
         $script:RefreshButton.IsEnabled = $false
@@ -1496,6 +1578,18 @@ $script:Window.Add_ContentRendered({
         $script:MonitorStateHint.Text = 'Synthetic layout preview. No live model status or hardware metrics were queried.'
         $script:SettingsSaveMessage.Text = 'Demo preview is read-only; no settings were saved.'
         Set-ActionMessage 'Demo preview is read-only. No live service was queried.'
+        if ($script:PreviewState -in @('DemoLoading','DemoDownload')) {
+            $script:ActionProgress.Visibility = 'Visible'
+            $script:ActionProgressText.Visibility = 'Visible'
+            if ($script:PreviewState -eq 'DemoLoading') {
+                $script:ActionProgress.IsIndeterminate = $true
+                $script:ActionProgressText.Text = 'Loading; the backend does not report a percentage.'
+            } else {
+                $script:ActionProgress.IsIndeterminate = $false
+                $script:ActionProgress.Value = 45
+                $script:ActionProgressText.Text = 'Synthetic preview: current file 45% (450 / 1000 MiB).'
+            }
+        }
     } elseif ($SkipInitialize) { Start-ManagerAction 'Status' }
     else { Start-ManagerAction 'Initialize' }
 })

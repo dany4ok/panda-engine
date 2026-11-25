@@ -48,6 +48,26 @@ class PandaGuiContractTests(unittest.TestCase):
         self.assertEqual(tabs[1].attrib["Header"], "Settings")
         self.assertEqual(tabs[2].attrib["Header"], "Monitor")
 
+    def test_gui_launcher_does_not_depend_on_console(self):
+        launcher = (ROOT / "START.bat").read_text(encoding="utf-8-sig")
+        helper = (ROOT / "panda" / "launch-gui.vbs").read_text(encoding="utf-8-sig")
+        self.assertIn('--console', launcher)
+        self.assertIn('wscript.exe', launcher.lower())
+        self.assertIn('shell.Run command, 0, False', helper)
+        self.assertIn('[PandaGuiConsole]::FreeConsole()', self.gui)
+
+    def test_model_progress_reports_real_download_bytes_and_indeterminate_loading(self):
+        names = {element.attrib.get(f"{{{XAML_NS['x']}}}Name") for element in self.xaml.iter()}
+        self.assertTrue({"ActionProgress", "ActionProgressText"}.issubset(names))
+        self.assertIn("PANDA_DOWNLOAD", self.manager)
+        self.assertIn("100.0 * $downloaded / $total", self.gui)
+        self.assertIn("the backend does not report a percentage", self.gui)
+
+    def test_failed_action_includes_launcher_diagnostics(self):
+        reader = extract_braced_block(self.gui, "function Read-ManagerResult")
+        self.assertIn("ERROR|WARNING", reader)
+        self.assertIn("$result.message", reader)
+
     def test_strata_inspired_controls_are_present(self):
         names = {element.attrib.get(f"{{{XAML_NS['x']}}}Name") for element in self.xaml.iter()}
         self.assertTrue(
@@ -80,7 +100,7 @@ class PandaGuiContractTests(unittest.TestCase):
             self.assertIn(f"$script:{name} = $script:Window.FindName('{name}')", self.gui)
 
     def test_demo_preview_does_not_dispatch_live_actions(self):
-        start = self.gui.index("elseif ($script:PreviewState -eq 'Demo')")
+        start = self.gui.index("elseif ($script:PreviewState -in @('Demo','DemoLoading','DemoDownload'))")
         end = self.gui.index("elseif ($SkipInitialize)", start)
         preview_branch = self.gui[start:end]
         self.assertIn("Get-DemoStatus", preview_branch)
@@ -93,7 +113,7 @@ class PandaGuiContractTests(unittest.TestCase):
         self.assertIn("if ($script:PreviewState)", manager_action)
         self.assertNotIn("$Action -ne 'Status'", manager_action)
         self.assertIn("if ($script:PreviewState)", hardware_refresh)
-        demo_start = self.gui.index("elseif ($script:PreviewState -eq 'Demo')")
+        demo_start = self.gui.index("elseif ($script:PreviewState -in @('Demo','DemoLoading','DemoDownload'))")
         demo_end = self.gui.index("elseif ($SkipInitialize)", demo_start)
         demo_branch = self.gui[demo_start:demo_end]
         for control in ("RefreshButton", "StopButton", "HardwareRefreshButton"):
