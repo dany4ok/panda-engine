@@ -1,7 +1,7 @@
 # Panda Engine
 
-Panda Engine is now a single local AI engine with **one public API on port 8080**. It owns
-its runtimes and its model data; clients always talk to `http://127.0.0.1:8080/v1` and
+Panda Engine is now a single local AI engine with **one public API on port 8081**. It owns
+its runtimes and its model data; clients always talk to `http://127.0.0.1:8081/v1` and
 Panda routes each request to the active backend. It is no longer a shortcut that opens
 another product's launcher.
 
@@ -9,7 +9,8 @@ another product's launcher.
 
 ```
 panda engine\
-  panda\panda.ps1          menu, model manager, process orchestration
+  panda\gui.ps1            default Windows desktop UI: Model Library
+  panda\panda.ps1          console menu, model manager, process orchestration
   panda\core\router.py     the unified API (stdlib Python, no dependencies)
   panda\state\route.json   which backend the API currently targets
   panda\catalog.json       models, paths, ports
@@ -29,7 +30,7 @@ engine binaries live in `models\gyro-s*`, `models\gyro-s-pack`, `models\gyro-s-m
 
 ## One API, internal backends
 
-The API process owns `127.0.0.1:8080` and forwards requests (including streaming token
+The API process owns `127.0.0.1:8081` and forwards requests (including streaming token
 responses) to the active backend on an internal port:
 
 | Backend | Internal port | Models |
@@ -38,27 +39,32 @@ responses) to the active backend on an internal port:
 | Poly-strata | 8182 | MiniCPM-V 4.7 35B A3B |
 | Gyro engine (bundled) | 8183 | Gyro Gyro S — model + pack + engine in Panda |
 
-Menu numbers come from `catalog.json` and are dynamic. Currently 1–5 are Inkling
-variants, **6 is MiniCPM** and **7 is Gyro-S**. `GET /_panda/status` reports the active
-model, its internal port and whether the backend is reachable. `X` stops the API and all
-backends. `Q` closes the menu — the API keeps serving, and if `O` was used the original
-OpenCode config is restored (a session that ends without `Q` is restored at next launch).
+The catalog currently contains two Inkling variants, MiniCPM and Gyro-S. `START.bat`
+opens the desktop Model Library; `START.bat --console` opens the legacy text menu.
+`GET /_panda/status` reports the active model, its internal port and whether the backend
+is reachable. In the GUI, selecting a row only inspects it; **Set active** changes the
+next-start selection, while **Start** changes the live route. Switching a running model
+can stop its current backend. **Stop engine** stops the API and all backends.
 
 ## Start
 
-Double-click `START.bat` in the repository root — it is the only start file there. The API is started at launch.
+Double-click `START.bat` in the repository root to open the Model Library and start the
+Panda API. Use `START.bat --console` to open the legacy text menu.
 
-- **First run:** pick the models to download by number, `A` for all, or `N` to skip.
-  Downloads use `.part` files, resume with `curl -C -`, and are checked against
-  `Content-Length` and, when available, SHA-256. The choice is saved in
-  `%LOCALAPPDATA%\panda-engine\state.json`, so the first-run screen never appears again.
-- **Later runs:** `S` starts the active model and repoints the API at it. Any model
+- **First run:** browse the catalog and use **Install** on a model you want. Downloads use
+  `.part` files, resume with `curl -C -`, and are checked against `Content-Length` and,
+  when available, SHA-256. Installing does not automatically start a model.
+- **Model Library:** search or filter the four catalog entries, inspect model/provider
+  details, set a model active for the next start, or start an installed model. Status
+  distinguishes installed, selected-for-next-start and a backend confirmed healthy by
+  `GET /_panda/status`. No model size or performance estimates are shown.
+- **Console mode:** `S` starts the active model and repoints the API at it. Any model
   number selects another model; if it is missing, Panda offers to download it.
 - `D` re-downloads models, `G` toggles MiniCPM game mode, `C` installs the OpenCode
   layer, `R` replays first-run setup, `X` stops API + backends, `Q` exits the menu.
 - `O` launches **OpenCode** against the Panda API. It backs up
   `~/.config/opencode/opencode.json`, sets `model` to the active model's OpenCode ID,
-  points all bundled providers at `http://127.0.0.1:8080/v1`, and starts OpenCode in a
+  points all bundled providers at `http://127.0.0.1:8081/v1`, and starts OpenCode in a
   new terminal (CLI from PATH, or the desktop CLI). Pressing `Q` restores the original
   config byte-for-byte; the backup marker lives in `panda\state\opencode-backup.json`.
   The CLI installed on this machine is OpenCode **V1**, while the live config is V2
@@ -71,7 +77,7 @@ Double-click `START.bat` in the repository root — it is the only start file th
 
 ### Game mode (`G`)
 
-Only for MiniCPM (model 6). With it on, START runs Poly-strata's adaptive VRAM guard
+Only for MiniCPM. With it on, START runs Poly-strata's adaptive VRAM guard
 on internal port 8182 instead of the plain server:
 
 - fast mode: model loads on demand into the GPU, ~4 GB VRAM reserved;
@@ -101,11 +107,12 @@ than the 131072/`auto` config — the VRAM thresholds depend on that headroom. L
 `C` copies `config/opencode.json`, `AGENT_RULES.md` and the bundled `plugins/` into
 `%USERPROFILE%\.config\opencode\`, with timestamped backups, and rewrites `instructions`
 to the absolute path of the copied rules file. All three model IDs are present there;
-they keep using port 8080, which is now the Panda API.
+they use port 8081, which is the Model Library API.
 
 ## Files
 
-- `panda/panda.ps1` — menu, download/state logic, process orchestration, routing.
+- `panda/gui.ps1` — default desktop Model Library UI.
+- `panda/panda.ps1` — console menu, download/state logic, process orchestration and GUI actions.
 - `panda/core/router.py` — unified API and streaming proxy.
 - `panda/catalog.json` — models, runtime roots, ports, game-mode files.
 - `panda/settings/` — snapshot of `strata-minicpmv-q4_k_m.json`.

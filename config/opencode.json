@@ -18,7 +18,7 @@
       "name": "Strata Local",
       "package": "@opencode/ai/providers/openai-compatible",
       "settings": {
-        "baseURL": "http://127.0.0.1:8080/v1",
+        "baseURL": "http://127.0.0.1:8081/v1",
         "apiKey": "strata-local-token",
         "headerTimeout": 900000,
         "chunkTimeout": 120000
@@ -385,7 +385,7 @@
       "name": "NInfer Inkling 2 Mini",
       "package": "@opencode/ai/providers/openai-compatible",
       "settings": {
-        "baseURL": "http://127.0.0.1:8080/v1",
+        "baseURL": "http://127.0.0.1:8081/v1",
         "apiKey": "ninfer-local-token",
         "headerTimeout": 900000,
         "chunkTimeout": 120000
@@ -495,7 +495,7 @@
       "name": "MiniCPM Local",
       "package": "@opencode/ai/providers/openai-compatible",
       "settings": {
-        "baseURL": "http://127.0.0.1:8080/v1",
+        "baseURL": "http://127.0.0.1:8081/v1",
         "apiKey": "mini-local-token",
         "headerTimeout": 900000
       },
@@ -570,7 +570,7 @@
       "name": "PolyStrata Local",
       "package": "@opencode/ai/providers/openai-compatible",
       "settings": {
-        "baseURL": "http://127.0.0.1:8080/v1",
+        "baseURL": "http://127.0.0.1:8081/v1",
         "headerTimeout": 900000
       },
       "models": {

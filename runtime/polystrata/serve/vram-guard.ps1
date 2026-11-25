@@ -32,6 +32,9 @@ $Python   = Join-Path $Root '.venv\Scripts\python.exe'
 $ServerPy = 'serve\server.py'
 $Log      = Join-Path $Root 'strata-adaptive-guard.log'
 $Base     = "http://127.0.0.1:$Port"
+$script:OwnedServer = $null
+$script:UnverifiedStartedProcess = $null
+$script:EngineEnumerationSucceeded = $true
 
 function Rotate-Log([string]$path) {
     try {
@@ -78,67 +81,309 @@ function Test-Busy {
     }
 }
 
+function Get-PortListenerSnapshot {
+    try {
+        $connections = @(Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction Stop)
+        $processIds = @($connections | ForEach-Object { [int]$_.OwningProcess } | Select-Object -Unique)
+        return [pscustomobject]@{ Success = $true; ProcessIds = $processIds; Error = '' }
+    } catch {
+        return [pscustomobject]@{ Success = $false; ProcessIds = @(); Error = $_.Exception.Message }
+    }
+}
+
+function Get-VerifiedOwnedServer {
+    $record = $script:OwnedServer
+    if (-not $record -or [int]$record.Port -ne $Port) { return $null }
+    try {
+        $live = Get-CimInstance Win32_Process -Filter ("ProcessId=" + [int]$record.ProcessId) -ErrorAction Stop
+        $process = $record.Process
+        if (-not $process) { return $null }
+        $null = $process.Handle
+        $process.Refresh()
+        $startTicks = [long]$process.StartTime.ToUniversalTime().Ticks
+        $executable = [System.IO.Path]::GetFullPath([string]$live.ExecutablePath)
+        if ([int]$live.ProcessId -ne [int]$record.ProcessId -or
+            [int]$live.ParentProcessId -ne [int]$record.ParentProcessId -or
+            $startTicks -ne [long]$record.StartedUtcTicks -or
+            -not [string]::Equals($executable, [string]$record.ExecutablePath, [System.StringComparison]::OrdinalIgnoreCase) -or
+            -not [string]::Equals([string]$live.CommandLine, [string]$record.CommandLine, [System.StringComparison]::Ordinal)) {
+            return $null
+        }
+        return [pscustomobject]@{ Cim = $live; Process = $process }
+    } catch {
+        return $null
+    }
+}
+
 function Get-OurServerPids {
-    # Only servers started with OUR configs are ours to stop.
-    $mine = @()
-    Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
-        $_.ProcessId -ne $PID -and $_.CommandLine -and
-        $_.CommandLine -like '*serve\server.py*' -and
-        ($_.CommandLine -like "*$FastCfg*" -or $_.CommandLine -like "*$GameCfg*" -or $_.CommandLine -like '*minicpmv-Q4_K_M*')
-    } | ForEach-Object { $mine += $_.ProcessId }
-    return $mine
+    $owned = Get-VerifiedOwnedServer
+    if ($owned) { return @([int]$script:OwnedServer.ProcessId) }
+    return @()
+}
+
+function Test-ProcessDescendsFrom([int]$ProcessId, [int]$AncestorId, $Processes) {
+    $byId = @{}
+    foreach ($process in $Processes) { $byId[[int]$process.ProcessId] = $process }
+    $seen = @{}
+    $current = $ProcessId
+    for ($depth = 0; $depth -lt 64; $depth++) {
+        if ($current -le 0 -or $seen.ContainsKey($current)) { return $false }
+        $seen[$current] = $true
+        if (-not $byId.ContainsKey($current)) { return $false }
+        $parent = [int]$byId[$current].ParentProcessId
+        if ($parent -eq $AncestorId) { return $true }
+        $current = $parent
+    }
+    return $false
 }
 
 function Get-OurEnginePids {
-    # Engines of our servers, plus orphans whose parent died unexpectedly.
-    # The model-file tag identifies our engines even when the parent is gone.
+    $script:EngineEnumerationSucceeded = $false
     $servers = @(Get-OurServerPids)
+    if (-not $servers.Count) {
+        $script:EngineEnumerationSucceeded = $true
+        return @()
+    }
+    try {
+        $processes = @(Get-CimInstance Win32_Process -ErrorAction Stop)
+    } catch {
+        return @()
+    }
+    $rootPath = [System.IO.Path]::GetFullPath($Root).TrimEnd('\') + '\'
     $mine = @()
-    Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
-        $_.Name -in @('strata-poly.exe','strata-vision.exe') -and
-        (($servers -contains $_.ParentProcessId) -or ($_.CommandLine -like '*minicpmv-Q4_K_M*'))
-    } | ForEach-Object { $mine += $_.ProcessId }
-    return $mine
+    foreach ($process in $processes) {
+        if ($process.Name -notin @('strata-poly.exe','strata-vision.exe') -or
+            -not $process.ExecutablePath -or
+            [string]$process.CommandLine -notmatch 'minicpmv-Q4_K_M') { continue }
+        try { $executable = [System.IO.Path]::GetFullPath([string]$process.ExecutablePath) } catch { continue }
+        if (-not $executable.StartsWith($rootPath, [System.StringComparison]::OrdinalIgnoreCase)) { continue }
+        foreach ($serverPid in $servers) {
+            if (Test-ProcessDescendsFrom ([int]$process.ProcessId) ([int]$serverPid) $processes) {
+                $mine += [int]$process.ProcessId
+                break
+            }
+        }
+    }
+    $script:EngineEnumerationSucceeded = $true
+    return @($mine | Select-Object -Unique)
 }
 
 function Stop-PidIfOurs([int]$procId) {
-    if ($procId -le 0 -or $procId -eq $PID) { return }
-    $p = Get-CimInstance Win32_Process -Filter "ProcessId=$procId" -ErrorAction SilentlyContinue
-    if ($p -and $p.Name -in @('python.exe','pythonw.exe','strata-poly.exe','strata-vision.exe')) {
-        Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+    if ($procId -le 0 -or $procId -eq $PID) { return $false }
+    if ($script:OwnedServer -and $procId -eq [int]$script:OwnedServer.ProcessId) {
+        $owned = Get-VerifiedOwnedServer
+        if (-not $owned) { return $false }
+        try {
+            $owned.Process.Kill()
+            $owned.Process.WaitForExit(5000)
+            $owned.Process.Refresh()
+            if (-not $owned.Process.HasExited) { return $false }
+            $script:OwnedServer = $null
+            return $true
+        } catch { return $false }
+    }
+
+    $enginePids = @(Get-OurEnginePids)
+    if (-not $script:EngineEnumerationSucceeded -or $enginePids -notcontains $procId) { return $false }
+    try {
+        $before = Get-CimInstance Win32_Process -Filter "ProcessId=$procId" -ErrorAction Stop
+        $process = Get-Process -Id $procId -ErrorAction Stop
+        $null = $process.Handle
+        $process.Refresh()
+        $startTicks = [long]$process.StartTime.ToUniversalTime().Ticks
+        $after = Get-CimInstance Win32_Process -Filter "ProcessId=$procId" -ErrorAction Stop
+        $process.Refresh()
+        if ([long]$process.StartTime.ToUniversalTime().Ticks -ne $startTicks -or
+            [string]$before.CommandLine -ne [string]$after.CommandLine -or
+            [string]$before.ExecutablePath -ne [string]$after.ExecutablePath -or
+            @(Get-OurEnginePids) -notcontains $procId) {
+            return $false
+        }
+        $process.Kill()
+        $process.WaitForExit(5000)
+        $process.Refresh()
+        if (-not $process.HasExited) { return $false }
+        $remainingEngines = @(Get-OurEnginePids)
+        return ($script:EngineEnumerationSucceeded -and $remainingEngines -notcontains $procId)
+    } catch {
+        return $false
     }
 }
 
 function Free-Port {
-    $owners = @(Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue | ForEach-Object { $_.OwningProcess })
-    $stale = @(Get-OurServerPids) + @(Get-OurEnginePids)
-    foreach ($procId in (@($owners + $stale) | Select-Object -Unique)) {
-        Log "eliberez portul $Port / server orfan (PID $procId)"
-        Stop-PidIfOurs $procId
-    }
-    Start-Sleep -Seconds 2
+    return (Stop-Server)
 }
 
 function Stop-Server {
-    $owners = @(Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue | ForEach-Object { $_.OwningProcess })
-    foreach ($procId in (@($owners + @(Get-OurServerPids) + @(Get-OurEnginePids)) | Select-Object -Unique)) {
-        Stop-PidIfOurs $procId
+    $snapshot = Get-PortListenerSnapshot
+    if (-not $snapshot.Success) {
+        Log "nu pot inspecta listenerii de pe portul $Port; nu opresc niciun proces. $($snapshot.Error)"
+        return $false
+    }
+    $owners = @($snapshot.ProcessIds)
+    $owned = Get-VerifiedOwnedServer
+    if ($script:OwnedServer -and -not $owned) {
+        try {
+            $script:OwnedServer.Process.Refresh()
+            if (-not $script:OwnedServer.Process.HasExited) {
+                Log 'nu pot revalida procesul administrat care inca ruleaza; il las neatins si pastrez proprietatea.'
+                return $false
+            }
+            $script:OwnedServer = $null
+        } catch {
+            Log 'nu pot confirma daca procesul administrat a iesit; pastrez proprietatea.'
+            return $false
+        }
+    }
+    $ownedPid = if ($owned) { [int]$script:OwnedServer.ProcessId } else { 0 }
+    $foreign = @($owners | Where-Object { $_ -ne $ownedPid })
+    if ($foreign.Count) {
+        Log "portul $Port este ocupat de un proces neadministrat (PID $($foreign -join ', ')); il las neatins."
+        return $false
+    }
+
+    $enginePids = @(Get-OurEnginePids)
+    if (-not $script:EngineEnumerationSucceeded) {
+        Log 'nu pot enumera procesele engine; pastrez serverul si proprietatea lui.'
+        return $false
+    }
+    $engineStopFailed = $false
+    foreach ($procId in $enginePids) {
+        if (-not (Stop-PidIfOurs ([int]$procId))) { $engineStopFailed = $true }
+    }
+    $remainingEngines = @(Get-OurEnginePids)
+    if (-not $script:EngineEnumerationSucceeded -or $engineStopFailed -or $remainingEngines.Count -gt 0) {
+        Log 'nu pot confirma oprirea tuturor proceselor engine administrate; serverul ramane neatins.'
+        return $false
+    }
+    if ($ownedPid -gt 0 -and -not (Stop-PidIfOurs $ownedPid)) {
+        Log "nu pot revalida serverul administrat (PID $ownedPid); il las neatins."
+        return $false
     }
     Start-Sleep -Seconds 2
+    $remaining = Get-PortListenerSnapshot
+    if (-not $remaining.Success -or $remaining.ProcessIds.Count) {
+        Log "portul $Port ramane ocupat dupa oprirea proceselor administrate; nu ating listenerul ramas."
+        return $false
+    }
+    return $true
+}
+
+function New-ServerOwnershipRecord($startedProcess, [string]$cfg) {
+    try {
+        $procId = [int]$startedProcess.Id
+        $process = $startedProcess
+        $null = $process.Handle
+        $process.Refresh()
+        $startedUtcTicks = [long]$process.StartTime.ToUniversalTime().Ticks
+        $processExecutable = [System.IO.Path]::GetFullPath([string]$process.MainModule.FileName)
+        $live = Get-CimInstance Win32_Process -Filter ("ProcessId=" + $procId) -ErrorAction Stop
+        $executable = [System.IO.Path]::GetFullPath([string]$live.ExecutablePath)
+        $expectedExecutable = [System.IO.Path]::GetFullPath($Python)
+        $configPath = [System.IO.Path]::GetFullPath($cfg)
+        $commandLine = [string]$live.CommandLine
+        $required = @($ServerPy, '--engine', 'strata', '--config', $configPath, '--port', [string]$Port)
+        if ([int]$live.ParentProcessId -ne $PID -or
+            -not [string]::Equals($executable, $expectedExecutable, [System.StringComparison]::OrdinalIgnoreCase)) {
+            return $null
+        }
+        if (-not [string]::Equals($processExecutable, $executable, [System.StringComparison]::OrdinalIgnoreCase)) {
+            return $null
+        }
+        foreach ($token in $required) {
+            if ($commandLine.IndexOf([string]$token, [System.StringComparison]::OrdinalIgnoreCase) -lt 0) { return $null }
+        }
+        return [pscustomobject]@{
+            ProcessId = $procId
+            ParentProcessId = [int]$live.ParentProcessId
+            StartedUtcTicks = $startedUtcTicks
+            ExecutablePath = $executable
+            CommandLine = $commandLine
+            ModelConfig = $configPath
+            Port = $Port
+            Process = $process
+        }
+    } catch {
+        return $null
+    }
+}
+
+function Stop-JustStartedServerSafely($startedProcess) {
+    try {
+        $null = $startedProcess.Handle
+        $startedProcess.Refresh()
+        if ($startedProcess.HasExited) { return $true }
+        $executable = [System.IO.Path]::GetFullPath([string]$startedProcess.MainModule.FileName)
+        $expectedExecutable = [System.IO.Path]::GetFullPath($Python)
+        if (-not [string]::Equals($executable, $expectedExecutable, [System.StringComparison]::OrdinalIgnoreCase)) {
+            return $false
+        }
+        $startedProcess.Kill()
+        $startedProcess.WaitForExit(5000)
+        return [bool]$startedProcess.HasExited
+    } catch {
+        return $false
+    }
 }
 
 function Start-Server([string]$cfg) {
-    Free-Port
+    if (-not (Free-Port)) {
+        Log "nu pornesc serverul: portul $Port nu a putut fi eliberat in siguranta."
+        return $false
+    }
     try { $cfgObj = Get-Content $cfg -Raw | ConvertFrom-Json; Rotate-Log $cfgObj.log } catch { }
     $a = @($ServerPy, '--engine', 'strata', '--config', $cfg, '--port', "$Port")
-    Start-Process -FilePath $Python -ArgumentList $a -WorkingDirectory $Root -NoNewWindow
+    $started = Start-Process -FilePath $Python -ArgumentList $a -WorkingDirectory $Root -NoNewWindow -PassThru
+    if (-not $started) {
+        Log 'pornirea procesului Python administrat a esuat.'
+        return $false
+    }
+    $script:OwnedServer = New-ServerOwnershipRecord $started $cfg
+    if (-not $script:OwnedServer) {
+        Log 'identitatea procesului pornit nu a putut fi validata; incerc oprirea doar prin handle-ul returnat la lansare.'
+        if (-not (Stop-JustStartedServerSafely $started)) {
+            Log 'procesul lansat nu a putut fi oprit in siguranta; nu voi opri procese dupa nume sau port.'
+            $script:UnverifiedStartedProcess = $started
+        }
+        return $false
+    }
     for ($i = 0; $i -lt 90; $i++) {
         Start-Sleep -Seconds 1
-        if ((Get-Health).Up) {
+        $owned = Get-VerifiedOwnedServer
+        $snapshot = Get-PortListenerSnapshot
+        if (-not $snapshot.Success) {
+            Log "nu pot inspecta listenerii de pe portul $Port in asteptarea serverului: $($snapshot.Error)"
+            break
+        }
+        if ($owned -and $snapshot.ProcessIds.Count -eq 1 -and
+            $snapshot.ProcessIds[0] -eq [int]$script:OwnedServer.ProcessId -and (Get-Health).Up) {
             $mod = 'RAPID (GPU la cerere)'
             if ($cfg -eq $GameCfg) { $mod = 'JOC (RAM/SSD, 0 experti in VRAM)' }
             Log "serverul este gata: $mod"
             return $true
+        }
+    }
+    Log 'serverul nu a devenit gata; incerc oprirea doar prin identitatea procesului pornit.'
+    if (-not (Stop-Server)) {
+        $enginePids = @(Get-OurEnginePids)
+        if (-not $script:EngineEnumerationSucceeded) {
+            Log 'nu pot enumera procesele engine; pastrez serverul si inregistrarea lui pentru recuperare sigura.'
+            return $false
+        }
+        $engineStopFailed = $false
+        foreach ($procId in $enginePids) {
+            if (-not (Stop-PidIfOurs ([int]$procId))) { $engineStopFailed = $true }
+        }
+        $remainingEngines = @(Get-OurEnginePids)
+        if (-not $script:EngineEnumerationSucceeded -or $engineStopFailed -or $remainingEngines.Count -gt 0) {
+            Log 'nu pot confirma oprirea tuturor proceselor engine; pastrez serverul si inregistrarea lui.'
+            return $false
+        }
+        if (Stop-JustStartedServerSafely $started) {
+            $script:OwnedServer = $null
+            Log 'serverul pornit de acest guard a fost oprit prin handle-ul sau; listenerul neadministrat a ramas neatins.'
+        } else {
+            Log 'procesul lansat nu a putut fi oprit in siguranta; nu voi opri niciun listener neadministrat.'
         }
     }
     return $false
@@ -161,7 +406,10 @@ function Request-Switch([string]$target, [string]$why) {
 function Switch-To([string]$newMode, [string]$cfg) {
     $previous = $script:mode
     Log "trecere in modul $newMode"
-    Stop-Server
+    if (-not (Stop-Server)) {
+        Log 'oprirea serverului nu a putut fi confirmata; pastrez modul curent.'
+        return $false
+    }
     if (Start-Server $cfg) {
         Log "trecere reusita."
         return $true
@@ -185,7 +433,31 @@ if ($null -ne $free -and $free -lt $FastToGameMs) {
     $mode = 'fast'
     $ok = Start-Server $FastCfg
 }
-if (-not $ok) { Log "serverul nu a pornit; iesire."; exit 1 }
+if (-not $ok) {
+    Log 'serverul nu a pornit; pastrez guard-ul activ pana confirm oprirea procesului lansat.'
+    while ($script:OwnedServer -or $script:UnverifiedStartedProcess) {
+        if ($script:OwnedServer) {
+            try {
+                $script:OwnedServer.Process.Refresh()
+                if ($script:OwnedServer.Process.HasExited) { $script:OwnedServer = $null }
+                elseif (Stop-Server) { break }
+            } catch {}
+        }
+        if ($script:UnverifiedStartedProcess) {
+            try {
+                $script:UnverifiedStartedProcess.Refresh()
+                if ($script:UnverifiedStartedProcess.HasExited -or
+                    (Stop-JustStartedServerSafely $script:UnverifiedStartedProcess)) {
+                    $script:UnverifiedStartedProcess = $null
+                    break
+                }
+            } catch {}
+        }
+        if ($script:OwnedServer -or $script:UnverifiedStartedProcess) { Start-Sleep -Seconds 3 }
+    }
+    Log 'serverul esuat a fost confirmat oprit; ies din guard.'
+    exit 1
+}
 Log "modelul NU e incarcat; se incarca la prima cerere si ramane in VRAM cat timp nu e presiune. Daca alta aplicatie cere memorie, eliberez VRAM in ~$PressurePolls s."
 
 $script:mode = $mode
@@ -203,10 +475,18 @@ while ($true) {
         $down++
         if ($down -ge 3) {
             Log "serverul nu raspunde; repornesc in modul $($script:mode)"
-            Stop-Server
+            if (-not (Stop-Server)) {
+                Log 'oprirea nu a putut fi confirmata; pastrez guard-ul activ si reiau verificarea.'
+                Start-Sleep -Seconds 3
+                continue
+            }
             $cfg = if ($script:mode -eq 'game') { $GameCfg } else { $FastCfg }
-            if (-not (Start-Server $cfg)) { Log "repornire esuata; iesire."; break }
-            $down = 0
+            if (-not (Start-Server $cfg)) {
+                Log 'repornirea esuata; guard-ul ramane activ si va reincerca recuperarea.'
+                Start-Sleep -Seconds 3
+            } else {
+                $down = 0
+            }
         }
         continue
     }

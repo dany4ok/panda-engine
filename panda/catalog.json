@@ -7,7 +7,7 @@
     "knownGyro": "C:\\Users\\x1p\\Desktop\\panda engine\\runtime\\gyro-engine"
   },
   "ports": {
-    "api": 8080,
+    "api": 8081,
     "infer": 8181,
     "mini": 8182,
     "gyro": 8183
@@ -41,30 +41,6 @@
       "label": "Inkling 2 Mini (Q2_K_XL)",
       "artifact": "Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer",
       "url": "https://huggingface.co/WaveCut/Inkling-2-Mini-UD-Q2_K_XL-NInfer-v3/resolve/main/Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer",
-      "provider": "ninfer/inkling-2-mini"
-    },
-    {
-      "id": "inkling-q3kxl",
-      "kind": "inkling",
-      "label": "Inkling 2 Mini (Q3_K_XL)",
-      "artifact": "Inkling-2-Mini-UD-Q3_K_XL-ninfer-v3.ninfer",
-      "url": "https://huggingface.co/WaveCut/Inkling-2-Mini-UD-Q3_K_XL-NInfer-v3/resolve/main/Inkling-2-Mini-UD-Q3_K_XL-ninfer-v3.ninfer",
-      "provider": "ninfer/inkling-2-mini"
-    },
-    {
-      "id": "inkling-iq4xs",
-      "kind": "inkling",
-      "label": "Inkling 2 Mini (IQ4_XS)",
-      "artifact": "Inkling-2-Mini-UD-IQ4_XS-ninfer-v3.ninfer",
-      "url": "https://huggingface.co/WaveCut/Inkling-2-Mini-UD-IQ4_XS-NInfer-v3/resolve/main/Inkling-2-Mini-UD-IQ4_XS-ninfer-v3.ninfer",
-      "provider": "ninfer/inkling-2-mini"
-    },
-    {
-      "id": "inkling-apex",
-      "kind": "inkling",
-      "label": "Inkling 2 Mini (APEX-I MiniPlus V2.1)",
-      "artifact": "Inkling-2-Mini-APEX-I-MiniPlus-V2.1-ninfer-v3.ninfer",
-      "url": "https://huggingface.co/WaveCut/Inkling-2-Mini-APEX-I-MiniPlus-V2.1-NInfer-v3/resolve/main/Inkling-2-Mini-APEX-I-MiniPlus-V2.1-ninfer-v3.ninfer",
       "provider": "ninfer/inkling-2-mini"
     },
     {

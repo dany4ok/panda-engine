@@ -6,13 +6,20 @@ param([switch]$AutoStart)
 $ErrorActionPreference = 'Continue'
 try { $Host.UI.RawUI.WindowTitle = 'Inkling 2 Mini - NInfer' } catch {}
 
-$Root       = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$Root       = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $ConfigPath = Join-Path $Root 'config.json'
 $LogDir     = Join-Path $Root 'logs'
 $RunDir     = Join-Path $Root 'run'
 $StatsPath  = Join-Path $LogDir 'tokens.csv'
 $NinferDir  = Join-Path $Root 'ninfer'
 $ModelsDir  = Join-Path $Root 'models'
+$KnownInkling = ''
+try {
+    $catalog = Get-Content -LiteralPath (Join-Path $Root 'panda\catalog.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+    $KnownInkling = [string]$catalog.roots.knownInkling
+} catch {}
+$ApprovedNinferDirs = @($NinferDir)
+if ($KnownInkling) { $ApprovedNinferDirs += (Join-Path $KnownInkling 'ninfer') }
 $Contexts   = @(65536, 98304, 131072)
 $Reasons    = @('minimal','low','medium','high','xhigh','max')
 
@@ -26,6 +33,62 @@ function Read-Config {
     return ((Get-Content -LiteralPath $ConfigPath -Raw -Encoding UTF8) | ConvertFrom-Json)
 }
 function Save-Config($c) { ($c | ConvertTo-Json -Depth 4) | Set-Content -LiteralPath $ConfigPath -Encoding UTF8 }
+function Test-PathUnderDirectory([string]$Path, [string]$Directory) {
+    if (-not $Path -or -not $Directory) { return $false }
+    try {
+        $fullPath = [System.IO.Path]::GetFullPath($Path)
+        $fullDirectory = [System.IO.Path]::GetFullPath($Directory)
+        if (-not $fullDirectory.EndsWith('\')) { $fullDirectory += '\' }
+        return $fullPath.StartsWith($fullDirectory, [System.StringComparison]::OrdinalIgnoreCase)
+    } catch { return $false }
+}
+function Test-CommandLineArgumentValue([string]$CommandLine, [string]$Name, [string]$Value) {
+    if (-not $CommandLine -or -not $Name -or $null -eq $Value) { return $false }
+    $escapedValue = [regex]::Escape([string]$Value)
+    $pattern = '(?i)(?:^|\s)' + [regex]::Escape($Name) + '\s+(?:"' + $escapedValue + '"|' + $escapedValue + ')(?:\s|$)'
+    return [regex]::IsMatch($CommandLine, $pattern)
+}
+function New-NinferOwnerRecord($Process, $c) {
+    try {
+        $Process.Refresh()
+        $cim = Get-CimInstance Win32_Process -Filter ("ProcessId=" + [int]$Process.Id) -ErrorAction Stop
+        if (-not $cim -or -not $cim.ExecutablePath -or -not $cim.CommandLine) { return $null }
+        return [pscustomobject]@{
+            ProcessId = [int]$Process.Id
+            StartedUtcTicks = [long]$Process.StartTime.ToUniversalTime().Ticks
+            ExecutablePath = [string]$cim.ExecutablePath
+            CommandLine = [string]$cim.CommandLine
+            Artifact = [string]$c.artifact
+            Port = [int]$c.port
+        }
+    } catch { return $null }
+}
+function Get-ValidatedNinferOwner($c) {
+    $ownerPath = Join-Path $RunDir 'server.pid'
+    if (-not (Test-Path -LiteralPath $ownerPath)) { return $null }
+    try {
+        $owner = Get-Content -LiteralPath $ownerPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        if (-not $owner.ProcessId -or -not $owner.StartedUtcTicks -or -not $owner.ExecutablePath -or -not $owner.CommandLine) { return $null }
+        if ([int]$owner.Port -ne [int]$c.port -or -not $owner.Artifact) { return $null }
+        $cim = Get-CimInstance Win32_Process -Filter ("ProcessId=" + [int]$owner.ProcessId) -ErrorAction Stop
+        $process = Get-Process -Id ([int]$owner.ProcessId) -ErrorAction Stop
+        $process.Refresh()
+        if (-not $cim -or
+            -not [string]::Equals([string]$cim.ExecutablePath, [string]$owner.ExecutablePath, [System.StringComparison]::OrdinalIgnoreCase) -or
+            -not [string]::Equals([string]$cim.CommandLine, [string]$owner.CommandLine, [System.StringComparison]::OrdinalIgnoreCase) -or
+            [long]$process.StartTime.ToUniversalTime().Ticks -ne [long]$owner.StartedUtcTicks -or
+            [System.IO.Path]::GetFileName([string]$cim.ExecutablePath) -ine 'ninfer-serve.exe') { return $null }
+        $approved = $false
+        foreach ($directory in $ApprovedNinferDirs) {
+            if (Test-PathUnderDirectory ([string]$cim.ExecutablePath) $directory) { $approved = $true; break }
+        }
+        $artifactPath = Join-Path $ModelsDir ([string]$owner.Artifact)
+        if (-not $approved -or
+            ([string]$cim.CommandLine).IndexOf($artifactPath, [System.StringComparison]::OrdinalIgnoreCase) -lt 0 -or
+            -not (Test-CommandLineArgumentValue ([string]$cim.CommandLine) '--port' ([string]$owner.Port))) { return $null }
+        return $process
+    } catch { return $null }
+}
 
 function Get-Exe {
     Get-ChildItem -LiteralPath $NinferDir -Recurse -File -Filter 'ninfer-serve.exe' -ErrorAction SilentlyContinue |
@@ -37,7 +100,14 @@ function Get-FreeVram {
 }
 function Register-Lifecycle([int]$ServerPid) {
     $me = $PID
-    $cmd = 'while (Get-Process -Id {0} -ErrorAction SilentlyContinue) {{ Start-Sleep -Seconds 2 }}; Stop-Process -Id {1} -Force -ErrorAction SilentlyContinue' -f $me, $ServerPid
+    try {
+        $server = Get-Process -Id $ServerPid -ErrorAction Stop
+        $server.Refresh()
+        $startTicks = $server.StartTime.ToUniversalTime().Ticks
+    } catch { return }
+    $cmd = '$parentId=' + $me + '; $serverId=' + $ServerPid + '; $startTicks=[long]' + $startTicks +
+        '; while (Get-Process -Id $parentId -ErrorAction SilentlyContinue) { Start-Sleep -Seconds 2 };' +
+        ' try { $p=Get-Process -Id $serverId -ErrorAction Stop; $p.Refresh(); if ($p.StartTime.ToUniversalTime().Ticks -eq $startTicks) { $p.Kill() } } catch {}'
     Start-Process -FilePath 'powershell.exe' -WindowStyle Hidden -PassThru -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-Command',$cmd) | Out-Null
     Write-Host ("Model will stop automatically when you close this terminal (server PID {0})." -f $ServerPid)
 }
@@ -182,7 +252,16 @@ function Show-Status($c) {
 function Stop-Sampler {
     $sf = Join-Path $RunDir 'sampler.pid'
     if (Test-Path -LiteralPath $sf) {
-        $id=0; if ([int]::TryParse((Get-Content $sf -Raw).Trim(),[ref]$id)) { $p=Get-Process -Id $id -ErrorAction SilentlyContinue; if($p){Stop-Process -Id $id -Force -ErrorAction SilentlyContinue} }
+        $id=0
+        if ([int]::TryParse((Get-Content $sf -Raw).Trim(),[ref]$id)) {
+            $p = Get-CimInstance Win32_Process -Filter ("ProcessId=" + $id) -ErrorAction SilentlyContinue
+            $samplerScript = Join-Path $RunDir 'metrics-sampler.ps1'
+            if ($p -and [int]$p.ParentProcessId -eq $PID -and $p.CommandLine -and
+                $p.CommandLine.IndexOf($samplerScript, [System.StringComparison]::OrdinalIgnoreCase) -ge 0 -and
+                (Test-CommandLineArgumentValue ([string]$p.CommandLine) '-ParentPid' ([string]$PID))) {
+                Stop-Process -Id $id -Force -ErrorAction SilentlyContinue
+            }
+        }
         Remove-Item -LiteralPath $sf -Force -ErrorAction SilentlyContinue
     }
 }
@@ -190,12 +269,30 @@ function Stop-Server($c) {
     Stop-Sampler
     $pf = Join-Path $RunDir 'server.pid'
     if (Test-Path -LiteralPath $pf) {
-        $id=0; if ([int]::TryParse((Get-Content $pf -Raw).Trim(),[ref]$id)) { $p=Get-Process -Id $id -ErrorAction SilentlyContinue; if($p){Stop-Process -Id $id -Force -ErrorAction SilentlyContinue; Write-Host ("Stopped PID {0}" -f $id)} }
-        Remove-Item -LiteralPath $pf -Force -ErrorAction SilentlyContinue
-    }
-    Get-NetTCPConnection -State Listen -LocalPort ([int]$c.port) -ErrorAction SilentlyContinue | ForEach-Object {
-        $p = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue
-        if ($p -and $p.ProcessName -match 'ninfer') { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue; Write-Host ("Stopped PID {0}" -f $p.Id) }
+        $owner = $null
+        try { $owner = Get-Content -LiteralPath $pf -Raw -Encoding UTF8 | ConvertFrom-Json } catch {}
+        $ownedProcess = Get-ValidatedNinferOwner $c
+        $removeOwnerRecord = $false
+        if ($ownedProcess) {
+            try {
+                $ownedProcess.Kill()
+                $ownedProcess.WaitForExit(5000)
+                $ownedProcess.Refresh()
+                if ($ownedProcess.HasExited) {
+                    $removeOwnerRecord = $true
+                    Write-Host ("Stopped owned NInfer server PID {0}" -f $owner.ProcessId)
+                } else {
+                    Write-Host 'WARNING: Owned NInfer server did not exit; preserving its ownership record.'
+                }
+            } catch {
+                Write-Host 'WARNING: Owned NInfer server could not be confirmed stopped; preserving its ownership record.'
+            }
+        } elseif ($owner -and $owner.ProcessId) {
+            Write-Host 'WARNING: NInfer ownership could not be confirmed; leaving the process and ownership record untouched.'
+        } else {
+            Write-Host 'WARNING: NInfer ownership record is unreadable; preserving it for safe recovery.'
+        }
+        if ($removeOwnerRecord) { Remove-Item -LiteralPath $pf -Force -ErrorAction SilentlyContinue }
     }
     $script:PrevMetrics = $null
 }
@@ -219,6 +316,13 @@ function Start-Ninfer($c) {
     if (-not $exe) { Write-Host 'ERROR: ninfer-serve.exe is missing.'; return }
     $art = Join-Path $ModelsDir $c.artifact
     if (-not (Test-Path -LiteralPath $art)) { Write-Host "ERROR: artifact $($c.artifact) is missing."; return }
+    $listeners = @(Get-NetTCPConnection -State Listen -LocalPort ([int]$c.port) -ErrorAction SilentlyContinue)
+    if ($listeners.Count -gt 0) {
+        Write-Host ("ERROR: port {0} is occupied; no unowned process was touched." -f $c.port)
+        return
+    }
+    New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
+    New-Item -ItemType Directory -Force -Path $RunDir | Out-Null
     Write-Host ("Starting NInfer: {0}" -f $exe)
     $argLine = '"' + $art + '" --model-id inkling-2-mini --max-context ' + [string]$c.context +
         ' --kv-capacity ' + [string]$c.context + ' --expert-residency device --vision --spec none' +
@@ -226,7 +330,23 @@ function Start-Ninfer($c) {
         ' --host 127.0.0.1 --port ' + [string]$c.port
     $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
     $p = Start-Process -FilePath $exe -ArgumentList $argLine -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $LogDir "ninfer-$stamp.out.log") -RedirectStandardError (Join-Path $LogDir "ninfer-$stamp.err.log")
-    $p.Id | Set-Content -LiteralPath (Join-Path $RunDir 'server.pid') -Encoding ASCII
+    $owner = $null
+    for ($i = 0; $i -lt 15 -and -not $owner; $i++) {
+        $owner = New-NinferOwnerRecord $p $c
+        if (-not $owner) { Start-Sleep -Milliseconds 200 }
+    }
+    if (-not $owner) {
+        Write-Host 'ERROR: Could not establish NInfer process ownership; stopping only the just-launched process.'
+        try { $p.Kill() } catch {}
+        return
+    }
+    try {
+        $owner | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $RunDir 'server.pid') -Encoding UTF8
+    } catch {
+        Write-Host 'ERROR: Could not save NInfer ownership; stopping only the just-launched process.'
+        try { $p.Kill() } catch {}
+        return
+    }
     Register-Lifecycle $p.Id
     if (-not (Wait-Health $c 120)) {
         Write-Host 'ERROR: server not ready. Last log lines:'

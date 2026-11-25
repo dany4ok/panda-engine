@@ -4,7 +4,7 @@ Public snapshot of the local setup we built and benchmarked on an **RTX 5070 Ti 
 
 ## What this repo contains
 
-- `START.bat` — the **only** start file in this folder. Double-click it to run Panda Engine, a self-contained local engine with one API on `127.0.0.1:8080/v1`. It owns its runtimes in `runtime/` and all model data in `models/`, routes requests to the active backend on an internal port, and includes the adaptive VRAM game mode for MiniCPM. Gyro-S is copied into Panda (model, pack and engine) and runs from there without opening Strata. See `panda/README.md`.
+- `START.bat` — the **only** start file in this folder. Double-click it to open Panda Engine's desktop Model Library and start its isolated local API at `127.0.0.1:8081/v1`; pass `--console` to open the legacy text menu. Panda owns its runtimes in `runtime/` and all model data in `models/`, routes requests to the active backend on an internal port, and includes the adaptive VRAM game mode for MiniCPM. Gyro-S is copied into Panda (model, pack and engine) and runs from there without opening Strata. See `panda/README.md`.
 - `panda\legacy\` — the old standalone launchers (`start.ps1`, `START-MINI.bat`, `START-old.bat`), kept for reference. Panda Engine calls the NInfer launcher from there automatically; you do not need any of them.
 - `bench.ps1`, `run/metrics-sampler.ps1` — benchmark and live `/metrics` sampler.
 - `config.json`, `config/opencode.json` — engine settings and the OpenCode provider/model entries. `config/opencode.json` is the working config with three adaptations for reuse: `instructions` points at the bundled `AGENT_RULES.md` instead of an absolute path, the `plugins/agent-journal` entry is backed by the `plugins/` folder in this repo, and `agents.reviewer` has no model pin, so it inherits the session model, as in the live config.
@@ -54,5 +54,5 @@ Some files in `benchmarks/` still contain absolute paths from the original machi
 1. Download the NInfer Windows CUDA 13.4 release and extract it into `ninfer/`.
 2. Download the GGUF/NInfer artifacts into `models/`.
 3. Copy `config/opencode.json` to `~/.config/opencode/opencode.json` and `AGENT_RULES.md` and `plugins/` next to it — or run Panda Engine and press `C` to do all of this with backups.
-4. Run `START.bat` (the only launcher in the root folder). The first run asks which models to download, then remembers the choice.
+4. Run `START.bat` (the only launcher in the root folder). The Model Library opens by default; install models individually from the library. Use `START.bat --console` to access the legacy console first-run download prompt.
 5. Run the A–F probes with `benchmarks/scripts/run_probe.ps1`, e.g. `-Model ninfer/inkling-2-mini -NoSub -Task A -Batch myrun`. The script derives its harness root from its own location, so `tasks/`, `config/` and `scripts/` are found automatically; pass `-OpencodeExe` if the bundled desktop CLI is not present (otherwise `opencode` from PATH is used).
