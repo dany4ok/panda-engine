@@ -65,7 +65,9 @@ Panda API. Use `panda.exe --console` to open the legacy text menu.
   `X` stops API + backends, `Q` exits the menu.
 - `O` launches **OpenCode** against the Panda API. It backs up
   `~/.config/opencode/opencode.json`, sets `model` to the active model's OpenCode ID,
-  points all bundled providers at `http://127.0.0.1:8081/v1`, and starts OpenCode in a
+  points the five Panda-managed providers (`strata`, `ninfer`, `polystrata-mini`,
+  `polystrata`, `panda`) at `http://127.0.0.1:8081/v1` and leaves the bundled Ollama
+  entry on `http://127.0.0.1:11434`, and starts OpenCode in a
   new terminal (CLI from PATH, or the desktop CLI). Pressing `Q` restores the original
   config byte-for-byte; the backup marker lives in `panda\state\opencode-backup.json`.
   The CLI installed on this machine is OpenCode **V1**, while the live config is V2
@@ -119,4 +121,4 @@ are present there; they use port 8081, which is the Model Library API.
 - `panda/settings/` — snapshot of `strata-minicpmv-q4_k_m.json`.
 - `runtime/polystrata/strata-gyro-s.json` — Gyro-S config pointing only inside Panda.
 - `panda.exe` — the double-click entry point, with `panda.ico` (old launchers are in `panda\legacy\`); `START.bat` forwards to it.
-- Rebuild — `powershell -File panda\build-launcher.ps1` recompiles `panda.exe` from `panda\panda-launcher.cs` with `panda.ico` embedded; `python panda\make_panda_icon.py` regenerates `panda.ico` and `panda.png`.
+- Rebuild — `powershell -NoProfile -ExecutionPolicy Bypass -File panda\build-launcher.ps1` recompiles `panda.exe` from `panda\panda-launcher.cs` with `panda.ico` embedded (the default output is the tracked `panda.exe`, so it overwrites it; pass `-Out <path>` to build elsewhere). `python panda\make_panda_icon.py` regenerates `panda.ico` and `panda.png`.
