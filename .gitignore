@@ -9,14 +9,14 @@ models/
 events.jsonl
 
 # Bundled runtime binaries and local model packs (copied/downloaded on this PC).
-# Keep the small server/VRAM-guard configs that Panda actually references.
+# Keep the small server/VRAM-guard configs that Panda Engine actually references.
 runtime/*
-!runtime/polystrata/
-runtime/polystrata/*
-!runtime/polystrata/*.json
-!runtime/polystrata/serve/
-runtime/polystrata/serve/*
-!runtime/polystrata/serve/vram-guard.ps1
+!runtime/panda/
+runtime/panda/*
+!runtime/panda/*.json
+!runtime/panda/serve/
+runtime/panda/serve/*
+!runtime/panda/serve/vram-guard.ps1
 panda/state/
 
 # Runtime state

@@ -47,7 +47,7 @@ function Get-State {
     if (Test-Path -LiteralPath $script:StatePath) {
         try {
             $s = Get-Content -LiteralPath $script:StatePath -Raw -Encoding UTF8 | ConvertFrom-Json
-            # Gyro is loaded on demand by Strata, not downloaded by this launcher.
+            # Gyro is loaded on demand by Panda Engine, not downloaded by this launcher.
             $s.downloaded = @($s.downloaded | Where-Object { $_ -ne 'gyro-s' })
             # States written before game mode existed have no gameMode key.
             if ($null -eq $s.PSObject.Properties['gameMode']) { Add-Member -InputObject $s -NotePropertyName gameMode -NotePropertyValue $false }
@@ -164,12 +164,12 @@ function Stop-GameGuard([switch]$LockHeld) {
 function Stop-MiniBackend {
     $mutex = Enter-BackendLifecycleLock
     if (-not $mutex) {
-        Write-Host '  ERROR: Another Panda backend lifecycle action is in progress.'
+        Write-Host '  ERROR: Another Panda Engine backend lifecycle action is in progress.'
         return $false
     }
     try {
         if ([int]$script:cat.ports.mini -in @(Get-OtherRouterBackendPorts)) {
-            Write-Host ("  Preserving MiniCPM backend on port " + $script:cat.ports.mini + "; another Panda API routes to it.")
+            Write-Host ("  Preserving MiniCPM backend on port " + $script:cat.ports.mini + "; another Panda Engine API routes to it.")
             return $false
         }
         if (-not (Stop-GameGuard -LockHeld)) { return $false }
@@ -183,7 +183,7 @@ function Stop-MiniBackend {
 }
 function Toggle-GameMode($s) {
     $mutex = Enter-BackendLifecycleLock
-    if (-not $mutex) { Write-Host '  ERROR: Another Panda backend lifecycle action is in progress.'; return }
+    if (-not $mutex) { Write-Host '  ERROR: Another Panda Engine backend lifecycle action is in progress.'; return }
     try {
     $latest = Get-State
     $s.active = $latest.active
@@ -195,7 +195,7 @@ function Toggle-GameMode($s) {
     }
     if ($DryRun) { Write-Host '  [dry-run] would toggle MiniCPM game mode'; return }
     if (-not $s.gameMode -and -not (Test-GameGuard)) {
-        Write-Host '  ERROR: game mode files are missing from the Poly-strata install:'
+        Write-Host '  ERROR: game mode files are missing from the Panda Engine runtime:'
         foreach ($key in @('guard','fastConfig','cpuConfig')) { Write-Host ("    " + (Get-GameGuardPath $key)) }
         return
     }
@@ -316,7 +316,7 @@ function Start-Router([switch]$LockHeld) {
         return $false
     }
     Start-Sleep -Milliseconds 800
-    if ($DryRun) { Write-Host '  [dry-run] would start the Panda API router'; return $true }
+    if ($DryRun) { Write-Host '  [dry-run] would start the Panda Engine API router'; return $true }
     if (-not (Upgrade-LegacyRouteIfOwned)) {
         if (-not (Clear-StaleRouteIfBackendOffline)) {
             Write-Host '  ERROR: Existing route could not be safely adopted or confirmed offline; it remains unchanged.'
@@ -331,11 +331,11 @@ function Start-Router([switch]$LockHeld) {
         if ($r) {
             New-Item -ItemType Directory -Force -Path (Split-Path -Parent $script:RouterPidPath) | Out-Null
             $r.ProcessId | Set-Content -LiteralPath $script:RouterPidPath -Encoding UTF8
-            Write-Host ('  Panda API ready on http://127.0.0.1:' + $script:cat.ports.api + '/v1')
+            Write-Host ('  Panda Engine API ready on http://127.0.0.1:' + $script:cat.ports.api + '/v1')
             return $true
         }
     }
-    Write-Host '  ERROR: Panda API did not start. See logs\panda-router.log'
+    Write-Host '  ERROR: Panda Engine API did not start. See logs\panda-router.log'
     return $false
     } finally {
         if ($mutex) { Exit-BackendLifecycleLock $mutex }
@@ -343,13 +343,13 @@ function Start-Router([switch]$LockHeld) {
 }
 function Stop-Router {
     if ($DryRun) {
-        Write-Host '  [dry-run] would stop the Panda API router and clear its route'
+        Write-Host '  [dry-run] would stop the Panda Engine API router and clear its route'
         return $true
     }
     $apiPort = [int]$script:cat.ports.api
     $r = Get-RouterProcess
     if ($r) {
-        Write-Host ("  Stopping Panda API (PID " + $r.ProcessId + ")")
+        Write-Host ("  Stopping Panda Engine API (PID " + $r.ProcessId + ")")
         try {
             $current = Get-CimInstance Win32_Process -Filter ("ProcessId=" + [int]$r.ProcessId) -ErrorAction Stop
             $process = Get-Process -Id ([int]$r.ProcessId) -ErrorAction Stop
@@ -363,7 +363,7 @@ function Stop-Router {
                 $process.WaitForExit(5000)
                 $process.Refresh()
                 if (-not $process.HasExited) {
-                    Write-Host '  WARNING: Panda API did not exit; preserving its PID and route records.'
+                    Write-Host '  WARNING: Panda Engine API did not exit; preserving its PID and route records.'
                     return $false
                 }
             } else {
@@ -394,7 +394,7 @@ function Stop-Router {
         if ($_.FullyQualifiedErrorId -like 'CmdletizationQuery_NotFound,*') {
             $remainingListeners = @()
         } else {
-            Write-Host '  WARNING: Cannot verify that the Panda API port is clear; preserving its PID and route records.'
+            Write-Host '  WARNING: Cannot verify that the Panda Engine API port is clear; preserving its PID and route records.'
             return $false
         }
     }
@@ -514,7 +514,7 @@ function Ensure-Model($m) {
                 catch { Write-Host ("  ERROR: " + $_.Exception.Message); return $false }
             }
             if (-not (Test-Model $m)) {
-                Write-Host '  ERROR: MiniCPM runtime is incomplete. Need the Poly-strata install with .venv\Scripts\python.exe, serve\server.py, strata-minicpmv-q4_k_m.json, and the expert profile + tokenizer in PolyStrata-data.'
+                Write-Host '  ERROR: MiniCPM runtime is incomplete. Need the Panda Engine runtime with .venv\Scripts\python.exe, serve\server.py, panda-minicpmv-q4_k_m.json, and the expert profile + tokenizer in Panda Engine model data.'
                 Write-Host '  See panda/README.md. The model is NOT marked installed.'
                 return $false
             }
@@ -522,7 +522,7 @@ function Ensure-Model($m) {
         }
         'gyro' {
             if (Test-Model $m) {
-                Write-Host '  Gyro-S model, pack and engine are bundled in Panda. Nothing to download.'
+                Write-Host '  Gyro-S model, pack and engine are bundled in Panda Engine. Nothing to download.'
                 return $true
             }
             Write-Host '  ERROR: Gyro-S files are missing from models\gyro-s*, models\gyro-s-pack, models\gyro-s-mtp or runtime\gyro-engine.'
@@ -679,7 +679,7 @@ function Test-BackendProcessSignature($Process, $Model, [int]$Port, [string]$Rol
             if (Test-CommandLineArgumentValue $commandLine '--config' $config) { $configMatches = $true; break }
         }
         return ($approvedPython -and $hasServerScript -and
-            (Test-CommandLineArgumentValue $commandLine '--engine' 'strata') -and $configMatches -and
+            (Test-CommandLineArgumentValue $commandLine '--engine' 'panda') -and $configMatches -and
             (Test-CommandLineArgumentValue $commandLine '--port' ([string]$Port)))
     }
     return $false
@@ -1194,13 +1194,13 @@ function Stop-BackendOwnersForPort([int]$Port, [string]$Role = '', [switch]$Lock
     if (-not $LockHeld) {
         $mutex = Enter-BackendLifecycleLock
         if (-not $mutex) {
-            Write-Host '  ERROR: Another Panda backend lifecycle action is in progress.'
+            Write-Host '  ERROR: Another Panda Engine backend lifecycle action is in progress.'
             return $false
         }
     }
     try {
         if ($Port -in @(Get-OtherRouterBackendPorts)) {
-            Write-Host ("  Preserving backend on port " + $Port + "; another Panda API routes to it.")
+            Write-Host ("  Preserving backend on port " + $Port + "; another Panda Engine API routes to it.")
             return $false
         }
         $read = Get-BackendOwners
@@ -1246,7 +1246,7 @@ function Stop-CurrentEngine([switch]$LockHeld, [switch]$AuthorizeGyroStop) {
     if (-not $LockHeld) {
         $mutex = Enter-BackendLifecycleLock
         if (-not $mutex) {
-            Write-Host '  ERROR: Another Panda backend lifecycle action is in progress.'
+            Write-Host '  ERROR: Another Panda Engine backend lifecycle action is in progress.'
             return $false
         }
     }
@@ -1267,7 +1267,7 @@ function Stop-CurrentEngine([switch]$LockHeld, [switch]$AuthorizeGyroStop) {
         $allStopped = $true
         foreach ($owner in @($read.Owners)) {
             if ([int]$owner.Port -in $protectedPorts) {
-                Write-Host ("  Preserving managed backend on port " + $owner.Port + "; another Panda API routes to it.")
+                Write-Host ("  Preserving managed backend on port " + $owner.Port + "; another Panda Engine API routes to it.")
                 $remaining += $owner
                 continue
             }
@@ -1306,7 +1306,7 @@ function Stop-PandaEngine([switch]$AuthorizeGyroStop) {
     $script:GyroStopAuthorizationRequired = $false
     $mutex = Enter-BackendLifecycleLock
     if (-not $mutex) {
-        Write-Host '  ERROR: Another Panda backend lifecycle action is in progress.'
+        Write-Host '  ERROR: Another Panda Engine backend lifecycle action is in progress.'
         return $false
     }
     try {
@@ -1365,7 +1365,7 @@ function Start-Model($m, $s, [switch]$AuthorizeGyroStop, [switch]$LockHeld) {
     if (-not $LockHeld) {
         $mutex = Enter-BackendLifecycleLock
         if (-not $mutex) {
-            Write-Host '  ERROR: Another Panda backend lifecycle action is in progress.'
+            Write-Host '  ERROR: Another Panda Engine backend lifecycle action is in progress.'
             return $false
         }
     }
@@ -1377,7 +1377,7 @@ function Start-Model($m, $s, [switch]$AuthorizeGyroStop, [switch]$LockHeld) {
         }
         if (-not (Start-Router -LockHeld)) { return $false }
         if ($backendPort -in @(Get-OtherRouterBackendPorts)) {
-            Write-Host ("  ERROR: Backend port " + $backendPort + ' is protected because another Panda API routes to it; it was left untouched.')
+            Write-Host ("  ERROR: Backend port " + $backendPort + ' is protected because another Panda Engine API routes to it; it was left untouched.')
             return $false
         }
         $read = Get-BackendOwners
@@ -1411,7 +1411,7 @@ function Start-Model($m, $s, [switch]$AuthorizeGyroStop, [switch]$LockHeld) {
                 if ($matchesSettings) {
                     if (-not (Wait-ManagedBackendReady $m $backendPort $existingOwner)) { return $false }
                     Set-Route $m $backendPort $existingOwner
-                    Write-Host ('  Panda API: http://127.0.0.1:' + $script:cat.ports.api + '/v1  ->  ' + $m.label + ' (already running)')
+                    Write-Host ('  Panda Engine API: http://127.0.0.1:' + $script:cat.ports.api + '/v1  ->  ' + $m.label + ' (already running)')
                     return $true
                 }
             }
@@ -1469,14 +1469,14 @@ function Start-Model($m, $s, [switch]$AuthorizeGyroStop, [switch]$LockHeld) {
                     $started = Start-Process -FilePath 'powershell.exe' -WorkingDirectory $root -WindowStyle Hidden -PassThru -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-NoExit','-File',('"' + $guard + '"'),'-Port',[string]$backendPort)
                 } else {
                     $python = Join-Path $root '.venv\Scripts\python.exe'
-                    $started = Start-Process -FilePath $python -WorkingDirectory $root -WindowStyle Hidden -PassThru -ArgumentList @('serve\server.py','--engine','strata','--config',$m.serverConfig,'--port',[string]$backendPort)
+                    $started = Start-Process -FilePath $python -WorkingDirectory $root -WindowStyle Hidden -PassThru -ArgumentList @('serve\server.py','--engine','panda','--config',$m.serverConfig,'--port',[string]$backendPort)
                 }
             }
             'gyro' {
-                # Gyro-S runs from Panda's own bundled engine and pack. No Strata desktop.
+                # Gyro-S runs from Panda Engine's own bundled engine and pack. No desktop application.
                 $root = $script:cat.roots.knownMini
                 $python = Join-Path $root '.venv\Scripts\python.exe'
-                $started = Start-Process -FilePath $python -WorkingDirectory $root -WindowStyle Hidden -PassThru -ArgumentList @('serve\server.py','--engine','strata','--config',$m.serverConfig,'--port',[string]$backendPort)
+                $started = Start-Process -FilePath $python -WorkingDirectory $root -WindowStyle Hidden -PassThru -ArgumentList @('serve\server.py','--engine','panda','--config',$m.serverConfig,'--port',[string]$backendPort)
             }
         }
         if (-not $started) {
@@ -1535,7 +1535,7 @@ function Start-Model($m, $s, [switch]$AuthorizeGyroStop, [switch]$LockHeld) {
             Clear-StaleRouteIfBackendOffline
             return $false
         }
-        Write-Host ('  Panda API: http://127.0.0.1:' + $script:cat.ports.api + '/v1  ->  ' + $m.label + ' (internal ' + $backendPort + ')')
+        Write-Host ('  Panda Engine API: http://127.0.0.1:' + $script:cat.ports.api + '/v1  ->  ' + $m.label + ' (internal ' + $backendPort + ')')
         return $true
     } catch {
         if ($started -and (Preserve-GyroAfterStartFailure $m $started 'startup verification raised an error' -AuthorizeGyroStop:$AuthorizeGyroStop -OwnershipSaved:$script:GyroStartOwnershipSaved)) {
@@ -1593,7 +1593,7 @@ function Install-OpenCodeLayer {
     # OpenCode parses JSON without a BOM; PS 5.1 Set-Content would emit one.
     $cfgJson = $cfgObj | ConvertTo-Json -Depth 100
     [System.IO.File]::WriteAllText($cfg, $cfgJson, (New-Object System.Text.UTF8Encoding($false)))
-    Write-Host '  OpenCode layer installed. Model IDs: ninfer/inkling-2-mini, polystrata-mini/minicpm-v-4.7-35b-a3b-q4_k_m, strata/gyro-gyro-s'
+    Write-Host '  OpenCode layer installed. Panda Engine models: inkling-2-mini, minicpm-v-4.7-35b-a3b-q4_k_m, gyro-gyro-s'
 }
 function Backup-OpenCodeConfig {
     if (-not (Test-Path -LiteralPath $script:OpenCodeCfg)) { Write-Host '  OpenCode config not found. Nothing to restore (the C installer was removed).'; return $false }
@@ -1614,10 +1614,10 @@ function Restore-OpenCodeConfig {
         $b = Get-Content -LiteralPath $script:OCBackupPath -Raw -Encoding UTF8 | ConvertFrom-Json
         if ($b.backup -and (Test-Path -LiteralPath $b.backup)) {
             Copy-Item -LiteralPath $b.backup $script:OpenCodeCfg -Force
-            Write-Host '  OpenCode config restored from the Panda backup.'
+            Write-Host '  OpenCode config restored from the Panda Engine backup.'
             Remove-Item -LiteralPath $script:OCBackupPath -Force -ErrorAction SilentlyContinue
         } else {
-            Write-Host '  WARNING: Panda OpenCode backup file is missing; config left as is.'
+            Write-Host '  WARNING: Panda Engine OpenCode backup file is missing; config left as is.'
             Remove-Item -LiteralPath $script:OCBackupPath -Force -ErrorAction SilentlyContinue
         }
     } catch {
@@ -1627,7 +1627,7 @@ function Restore-OpenCodeConfig {
 }
 function Write-OpenCodeV1Config {
     # The CLI on PATH is OpenCode V1; the live config is V2 (OpenChamber). Build a V1 view
-    # in an isolated config/data home so the CLI can list and use all Panda models.
+    # in an isolated config/data home so the CLI can list and use all Panda Engine models.
     if ($DryRun -or -not (Test-Path -LiteralPath $script:OpenCodeCfg)) { return }
     $cfg = Get-Content -LiteralPath $script:OpenCodeCfg -Raw -Encoding UTF8 | ConvertFrom-Json
     foreach ($pname in @($cfg.providers.PSObject.Properties.Name)) {
@@ -1674,7 +1674,7 @@ function Sync-OpenCodeConfig($m) {
     try { $cfg = Get-Content -LiteralPath $script:OpenCodeCfg -Raw -Encoding UTF8 | ConvertFrom-Json }
     catch { Write-Host '  ERROR: OpenCode config is not valid JSON.'; return $false }
     $api = 'http://127.0.0.1:' + $script:cat.ports.api + '/v1'
-    foreach ($name in @('strata','ninfer','polystrata-mini','polystrata','panda')) {
+    foreach ($name in @('panda','ninfer','panda-mini','panda','panda')) {
         if ($cfg.providers.PSObject.Properties[$name]) { $cfg.providers.$name.settings.baseURL = $api }
     }
     if ($m -and $m.provider) { $cfg.model = $m.provider }
@@ -1686,7 +1686,7 @@ function Sync-OpenCodeConfig($m) {
     return $true
 }
 function Start-OpenCode($m) {
-    if ($DryRun) { Write-Host '  [dry-run] would start OpenCode against the Panda API'; return }
+    if ($DryRun) { Write-Host '  [dry-run] would start OpenCode against the Panda Engine API'; return }
     if (-not $m) { Write-Host '  No active model. Pick one first.'; return }
     if (-not (Sync-OpenCodeConfig $m)) { return }
     $oc = (Get-Command opencode -ErrorAction SilentlyContinue).Source
@@ -1710,7 +1710,7 @@ function Start-OpenCode($m) {
         $env:XDG_CONFIG_HOME = $oldCfgHome
         $env:XDG_DATA_HOME = $oldDataHome
     }
-    Write-Host '  OpenCode started in a new terminal, pointed at the Panda API.'
+    Write-Host '  OpenCode started in a new terminal, pointed at the Panda Engine API.'
 }
 function Show-Menu($s) {
     Write-Host ''
@@ -1799,9 +1799,9 @@ function Invoke-GuiAction([string]$Action, [string]$SelectedModelId, [int]$Conte
                 Ensure-Links
                 if (-not $DryRun) { Restore-OpenCodeConfig }
                 if (-not (Start-Router)) {
-                    return [pscustomobject]@{ success = $false; message = 'Panda API did not start. Check logs\panda-router.log.' }
+                    return [pscustomobject]@{ success = $false; message = 'Panda Engine API did not start. Check logs\panda-router.log.' }
                 }
-                $message = 'Panda API is ready.'
+                $message = 'Panda Engine API is ready.'
                 try {
                     $roots = @([System.IO.Path]::GetPathRoot([System.IO.Path]::GetFullPath($script:Repo)),
                                [System.IO.Path]::GetPathRoot([System.IO.Path]::GetFullPath($env:TEMP)),
@@ -1823,7 +1823,7 @@ function Invoke-GuiAction([string]$Action, [string]$SelectedModelId, [int]$Conte
             }
             'install' {
                 $m = Find-Model $SelectedModelId
-                if (-not $m) { return [pscustomobject]@{ success = $false; message = 'Model is not in the Panda catalog.' } }
+                if (-not $m) { return [pscustomobject]@{ success = $false; message = 'Model is not in the Panda Engine catalog.' } }
                 if ($m.kind -eq 'gyro') { return [pscustomobject]@{ success = $false; message = 'Gyro-S files are bundled; no download action is available.' } }
                 $ok = Ensure-Model $m
                 if ($ok) {
@@ -1843,7 +1843,7 @@ function Invoke-GuiAction([string]$Action, [string]$SelectedModelId, [int]$Conte
             }
             'setactive' {
                 $m = Find-Model $SelectedModelId
-                if (-not $m) { return [pscustomobject]@{ success = $false; message = 'Model is not in the Panda catalog.' } }
+                if (-not $m) { return [pscustomobject]@{ success = $false; message = 'Model is not in the Panda Engine catalog.' } }
                 if (-not (Test-Model $m)) { return [pscustomobject]@{ success = $false; message = 'Install the model before setting it active.' } }
                 $mutex = Enter-BackendLifecycleLock
                 if (-not $mutex) { return [pscustomobject]@{ success = $false; message = 'Another backend lifecycle action is in progress; selection was not changed.' } }
@@ -1858,7 +1858,7 @@ function Invoke-GuiAction([string]$Action, [string]$SelectedModelId, [int]$Conte
             }
             'setcontext' {
                 $m = Find-Model $SelectedModelId
-                if (-not $m) { return [pscustomobject]@{ success = $false; message = 'Model is not in the Panda catalog.' } }
+                if (-not $m) { return [pscustomobject]@{ success = $false; message = 'Model is not in the Panda Engine catalog.' } }
                 if ($m.kind -ne 'inkling' -or $Context -notin @(65536, 98304, 131072)) {
                     return [pscustomobject]@{ success = $false; message = 'Context must be an allowed Inkling next-start value: 65536, 98304, or 131072.' }
                 }
@@ -1883,7 +1883,7 @@ function Invoke-GuiAction([string]$Action, [string]$SelectedModelId, [int]$Conte
                     return [pscustomobject]@{ success = $false; message = 'Game Mode value must be true or false.' }
                 }
                 if ($modeValue -eq 'true' -and -not (Test-GameGuard)) {
-                    return [pscustomobject]@{ success = $false; message = 'Game Mode was not saved because its guard or configuration files are missing from the Poly-strata install.' }
+                    return [pscustomobject]@{ success = $false; message = 'Game Mode was not saved because its guard or configuration files are missing from the Panda Engine runtime.' }
                 }
                 $mutex = Enter-BackendLifecycleLock
                 if (-not $mutex) { return [pscustomobject]@{ success = $false; message = 'Another backend lifecycle action is in progress; settings were not changed.' } }
@@ -1898,7 +1898,7 @@ function Invoke-GuiAction([string]$Action, [string]$SelectedModelId, [int]$Conte
             }
             'start' {
                 $m = Find-Model $SelectedModelId
-                if (-not $m) { return [pscustomobject]@{ success = $false; message = 'Model is not in the Panda catalog.' } }
+                if (-not $m) { return [pscustomobject]@{ success = $false; message = 'Model is not in the Panda Engine catalog.' } }
                 if (-not (Test-Model $m)) { return [pscustomobject]@{ success = $false; message = 'Install the model before starting it.' } }
                 $mutex = Enter-BackendLifecycleLock
                 if (-not $mutex) { return [pscustomobject]@{ success = $false; message = 'Another backend lifecycle action is in progress; try again after it completes.' } }
@@ -1940,7 +1940,7 @@ function Invoke-GuiAction([string]$Action, [string]$SelectedModelId, [int]$Conte
                             message = ($m.label + ' is running and routed, but the active selection could not be saved: ' + $_.Exception.Message + ' Refresh status before retrying.')
                         }
                     }
-                    return [pscustomobject]@{ success = $true; message = ($m.label + ' is healthy and routed through the Panda API.') }
+                    return [pscustomobject]@{ success = $true; message = ($m.label + ' is healthy and routed through the Panda Engine API.') }
                 }
                 $s.active = $oldActive
                 Save-State $s
@@ -1952,7 +1952,7 @@ function Invoke-GuiAction([string]$Action, [string]$SelectedModelId, [int]$Conte
             'stop' {
                 $backendsStopped = Stop-PandaEngine -AuthorizeGyroStop:$AuthorizeGyroStop
                 if ($backendsStopped) {
-                    return [pscustomobject]@{ success = $true; message = 'Panda API and verifiably owned backends stopped.' }
+                    return [pscustomobject]@{ success = $true; message = 'Panda Engine API and verifiably owned backends stopped.' }
                 }
                 if ($script:GyroStopAuthorizationRequired) {
                     return [pscustomobject]@{
@@ -2051,7 +2051,7 @@ while ($true) {
                 $answer = Read-Host 'A Gyro-S ownership record may represent a running process. Explicitly authorize stopping it? (y/N)'
                 if ($answer -in @('y','Y')) { $stopped = Stop-PandaEngine -AuthorizeGyroStop }
             }
-            if ($stopped) { Write-Host 'Panda API and verifiably owned backends stopped.' } else { Write-Host 'Panda stop incomplete: API and/or an owned backend could not be confirmed stopped; unowned listeners were left untouched.' }
+            if ($stopped) { Write-Host 'Panda Engine API and verifiably owned backends stopped.' } else { Write-Host 'Panda Engine stop incomplete: API and/or an owned backend could not be confirmed stopped; unowned listeners were left untouched.' }
         }
         '^[Qq]$' { Restore-OpenCodeConfig; return }
         default { Write-Host 'Unknown choice.' }

@@ -2,8 +2,8 @@
   "version": 1,
   "roots": {
     "knownInkling": "C:\\Users\\x1p\\Desktop\\inkling 2 mini",
-    "knownMini": "C:\\Users\\x1p\\Desktop\\panda engine\\runtime\\polystrata",
-    "knownMiniData": "C:\\Users\\x1p\\Desktop\\panda engine\\models\\polystrata-data",
+    "knownMini": "C:\\Users\\x1p\\Desktop\\panda engine\\runtime\\panda",
+    "knownMiniData": "C:\\Users\\x1p\\Desktop\\panda engine\\models\\panda-data",
     "knownGyro": "C:\\Users\\x1p\\Desktop\\panda engine\\runtime\\gyro-engine"
   },
   "ports": {
@@ -22,9 +22,9 @@
   },
   "game": {
     "guard": "serve\\vram-guard.ps1",
-    "fastConfig": "strata-minicpmv-q4_k_m-review.json",
-    "cpuConfig": "strata-minicpmv-q4_k_m-cpu.json",
-    "log": "strata-adaptive-guard.log"
+    "fastConfig": "panda-minicpmv-q4_k_m-review.json",
+    "cpuConfig": "panda-minicpmv-q4_k_m-cpu.json",
+    "log": "panda-adaptive-guard.log"
   },
   "models": [
     {
@@ -47,28 +47,28 @@
       "id": "minicpm-q4km",
       "kind": "mini",
       "label": "MiniCPM-V 4.7 35B (Q4_K_M)",
-      "provider": "polystrata-mini/minicpm-v-4.7-35b-a3b-q4_k_m",
+      "provider": "panda/minicpm-v-4.7-35b-a3b-q4_k_m",
       "files": [
         {
           "name": "MiniCPM-V-4_7-35B-A3B-Q4_K_M.gguf",
           "url": "https://huggingface.co/openbmb/MiniCPM-V-4.7-35B-A3B-gguf/resolve/main/MiniCPM-V-4_7-35B-A3B-Q4_K_M.gguf",
-          "target": "polystrata-data\\models\\minicpmv-Q4_K_M\\MiniCPM-V-4_7-35B-A3B-Q4_K_M.gguf"
+          "target": "panda-data\\models\\minicpmv-Q4_K_M\\MiniCPM-V-4_7-35B-A3B-Q4_K_M.gguf"
         },
         {
           "name": "mmproj-model-f16.gguf",
           "url": "https://huggingface.co/openbmb/MiniCPM-V-4.7-35B-A3B-gguf/resolve/main/mmproj-model-f16.gguf",
-          "target": "polystrata-data\\models\\minicpmv-Q4_K_M\\mmproj-model-f16.gguf"
+          "target": "panda-data\\models\\minicpmv-Q4_K_M\\mmproj-model-f16.gguf"
         }
       ],
-      "serverConfig": "strata-minicpmv-q4_k_m.json",
+      "serverConfig": "panda-minicpmv-q4_k_m.json",
       "port": 8182
     },
     {
       "id": "gyro-s",
       "kind": "gyro",
-      "label": "Gyro Gyro S (in Panda)",
-      "provider": "strata/gyro-gyro-s",
-      "serverConfig": "strata-gyro-s.json",
+      "label": "Gyro Gyro S (in Panda Engine)",
+      "provider": "panda/gyro-gyro-s",
+      "serverConfig": "panda-gyro-s.json",
       "port": 8183
     }
   ]

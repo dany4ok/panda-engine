@@ -1,19 +1,19 @@
 ﻿03:53:03 START A
-  batch1/polystrata-mini_minicpm-v-4.7-35b-a3b-q4_k_m/A wall_ms=34257 exit=0 tool_calls=9
+  batch1/panda-mini_minicpm-v-4.7-35b-a3b-q4_k_m/A wall_ms=34257 exit=0 tool_calls=9
 03:53:39 DONE A
 03:53:39 START B
-  batch1/polystrata-mini_minicpm-v-4.7-35b-a3b-q4_k_m/B wall_ms=120262 exit=0 tool_calls=25
+  batch1/panda-mini_minicpm-v-4.7-35b-a3b-q4_k_m/B wall_ms=120262 exit=0 tool_calls=25
 03:55:42 DONE B
 03:55:42 START C
-  batch1/polystrata-mini_minicpm-v-4.7-35b-a3b-q4_k_m/C wall_ms=41472 exit=0 tool_calls=16
+  batch1/panda-mini_minicpm-v-4.7-35b-a3b-q4_k_m/C wall_ms=41472 exit=0 tool_calls=16
 03:56:26 DONE C
 03:56:26 START D
-  batch1/polystrata-mini_minicpm-v-4.7-35b-a3b-q4_k_m/D wall_ms=223131 exit=0 tool_calls=29
+  batch1/panda-mini_minicpm-v-4.7-35b-a3b-q4_k_m/D wall_ms=223131 exit=0 tool_calls=29
 04:00:11 DONE D
 04:00:11 START E
-  batch1/polystrata-mini_minicpm-v-4.7-35b-a3b-q4_k_m/E wall_ms=27040 exit=0 tool_calls=9
+  batch1/panda-mini_minicpm-v-4.7-35b-a3b-q4_k_m/E wall_ms=27040 exit=0 tool_calls=9
 04:00:41 DONE E
 04:00:41 START F
-  batch1/polystrata-mini_minicpm-v-4.7-35b-a3b-q4_k_m/F wall_ms=37116 exit=0 tool_calls=16
+  batch1/panda-mini_minicpm-v-4.7-35b-a3b-q4_k_m/F wall_ms=37116 exit=0 tool_calls=16
 04:01:19 DONE F
 ALL_MINI_DONE

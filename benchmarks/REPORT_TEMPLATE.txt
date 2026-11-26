@@ -1,4 +1,4 @@
-RAPORT FINAL A/B — Gyro-S (Strata) vs MiniCPM-V 4.7 35B A3B Q4_K_M (PolyStrata)
+RAPORT FINAL A/B — Gyro-S (Panda Engine) vs MiniCPM-V 4.7 35B A3B Q4_K_M (Panda Engine)
 Scop: model de baza (default) pentru uz zilnic in OpenCode.
 
 =====================================================================
@@ -60,7 +60,7 @@ D. VERDICT
 - Merita diferenta de timp?:
 
 RECOMANDARE MODEL DEFAULT: [un singur model]
-Daca diferenta de calitate nu e demonstrata suficient: recomanda modelul mai
+Daca diferenta de calitate nu e demonpanda suficient: recomanda modelul mai
 eficient si marcheaza verdictul calitatii ca PROVIZORIU.
 
 =====================================================================

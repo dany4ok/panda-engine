@@ -31,9 +31,9 @@ nu am modificat configul global si nu am scris in ab-bench.
 
 URMATORUL PAS (la semnalul tau):
 1. swap_model.ps1 -Target gyro -Force   (elibereaza MiniCPM, incarca Gyro-S)
-2. 6 x run_probe.ps1 pentru strata/gyro-gyro-s
+2. 6 x run_probe.ps1 pentru panda/gyro-gyro-s
 3. swap_model.ps1 -Target mini -Force
-4. 6 x run_probe.ps1 pentru polystrata-mini/minicpm-v-4.7-35b-a3b-q4_k_m
+4. 6 x run_probe.ps1 pentru panda-mini/minicpm-v-4.7-35b-a3b-q4_k_m
 5. evaluate_all.ps1 + build_report.py + completarea verdictului
 
 Atentie la buget: au trecut ~60 min din cele 90; restul de ~30 min pot fi

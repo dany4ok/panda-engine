@@ -37,7 +37,7 @@ $script:startedGui = $false
 $script:deadline = (Get-Date).AddSeconds(115)
 
 function Hide-StrataWindow {
-    $pids = @(Get-Process -Name 'strata-desktop' -ErrorAction SilentlyContinue | ForEach-Object { $_.Id })
+    $pids = @(Get-Process -Name 'panda-desktop' -ErrorAction SilentlyContinue | ForEach-Object { $_.Id })
     if ($pids.Count -eq 0) { return $false }
     $windows = New-Object System.Collections.Generic.List[IntPtr]
     $callback = [StrataWindow+EnumProc] {
@@ -77,7 +77,7 @@ function Hide-StrataWindow {
 # Minimizare sigura in faza de startup: ShowWindow(SW_MINIMIZE) nu inchide
 # aplicatia, deci nu riscam sa o oprim inainte sa-si initializeze tray-ul.
 function Minimize-StrataWindow {
-    $pids = @(Get-Process -Name 'strata-desktop' -ErrorAction SilentlyContinue | ForEach-Object { $_.Id })
+    $pids = @(Get-Process -Name 'panda-desktop' -ErrorAction SilentlyContinue | ForEach-Object { $_.Id })
     if ($pids.Count -eq 0) { return $false }
     $windows = New-Object System.Collections.Generic.List[IntPtr]
     $callback = [StrataWindow+EnumProc] {
@@ -98,7 +98,7 @@ function Minimize-StrataWindow {
 }
 
 function Test-StrataWindowVisible {
-    $pids = @(Get-Process -Name 'strata-desktop' -ErrorAction SilentlyContinue | ForEach-Object { $_.Id })
+    $pids = @(Get-Process -Name 'panda-desktop' -ErrorAction SilentlyContinue | ForEach-Object { $_.Id })
     if ($pids.Count -eq 0) { return $false }
     $visible = $false
     $callback = [StrataWindow+EnumProc] {
@@ -193,16 +193,16 @@ try {
 
 # Verificare rapida doar daca GUI-ul exista; daca nu exista, hostul nu poate
 # fi sus, asa ca evitam un timeout inutil de ~8 s.
-$guiWasRunning = @(Get-Process -Name 'strata-desktop' -ErrorAction SilentlyContinue).Count -gt 0
+$guiWasRunning = @(Get-Process -Name 'panda-desktop' -ErrorAction SilentlyContinue).Count -gt 0
 $state = $null
 if ($guiWasRunning) { $state = Wait-ForHost 1 }
 if (-not $state) {
     Log 'Strata Control nu raspunde pe 47831.'
-    $running = @(Get-Process -Name 'strata-desktop' -ErrorAction SilentlyContinue)
+    $running = @(Get-Process -Name 'panda-desktop' -ErrorAction SilentlyContinue)
     if ($running.Count -eq 0) {
         # Nici GUI-ul, nici hostul: pornim imediat si ascundem fereastra
         # inainte ca hostul sa fie gata (altfel apare popup pe desktop).
-        Log 'Pornesc strata-desktop.exe ...'
+        Log 'Pornesc panda-desktop.exe ...'
         if (Test-Path -LiteralPath $StrataExe) { Start-Process -FilePath $StrataExe; $script:startedGui = $true }
         $state = Wait-ForHostAndMinimize
     } else {
@@ -212,7 +212,7 @@ if (-not $state) {
         Log 'GUI-ul Strata e deschis, dar hostul lipseste. Astept circa 40 s inainte de repornire ...'
         $state = Wait-ForHostAndMinimize 80
         if (-not $state) {
-            Log 'Repornesc strata-desktop.exe (hostul nu si-a revenit) ...'
+            Log 'Repornesc panda-desktop.exe (hostul nu si-a revenit) ...'
             if (Test-Path -LiteralPath $StrataExe) { Start-Process -FilePath $StrataExe; $script:startedGui = $true }
             $state = Wait-ForHostAndMinimize
         }
@@ -314,12 +314,12 @@ if ($ok) {
     # O singura incercare, apoi verificare post-hoc (fara retry-uri costisitoare).
     [void](Hide-Once)
     if (Test-StrataWindowVisible) { Log 'AVERTISMENT: fereastra Strata e inca vizibila.' }
-    Log 'GATA. OpenCode foloseste deja strata/gyro-gyro-s.'
+    Log 'GATA. OpenCode foloseste deja panda/gyro-gyro-s.'
     Start-Sleep -Seconds 1
     exit 0
 }
 if ($failed) {
-    Log 'Incarcarea a esuat. Detalii in strata-desktop / log.'
+    Log 'Incarcarea a esuat. Detalii in panda-desktop / log.'
     Start-Sleep -Seconds 1
     exit 1
 }

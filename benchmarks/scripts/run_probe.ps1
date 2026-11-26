@@ -41,8 +41,8 @@ Copy-Item -Path (Join-Path $taskDir 'REQUIREMENT.md') -Destination (Join-Path $w
 # (V2: "permissions": [{action:subagent, resource:*, effect:deny}]).
 $localCfg = $null
 if ($NoSub) {
-  $localCfg = if ($Model -like 'polystrata-mini*') { 'config\mini_nosub.opencode.json' } else { 'config\nosub.opencode.json' }
-} elseif ($Model -like 'polystrata-mini*') {
+  $localCfg = if ($Model -like 'panda-mini*') { 'config\mini_nosub.opencode.json' } else { 'config\nosub.opencode.json' }
+} elseif ($Model -like 'panda-mini*') {
   $localCfg = 'config\mini.opencode.json'
 }
 if ($localCfg) {

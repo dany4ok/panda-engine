@@ -60,7 +60,7 @@
       "name": "demo_end_to_end",
       "passed": false,
       "stdout": "",
-      "stderr": "Traceback (most recent call last):\n  File \"[local-repo]\\benchmarks\\results\\qb_q2kxl\\ninfer_inkling-2-mini\\B\\work\\demo.py\", line 22, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"[local-repo]\\benchmarks\\results\\qb_q2kxl\\ninfer_inkling-2-mini\\B\\work\\demo.py\", line 14, in main\n    o = s.place(c, \"2\", 2)\n  File \"[local-repo]\\benchmarks\\results\\qb_q2kxl\\ninfer_inkling-2-mini\\B\\work\\orders.py\", line 12, in place\n    raise NotImplementedError\nNotImplementedError"
+      "stderr": "Traceback (most recent call last):\n  File \"C:\\Users\\x1p\\Desktop\\panda engine\\benchmarks\\results\\qb_q2kxl\\ninfer_inkling-2-mini\\B\\work\\demo.py\", line 22, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"C:\\Users\\x1p\\Desktop\\panda engine\\benchmarks\\results\\qb_q2kxl\\ninfer_inkling-2-mini\\B\\work\\demo.py\", line 14, in main\n    o = s.place(c, \"2\", 2)\n  File \"C:\\Users\\x1p\\Desktop\\panda engine\\benchmarks\\results\\qb_q2kxl\\ninfer_inkling-2-mini\\B\\work\\orders.py\", line 12, in place\n    raise NotImplementedError\nNotImplementedError"
     },
     {
       "name": "model_tests_exist",

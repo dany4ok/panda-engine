@@ -286,7 +286,7 @@ def _gameguard_command_is_expected(command_line, executable_path, route, port):
     script_path = args[1] if ntpath.isabs(args[1]) else ntpath.join(str(backend_root), args[1])
     if normalize_path(script_path) != normalize_path(expected_script):
         return False
-    if args[2:5] != ["--engine", "strata", "--config"]:
+    if args[2:5] != ["--engine", "panda", "--config"]:
         return False
     if not any(normalize_path(args[5]) == normalize_path(config) for config in allowed_configs):
         return False
@@ -714,12 +714,12 @@ def main():
         server = ThreadingHTTPServer(("127.0.0.1", listen), Handler)
     except OSError as exc:
         log("cannot bind 127.0.0.1:%d: %s" % (listen, exc))
-        print("Panda API: cannot bind 127.0.0.1:%d (%s)" % (listen, exc))
+        print("Panda Engine API: cannot bind 127.0.0.1:%d (%s)" % (listen, exc))
         return 1
     server.daemon_threads = True
     server.listen_port = listen
-    log("Panda API listening on 127.0.0.1:%d" % listen)
-    print("Panda API listening on http://127.0.0.1:%d/v1" % listen, flush=True)
+    log("Panda Engine API listening on 127.0.0.1:%d" % listen)
+    print("Panda Engine API listening on http://127.0.0.1:%d/v1" % listen, flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

@@ -9,14 +9,14 @@ ROOT CAUSE FOUND (Inkling 2 Mini via NInfer):
 - Conclusion: a limitation of the Inkling 2 Mini model, not a configuration issue.
 
 SOLUTION IMPLEMENTED AND VERIFIED:
-- OpenCode default model: polystrata-mini/minicpm-v-4.7-35b-a3b-q4_k_m
-- provider polystrata-mini at http://127.0.0.1:8080/v1
+- OpenCode default model: panda-mini/minicpm-v-4.7-35b-a3b-q4_k_m
+- provider panda-mini at http://127.0.0.1:8080/v1
 - START-MINI.bat starts the server
 - Inkling remains available (ninfer/inkling-2-mini) for short/fast tasks.
 
 RESULTS:
 - batch finalmini (6 tasks, deterministic evaluator, NoSub): A 13/13, B 14/14, C 15/15, D 20/20, E 19/19, F 17/17 -> TOTAL 98/98.
 - post-reboot (batch postreboot, trial A): 13/13, 7 tool calls, correct output.
-- default config after reboot: polystrata-mini/minicpm-v-4.7-35b-a3b-q4_k_m.
+- default config after reboot: panda-mini/minicpm-v-4.7-35b-a3b-q4_k_m.
 
 CONFIG BACKUP: opencode.json.bak-before-mini-default-20261124-072419

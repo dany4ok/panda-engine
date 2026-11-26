@@ -72,7 +72,7 @@ D. LIMITARI RAMASE
    doar probele Gyro, iar intregul benchmark (ambele loturi + low_test) mult
    mai mult. Aceasta e o neconformitate de proces, nu un defect al cifrelor.
 2. CORECTIE: Gyro a facut capturi provenientiate in timpul probei (12 PNG in
-   results/batch2/strata_gyro-gyro-s/E/captures/, plus un harness puppeteer/Edge
+   results/batch2/panda_gyro-gyro-s/E/captures/, plus un harness puppeteer/Edge
    si pixel-match pe cele 4 cadre), iar la D a folosit CDP. MiniCPM NU a facut
    nicio verificare vizuala. Deci exista O ASIMETRIE: ambele primesc 19/19 de
    la evaluatorul static, dar doar Gyro a satisfacut cerinta explicita de
@@ -134,7 +134,7 @@ atribuire a diferentei de timp unei setari de reasoning. Cifrele din tabelul
 principal raman cele masurate in batch2.
 
 H. COMPARATIE ISTORICA PENTRU GYRO-S (toate loturile, aceleasi sarcini)
-Sursa: results/<lot>/strata_gyro-gyro-s/<sarcina>/metrics.json + eval.json.
+Sursa: results/<lot>/panda_gyro-gyro-s/<sarcina>/metrics.json + eval.json.
 
 | Lot | Configurare | A | B | C | D | E | F | Total |
 |---|---|---|---|---|---|---|---|---|

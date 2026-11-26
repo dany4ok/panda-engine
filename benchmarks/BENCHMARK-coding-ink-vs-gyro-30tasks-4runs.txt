@@ -75,7 +75,7 @@ Ink medium/xhigh on this suite, not a general claim about coding ability.
 
 SYSTEM STATE
 ------------
-Panda's saved active model and route were restored to Inkling Q2_K_XL. The
+Panda Engine's saved active model and route were restored to Inkling Q2_K_XL. The
 normal launcher did not relaunch NInfer automatically. A manual NInfer
 restart was attempted, but the executable path lookup used the wrong folder
 (the `ninfer` path is a junction to `runtime\ninfer`); the follow-up restart

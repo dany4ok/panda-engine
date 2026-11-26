@@ -14,8 +14,8 @@ NU se atinge workspace-ul concurent `...\Temp\opencode\ab-bench`.
 
 | Slot | ID OpenCode | Endpoint | Config |
 |---|---|---|---|
-| Gyro-S | `strata/gyro-gyro-s` | http://127.0.0.1:47831/v1 | global `~/.config/opencode/opencode.json` |
-| MiniCPM | `polystrata-mini/minicpm-v-4.7-35b-a3b-q4_k_m` | http://127.0.0.1:8080/v1 | `config/mini.opencode.json` copiat in `<work>/.opencode/opencode.json` |
+| Gyro-S | `panda/gyro-gyro-s` | http://127.0.0.1:47831/v1 | global `~/.config/opencode/opencode.json` |
+| MiniCPM | `panda-mini/minicpm-v-4.7-35b-a3b-q4_k_m` | http://127.0.0.1:8080/v1 | `config/mini.opencode.json` copiat in `<work>/.opencode/opencode.json` |
 
 Asimetrie necesara si documentata: MiniCPM nu e inregistrat global, deci primeste un
 config LOCAL de workspace. Gyro-S foloseste configul global. Agentii (reviewer etc.)
@@ -82,13 +82,13 @@ powershell -ExecutionPolicy Bypass -File "$root\scripts\swap_model.ps1" -Target 
 # 2) ruleaza cele 6 probe
 foreach ($t in 'A','B','C','D','E','F') {
   powershell -ExecutionPolicy Bypass -File "$root\scripts\run_probe.ps1" `
-    -Model 'strata/gyro-gyro-s' -Task $t -Batch batch1 -Root $root
+    -Model 'panda/gyro-gyro-s' -Task $t -Batch batch1 -Root $root
 }
 # 3) swap la MiniCPM
 powershell -ExecutionPolicy Bypass -File "$root\scripts\swap_model.ps1" -Target mini -Force
 foreach ($t in 'A','B','C','D','E','F') {
   powershell -ExecutionPolicy Bypass -File "$root\scripts\run_probe.ps1" `
-    -Model 'polystrata-mini/minicpm-v-4.7-35b-a3b-q4_k_m' -Task $t -Batch batch1 -Root $root
+    -Model 'panda-mini/minicpm-v-4.7-35b-a3b-q4_k_m' -Task $t -Batch batch1 -Root $root
 }
 # 4) evaluare independenta + raport
 powershell -ExecutionPolicy Bypass -File "$root\scripts\evaluate_all.ps1" -Root $root -Batch batch1

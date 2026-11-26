@@ -1,4 +1,4 @@
-# Rebuild panda.exe from panda/panda-launcher.cs with the Panda icon embedded.
+# Rebuild panda.exe from panda/panda-launcher.cs with the Panda Engine icon embedded.
 # Usage: powershell -NoProfile -ExecutionPolicy Bypass -File panda/build-launcher.ps1 [-Out <path>]
 # Requires the .NET Framework C# compiler (csc.exe), shipped with Windows.
 param(

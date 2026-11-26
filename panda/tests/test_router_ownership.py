@@ -20,7 +20,7 @@ class RouterOwnershipTests(unittest.TestCase):
             "port": 8183,
             "model": "gyro-s",
             "kind": "gyro",
-            "expectedModelName": "strata/gyro-gyro-s",
+            "expectedModelName": "panda/gyro-gyro-s",
             "owner": {
                 "processId": 101,
                 "startedUtcTicks": 1000,
@@ -170,7 +170,7 @@ class RouterOwnershipTests(unittest.TestCase):
             "processId": 202,
             "startedUtcTicks": 1100,
             "executablePath": r"C:\Python\python.exe",
-            "commandLine": r"C:\Python\python.exe serve\server.py --engine strata --config C:\Models\fast.json --port 8182",
+            "commandLine": r"C:\Python\python.exe serve\server.py --engine panda --config C:\Models\fast.json --port 8182",
         }
         route["backendRoot"] = r"C:\Models"
         route["expectedServerScriptPath"] = r"C:\Models\serve\server.py"
@@ -190,7 +190,7 @@ class RouterOwnershipTests(unittest.TestCase):
         }
         command_lines = {
             101: route["owner"]["commandLine"],
-            303: r"C:\Python\python.exe serve\server.py --engine strata --config C:\Models\cpu.json --port 8182",
+            303: r"C:\Python\python.exe serve\server.py --engine panda --config C:\Models\cpu.json --port 8182",
         }
         with (
             mock.patch.object(router.os, "name", "nt"),
@@ -201,7 +201,7 @@ class RouterOwnershipTests(unittest.TestCase):
         ):
             self.assertTrue(router._route_owner_valid(route, 8182))
 
-        command_lines[303] = r"C:\Python\python.exe unrelated.py --engine strata --config C:\Models\cpu.json --port 8182"
+        command_lines[303] = r"C:\Python\python.exe unrelated.py --engine panda --config C:\Models\cpu.json --port 8182"
         with (
             mock.patch.object(router.os, "name", "nt"),
             mock.patch.object(router, "_process_identity", side_effect=identities.get),

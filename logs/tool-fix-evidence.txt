@@ -5,7 +5,7 @@ CAUSE (confirmed via GitHub):
 - NInfer PR #118 (merged): presence_penalty > 0 penalizes repeated tool-call tokens; requests containing tools must have presence_penalty 0. We were explicitly sending 0.5 (and frequency 1.0), cancelling the engine's protection.
 - vLLM issue #68692 / PR #69351: <|content_invoke_tool_json|> was not recognized as end-of-reasoning, so --structured-output did not start the grammar for the tool-call JSON -> malformed JSON / marker in text.
 - ai-dynamo/frontend-crates PR #616: the parser rejected compact JSON.
-- Strata PR #6774: tool history must contain the forced empty thinking.
+- Panda Engine PR #6774: tool history must contain the forced empty thinking.
 
 FIX APPLIED:
 - OpenCode body for ninfer/inkling-2-mini: frequency_penalty=0, presence_penalty=0 (instead of 1.0 / 0.5), reasoning_effort=low, no post_thinking.

@@ -21,7 +21,7 @@ max_tokens=1024. Criteria were fixed before execution. The only thing changed
 between runs was the server loaded on port 8080:
 
   ink  = inkling-2-mini                    (NInfer, UD-IQ1_M, flags from start.ps1)
-  mini = minicpm-v-4.7-35b-a3b-q4_k_m     (Poly-strata strata engine, Q4_K_M)
+  mini = minicpm-v-4.7-35b-a3b-q4_k_m     (Panda Engine panda engine, Q4_K_M)
 
 Engine flags for ink were unchanged: --presence-penalty 0 --frequency-penalty 0
 --structured-output --spec none --reasoning-loop conclude --expert-residency device.

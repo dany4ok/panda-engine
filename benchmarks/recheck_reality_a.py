@@ -4,7 +4,7 @@ import pathlib
 import random
 import sys
 
-WORK = pathlib.Path(r"C:\Users\x1p\AppData\Local\Temp\opencode\gyro-mini-bench\results\batch1\strata_gyro-gyro-s\A\work")
+WORK = pathlib.Path(r"C:\Users\x1p\AppData\Local\Temp\opencode\gyro-mini-bench\results\batch1\panda_gyro-gyro-s\A\work")
 SEED = pathlib.Path(r"C:\Users\x1p\AppData\Local\Temp\opencode\gyro-mini-bench\tasks\A_simple\seed\string_utils.py")
 sys.path.insert(0, str(WORK))
 from string_utils import slugify, truncate

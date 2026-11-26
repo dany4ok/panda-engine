@@ -16,7 +16,7 @@ $log += Log "SWAP target=$Target before_VRAM_used/free_MiB=$before"
 
 if ($Target -eq 'gyro') {
   # Stop ONLY the benchmark-owned MiniCPM server (command line matches its config).
-  $victims = @(Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match 'strata-minicpmv' })
+  $victims = @(Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match 'panda-minicpmv' })
   foreach ($v in $victims) {
     $log += Log "STOP mini server PID=$($v.ProcessId) CMD=$($v.CommandLine)"
     Stop-Process -Id $v.ProcessId -Force -ErrorAction SilentlyContinue
@@ -36,24 +36,24 @@ if ($Target -eq 'gyro') {
   }
   if (-not $ready) { throw 'Gyro-S endpoint 47831 did not become ready after load.' }
 } else {
-  # Stop ONLY benchmark-owned Strata engine processes holding Gyro-S.
-  $victims = @(Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match 'Strata AI\\Strata' -or $_.Name -match 'strata-(desktop|engine)' })
+  # Stop ONLY benchmark-owned Panda Engine engine processes holding Gyro-S.
+  $victims = @(Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match 'Panda Engine AI\\Panda Engine' -or $_.Name -match 'panda-(desktop|engine)' })
   foreach ($v in $victims) {
-    $log += Log "STOP strata PID=$($v.ProcessId) NAME=$($v.Name)"
+    $log += Log "STOP panda PID=$($v.ProcessId) NAME=$($v.Name)"
     Stop-Process -Id $v.ProcessId -Force -ErrorAction SilentlyContinue
   }
   Start-Sleep -Seconds 8
   $log += Log "VRAM_after_unload=$(Vram)"
 
-  $py  = 'C:\Users\x1p\Desktop\Poly-strata\.venv\Scripts\python.exe'
-  $srv = 'C:\Users\x1p\Desktop\Poly-strata\serve\server.py'
-  $cfg = 'C:\Users\x1p\Desktop\Poly-strata\strata-minicpmv-q4_k_m.json'
-  $wd  = 'C:\Users\x1p\Desktop\Poly-strata'
+  $py  = 'C:\Users\x1p\Desktop\Panda\.venv\Scripts\python.exe'
+  $srv = 'C:\Users\x1p\Desktop\Panda\serve\server.py'
+  $cfg = 'C:\Users\x1p\Desktop\Panda\panda-minicpmv-q4_k_m.json'
+  $wd  = 'C:\Users\x1p\Desktop\Panda Engine'
   foreach ($p in @($py,$srv,$cfg)) { if (-not (Test-Path $p)) { throw "Missing: $p" } }
   $out = Join-Path $Root 'mini_server_out.log'
   $err = Join-Path $Root 'mini_server_err.log'
   $swSrv = [System.Diagnostics.Stopwatch]::StartNew()
-  $proc = Start-Process -FilePath $py -ArgumentList @($srv,'--engine','strata','--config',$cfg,'--port','8080') -WorkingDirectory $wd -RedirectStandardOutput $out -RedirectStandardError $err -WindowStyle Hidden -PassThru
+  $proc = Start-Process -FilePath $py -ArgumentList @($srv,'--engine','panda','--config',$cfg,'--port','8080') -WorkingDirectory $wd -RedirectStandardOutput $out -RedirectStandardError $err -WindowStyle Hidden -PassThru
   $log += Log "MINI_SERVER_PID=$($proc.Id) start_ms=$($swSrv.ElapsedMilliseconds)"
 
   $ready = $false

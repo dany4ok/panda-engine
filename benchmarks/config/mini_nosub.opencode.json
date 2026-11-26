@@ -4,7 +4,7 @@
     { "action": "subagent", "resource": "*", "effect": "deny" }
   ],
   "providers": {
-    "polystrata-mini": {
+    "panda-mini": {
       "name": "MiniCPM Local (bench)",
       "package": "@opencode/ai/providers/openai-compatible",
       "settings": {

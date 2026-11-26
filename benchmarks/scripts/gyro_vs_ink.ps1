@@ -1,9 +1,9 @@
-# Run the 23-task comparison against whichever model Panda currently serves.
-# Select the model in Panda first and confirm GET /v1/models.
+# Run the 23-task comparison against whichever model Panda Engine currently serves.
+# Select the model in Panda Engine first and confirm GET /v1/models.
 param(
   [Parameter(Mandatory=$true)][string]$ModelId,
   [string]$BaseUrl = 'http://127.0.0.1:8080/v1',
-  [string]$ApiKey = 'strata-local-token',
+  [string]$ApiKey = 'panda-local-token',
   [int]$Runs = 2,
   [int]$MaxTokens = 16384,
   [string[]]$Efforts = @('medium','xhigh')

@@ -34,7 +34,7 @@ internal static class PandaLauncher
             {
                 string script = Path.Combine(root, "panda", "panda.ps1");
                 if (!File.Exists(script))
-                    throw new FileNotFoundException("Panda console script not found", script);
+                    throw new FileNotFoundException("Panda Engine console script not found", script);
                 psi.FileName = "powershell.exe";
                 psi.Arguments = "-NoProfile -ExecutionPolicy Bypass -NoExit -File \"" + script + "\"" + extras;
                 psi.CreateNoWindow = false;
@@ -43,7 +43,7 @@ internal static class PandaLauncher
             {
                 string vbs = Path.Combine(root, "panda", "launch-gui.vbs");
                 if (!File.Exists(vbs))
-                    throw new FileNotFoundException("Panda GUI launcher not found", vbs);
+                    throw new FileNotFoundException("Panda Engine GUI launcher not found", vbs);
                 psi.FileName = "wscript.exe";
                 psi.Arguments = "//B //Nologo \"" + vbs + "\"";
                 psi.CreateNoWindow = true;

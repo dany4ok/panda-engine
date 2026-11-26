@@ -1,5 +1,5 @@
 =====================================================================
-BENCHMARK A/B — Gyro-S (Strata) vs MiniCPM-V 4.7 35B A3B Q4_K_M (PolyStrata)
+BENCHMARK A/B — Gyro-S (Panda Engine) vs MiniCPM-V 4.7 35B A3B Q4_K_M (Panda Engine)
 ROL: AGENT PRINCIPAL IN OPENDCODE
 Batch1 — 6 sarcini x 2 modele — evaluare independenta, criterii fixate inainte
 =====================================================================

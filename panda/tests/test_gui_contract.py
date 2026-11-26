@@ -71,7 +71,7 @@ class PandaGuiContractTests(unittest.TestCase):
         self.assertIn("ERROR|WARNING", reader)
         self.assertIn("$result.message", reader)
 
-    def test_strata_inspired_controls_are_present(self):
+    def test_panda_inspired_controls_are_present(self):
         names = {element.attrib.get(f"{{{XAML_NS['x']}}}Name") for element in self.xaml.iter()}
         self.assertTrue(
             {

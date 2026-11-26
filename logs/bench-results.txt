@@ -1,9 +1,9 @@
 2026-11-23T23:14:42 engine=llama model=ud-iq3-xs ctx=32768 vision=True draft=True avg=24.4 max=25.4
-2026-11-23T23:58:12 engine=strata model=inkling-2-mini-sq-10 ctx=32768 vision=True draft=False avg=56.2 max=56.5
-2026-11-23T23:59:05 engine=strata model=inkling-2-mini-sq-10 ctx=32768 vision=False draft=False avg=55.9 max=56.1
-2026-11-23T23:59:59 engine=strata model=inkling-2-mini-sq-10 ctx=32768 vision=True draft=False avg=80.8 max=80.8
-2026-11-24T00:01:00 engine=strata model=inkling-2-mini-sq-10 ctx=131072 vision=True draft=False avg=80.6 max=80.9
-2026-11-24T00:07:47 engine=strata model=inkling-2-mini-sq-10 ctx=131072 vision=True draft=False avg=81.7 max=82
+2026-11-23T23:58:12 engine=panda model=inkling-2-mini-sq-10 ctx=32768 vision=True draft=False avg=56.2 max=56.5
+2026-11-23T23:59:05 engine=panda model=inkling-2-mini-sq-10 ctx=32768 vision=False draft=False avg=55.9 max=56.1
+2026-11-23T23:59:59 engine=panda model=inkling-2-mini-sq-10 ctx=32768 vision=True draft=False avg=80.8 max=80.8
+2026-11-24T00:01:00 engine=panda model=inkling-2-mini-sq-10 ctx=131072 vision=True draft=False avg=80.6 max=80.9
+2026-11-24T00:07:47 engine=panda model=inkling-2-mini-sq-10 ctx=131072 vision=True draft=False avg=81.7 max=82
 2026-11-24T01:07:03 ninfer ctx=131072 avg=26.4
 2026-11-24T01:10:30 ninfer ctx=131072 avg=37.7
 2026-11-24T01:20:09 ninfer ctx=131072 avg=36.4

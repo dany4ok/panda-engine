@@ -8,28 +8,28 @@ Model curent al acestei sesiuni: opencode/hy4-flash-free (NU este nici Gyro-S, n
 =====================================================================
 
 A) Endpoint-urile Locale
-  - Gyro-S:   strata -> http://127.0.0.1:47831/v1   (inregistrat GLOBAL in opencode.json)
+  - Gyro-S:   panda -> http://127.0.0.1:47831/v1   (inregistrat GLOBAL in opencode.json)
               modelID: gyro-gyro-s. In prezent endpointul NU raspunde la /v1/models.
   - MiniCPM:  http://127.0.0.1:8080/v1 -> RASPUNDE.
               GET /v1/models returns: "minicpm-v-4.7-35b-a3b-q4_k_m",
               status "loaded", n_ctx 131072, input text+image.
               Serverul este pornit de:
-                C:\Users\x1p\Desktop\Poly-strata\serve\server.py --engine strata
-                --config ...strata-minicpmv-q4_k_m.json --port 8080
-              Procese: strata-vision.exe (PID 8772), strata-poly.exe (PID 5588).
+                C:\Users\x1p\Desktop\Panda\serve\server.py --engine panda
+                --config ...panda-minicpmv-q4_k_m.json --port 8080
+              Procese: panda-vision.exe (PID 8772), panda-poly.exe (PID 5588).
 
 B) MiniCPM NU este inregistrat in configul GLOBAL OpenCode
-  - providerul "polystrata" (8080) are un singur model: gemma-4-26b-a4b-qat-ud-q4_k_xl.
+  - providerul "panda" (8080) are un singur model: gemma-4-26b-a4b-qat-ud-q4_k_xl.
   - Singura modalitate de a rula MiniCPM ca "main agent" intr-o sesiune OpenCode reala
     este un config LOCAL de workspace. Exista deja unul in
     C:\Users\x1p\AppData\Local\Temp\opencode\ab-bench\.opencode\opencode.json
-    cu providerul "polystrata-mini" si modelul minicpm-v-4.7-35b-a3b-q4_k_m.
+    cu providerul "panda-mini" si modelul minicpm-v-4.7-35b-a3b-q4_k_m.
     (Acesta apartine celeilalte sesiuni de test.)
 
 C) MEMORIE / GPU — constrangere hardware confirmata
   - GPU: NVIDIA RTX 5070 Ti, 16303 MiB total.
   - La verificare: 15696 MiB folosit / 300 MiB liber, util 36-39%.
-  - nvidia-smi compute-apps: strata-vision.exe (8772) si strata-poly.exe (5588)
+  - nvidia-smi compute-apps: panda-vision.exe (8772) si panda-poly.exe (5588)
     detin GPU-ul, impreuna cu OpenCode.exe (16876).
   - Concluzie: NU se poate incarca Gyro-S fara a elibera VRAM-ul ocupat de MiniCPM.
     Setup-ul celeilalte sesiuni (setup_and_start.ps1) oprea explicit procesoarele
