@@ -1596,7 +1596,7 @@ function Install-OpenCodeLayer {
     Write-Host '  OpenCode layer installed. Model IDs: ninfer/inkling-2-mini, polystrata-mini/minicpm-v-4.7-35b-a3b-q4_k_m, strata/gyro-gyro-s'
 }
 function Backup-OpenCodeConfig {
-    if (-not (Test-Path -LiteralPath $script:OpenCodeCfg)) { Write-Host '  OpenCode config not found. Press C first to install the layer.'; return $false }
+    if (-not (Test-Path -LiteralPath $script:OpenCodeCfg)) { Write-Host '  OpenCode config not found. Nothing to restore (the C installer was removed).'; return $false }
     if ($DryRun) { Write-Host '  [dry-run] would back up the OpenCode config'; return $true }
     if (Test-Path -LiteralPath $script:OCBackupPath) { return $true }
     $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
@@ -1632,6 +1632,16 @@ function Write-OpenCodeV1Config {
     $cfg = Get-Content -LiteralPath $script:OpenCodeCfg -Raw -Encoding UTF8 | ConvertFrom-Json
     foreach ($pname in @($cfg.providers.PSObject.Properties.Name)) {
         $prov = $cfg.providers.$pname
+        # OpenCode V1 expects options/npm, not the V2 settings/package names.
+        if ($prov.settings) {
+            $prov | Add-Member -NotePropertyName options -NotePropertyValue $prov.settings -Force
+            $prov.PSObject.Properties.Remove('settings')
+        }
+        if ($prov.package) {
+            # V1 resolves the OpenAI-compatible provider under the @ai-sdk package name.
+            $prov | Add-Member -NotePropertyName npm -NotePropertyValue '@ai-sdk/openai-compatible' -Force
+            $prov.PSObject.Properties.Remove('package')
+        }
         if (-not $prov.models) { continue }
         foreach ($mname in @($prov.models.PSObject.Properties.Name)) {
             $m = $prov.models.$mname
@@ -1664,7 +1674,7 @@ function Sync-OpenCodeConfig($m) {
     try { $cfg = Get-Content -LiteralPath $script:OpenCodeCfg -Raw -Encoding UTF8 | ConvertFrom-Json }
     catch { Write-Host '  ERROR: OpenCode config is not valid JSON.'; return $false }
     $api = 'http://127.0.0.1:' + $script:cat.ports.api + '/v1'
-    foreach ($name in @('strata','ninfer','polystrata-mini','polystrata')) {
+    foreach ($name in @('strata','ninfer','polystrata-mini','polystrata','panda')) {
         if ($cfg.providers.PSObject.Properties[$name]) { $cfg.providers.$name.settings.baseURL = $api }
     }
     if ($m -and $m.provider) { $cfg.model = $m.provider }
@@ -1723,7 +1733,7 @@ function Show-Menu($s) {
     for ($i=1; $i -le $script:cat.models.Count; $i++) { $keys += ("$i=" + $script:cat.models[$i-1].id) }
     Write-Host ('  Models: ' + ($keys -join '  '))
     Write-Host '  D Download/change models    S START (start active)'
-    Write-Host '  G Toggle MiniCPM game mode  C Install OpenCode layer'
+    Write-Host '  G Toggle MiniCPM game mode'
     Write-Host '  O OpenCode (active model)   X Stop API+backends'
     Write-Host '  R Reset first-run           Q Exit (restores OpenCode config)'
     Write-Host '============================================================'
@@ -2034,7 +2044,6 @@ while ($true) {
         }
         '^[Gg]$' { Toggle-GameMode $s }
         '^[Oo]$' { Start-OpenCode (Find-Model $s.active) }
-        '^[Cc]$' { Install-OpenCodeLayer }
         '^[Rr]$' { $s = Update-ConsoleState @{ firstRunDone = $false }; Write-Host 'First-run setup will repeat on next launch.'; break }
         '^[Xx]$' {
             $stopped = Stop-PandaEngine -AuthorizeGyroStop:$AuthorizeGyroStop

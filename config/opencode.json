@@ -88,7 +88,7 @@
         },
         "inkling-2-mini-sq-10": {
           "name": "Inkling 2 Mini SQ-10 (128K, Strata)",
-          "modelID": "inkling-2-mini-sq-10",
+          "modelID": "inkling-2-mini",
           "capabilities": {
             "tools": true,
             "input": [
@@ -158,7 +158,7 @@
         },
         "inkling-2-mini-sq-20": {
           "name": "Inkling 2 Mini SQ-20 (128K, Strata)",
-          "modelID": "inkling-2-mini-sq-20",
+          "modelID": "inkling-2-mini",
           "capabilities": {
             "tools": true,
             "input": [
@@ -228,7 +228,7 @@
         },
         "inkling-2-mini-ud-iq1_s": {
           "name": "Inkling 2 Mini UD-IQ1_S (128K, Strata)",
-          "modelID": "inkling-2-mini-ud-iq1_s",
+          "modelID": "inkling-2-mini",
           "capabilities": {
             "tools": true,
             "input": [
@@ -298,7 +298,7 @@
         },
         "inkling-2-mini-ud-iq2_xxs": {
           "name": "Inkling 2 Mini UD-IQ2_XXS (128K, Strata)",
-          "modelID": "inkling-2-mini-ud-iq2_xxs",
+          "modelID": "inkling-2-mini",
           "capabilities": {
             "tools": true,
             "input": [
@@ -608,6 +608,139 @@
               "id": "medium",
               "body": {
                 "reasoning_effort": "medium"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "panda": {
+      "name": "Panda Engine (local)",
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": {
+        "baseURL": "http://127.0.0.1:8081/v1",
+        "apiKey": "panda-local-token",
+        "headerTimeout": 900000,
+        "chunkTimeout": 120000
+      },
+      "models": {
+        "inkling-2-mini": {
+          "name": "Panda · Inkling 2 Mini (doar când e activ în Panda)",
+          "modelID": "inkling-2-mini",
+          "capabilities": {
+            "tools": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          },
+          "settings": {
+            "cache": {
+              "warming": false
+            }
+          },
+          "body": {
+            "reasoning_effort": "low",
+            "frequency_penalty": 0,
+            "presence_penalty": 0
+          },
+          "variants": [
+            {
+              "id": "minimal",
+              "name": "Minimal thinking",
+              "body": {
+                "reasoning_effort": "minimal"
+              }
+            },
+            {
+              "id": "low",
+              "name": "Low thinking (default)",
+              "body": {
+                "reasoning_effort": "low"
+              }
+            },
+            {
+              "id": "medium",
+              "name": "Medium thinking",
+              "body": {
+                "reasoning_effort": "medium"
+              }
+            },
+            {
+              "id": "high",
+              "name": "High thinking",
+              "body": {
+                "reasoning_effort": "high"
+              }
+            },
+            {
+              "id": "xhigh",
+              "name": "Very high thinking",
+              "body": {
+                "reasoning_effort": "xhigh"
+              }
+            },
+            {
+              "id": "max",
+              "name": "Maximum thinking",
+              "body": {
+                "reasoning_effort": "max"
+              }
+            }
+          ]
+        },
+        "panda-active": {
+          "name": "Panda · alias compat (trimite inkling-2-mini; merge și cu Gyro-S / MiniCPM)",
+          "modelID": "inkling-2-mini",
+          "capabilities": {
+            "tools": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          },
+          "settings": {
+            "cache": {
+              "warming": false
+            }
+          },
+          "body": {
+            "reasoning_effort": "medium"
+          },
+          "variants": [
+            {
+              "id": "xhigh",
+              "name": "Deep reasoning",
+              "body": {
+                "reasoning_effort": "xhigh"
+              }
+            },
+            {
+              "id": "medium",
+              "name": "Balanced reasoning (default)",
+              "body": {
+                "reasoning_effort": "medium"
+              }
+            },
+            {
+              "id": "low",
+              "name": "Brief reasoning",
+              "body": {
+                "reasoning_effort": "low"
               }
             }
           ]

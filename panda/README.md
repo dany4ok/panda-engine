@@ -18,7 +18,7 @@ panda engine\
   runtime\polystrata\      Poly-strata runtime: .venv, engine-poly, serve, configs
   models\                  ALL model data: Inkling .ninfer files + polystrata-data\
   config.json              NInfer launch configuration
-  START.bat                the single entry point (legacy launchers live in panda\legacy\)
+  panda.exe                the desktop launcher (icon: panda.ico); START.bat forwards to it
 ```
 
 Junctions are left at the old locations (`inkling 2 mini\ninfer`, `Poly-strata`,
@@ -39,8 +39,9 @@ responses) to the active backend on an internal port:
 | Poly-strata | 8182 | MiniCPM-V 4.7 35B A3B |
 | Gyro engine (bundled) | 8183 | Gyro Gyro S — model + pack + engine in Panda |
 
-The catalog currently contains two Inkling variants, MiniCPM and Gyro-S. `START.bat`
-opens the desktop Model Library; `START.bat --console` opens the legacy text menu.
+The catalog currently contains two Inkling variants, MiniCPM and Gyro-S. `panda.exe`
+opens the desktop Model Library; `panda.exe --console` opens the legacy text menu.
+`START.bat` is kept as a thin wrapper around `panda.exe`.
 `GET /_panda/status` reports the active model, its internal port and whether the backend
 is reachable. In the GUI, selecting a row only inspects it; **Set active** changes the
 next-start selection, while **Start** changes the live route. Switching a running model
@@ -48,8 +49,8 @@ can stop its current backend. **Stop engine** stops the API and all backends.
 
 ## Start
 
-Double-click `START.bat` in the repository root to open the Model Library and start the
-Panda API. Use `START.bat --console` to open the legacy text menu.
+Double-click `panda.exe` in the repository root to open the Model Library and start the
+Panda API. Use `panda.exe --console` to open the legacy text menu.
 
 - **First run:** browse the catalog and use **Install** on a model you want. Downloads use
   `.part` files, resume with `curl -C -`, and are checked against `Content-Length` and,
@@ -60,8 +61,8 @@ Panda API. Use `START.bat --console` to open the legacy text menu.
   `GET /_panda/status`. No model size or performance estimates are shown.
 - **Console mode:** `S` starts the active model and repoints the API at it. Any model
   number selects another model; if it is missing, Panda offers to download it.
-- `D` re-downloads models, `G` toggles MiniCPM game mode, `C` installs the OpenCode
-  layer, `R` replays first-run setup, `X` stops API + backends, `Q` exits the menu.
+- `D` re-downloads models, `G` toggles MiniCPM game mode, `R` replays first-run setup,
+  `X` stops API + backends, `Q` exits the menu.
 - `O` launches **OpenCode** against the Panda API. It backs up
   `~/.config/opencode/opencode.json`, sets `model` to the active model's OpenCode ID,
   points all bundled providers at `http://127.0.0.1:8081/v1`, and starts OpenCode in a
@@ -104,10 +105,10 @@ than the 131072/`auto` config — the VRAM thresholds depend on that headroom. L
 - Gyro-S: `runtime\polystrata\strata-gyro-s.json`, using the bundled engine, pack, MTP and
   GGUF in `models\gyro-s*`; started directly by Panda, no Strata desktop.
 
-`C` copies `config/opencode.json`, `AGENT_RULES.md` and the bundled `plugins/` into
-`%USERPROFILE%\.config\opencode\`, with timestamped backups, and rewrites `instructions`
-to the absolute path of the copied rules file. All three model IDs are present there;
-they use port 8081, which is the Model Library API.
+The OpenCode config layer is copied manually: `config/opencode.json`, `AGENT_RULES.md`
+and the bundled `plugins/` go into `%USERPROFILE%\.config\opencode\`. The old console `C`
+shortcut was removed because it overwrote custom OpenCode configuration. All model IDs
+are present there; they use port 8081, which is the Model Library API.
 
 ## Files
 
@@ -117,4 +118,4 @@ they use port 8081, which is the Model Library API.
 - `panda/catalog.json` — models, runtime roots, ports, game-mode files.
 - `panda/settings/` — snapshot of `strata-minicpmv-q4_k_m.json`.
 - `runtime/polystrata/strata-gyro-s.json` — Gyro-S config pointing only inside Panda.
-- `START.bat` — the single double-click entry point (old launchers are in `panda\legacy\`).
+- `panda.exe` — the double-click entry point, with `panda.ico` (old launchers are in `panda\legacy\`); `START.bat` forwards to it.

@@ -29,6 +29,30 @@ $script:PreviewState = $PreviewState
 
 Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase
 
+# Give the GUI its own taskbar identity so Windows shows the Panda icon
+# instead of grouping it under the generic powershell.exe button.
+try {
+  Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class PandaAppIdentity {
+  [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+  public static extern void SetCurrentProcessExplicitAppUserModelID([MarshalAs(UnmanagedType.LPWStr)] string appID);
+}
+'@
+  $appId = 'PandaEngine.GUI.v2'
+  $appKey = "HKCU:\Software\Classes\AppUserModelId\$appId"
+  if (-not (Test-Path -LiteralPath $appKey)) { $null = New-Item -Path $appKey -Force }
+  Set-ItemProperty -LiteralPath $appKey -Name DisplayName -Value 'Panda Engine'
+  Set-ItemProperty -LiteralPath $appKey -Name Description -Value 'Panda Engine - Local model library'
+  Set-ItemProperty -LiteralPath $appKey -Name 'AppUserModel.RelaunchDisplayNameResource' -Value 'Panda Engine'
+  Set-ItemProperty -LiteralPath $appKey -Name 'AppUserModel.RelaunchCommand' -Value ('"{0}" -NoProfile -ExecutionPolicy Bypass -STA -WindowStyle Hidden -File "{1}"' -f $script:PowerShellExe, (Join-Path $script:PandaDir 'gui.ps1'))
+  Set-ItemProperty -LiteralPath $appKey -Name 'AppUserModel.RelaunchIconResource' -Value (Join-Path (Split-Path -Parent $script:PandaDir) 'panda.ico')
+  [PandaAppIdentity]::SetCurrentProcessExplicitAppUserModelID($appId)
+} catch {
+  # Non-fatal: the window icon is still set below.
+}
+
 [xml]$xaml = @'
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -215,10 +239,8 @@ Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase
           <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-          <Border Width="42" Height="42" CornerRadius="11" Background="#E7EEFC" BorderBrush="#D6E1F8" BorderThickness="1">
-            <TextBlock Text="P" FontSize="20" FontWeight="Bold" Foreground="#2E68E8"
-                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-          </Border>
+          <Image x:Name="LogoImage" Width="42" Height="42" Stretch="Uniform"
+                 AutomationProperties.Name="Panda Engine logo"/>
           <StackPanel Margin="11,0,0,0" VerticalAlignment="Center">
             <TextBlock Text="Panda Engine" FontSize="20" FontWeight="SemiBold" Foreground="#17243A"/>
             <TextBlock Text="Local model library" FontSize="12" Foreground="#69768A" Margin="0,2,0,0"/>
@@ -233,7 +255,11 @@ Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase
                 CornerRadius="10" Padding="12,9" VerticalAlignment="Center">
           <StackPanel Orientation="Horizontal">
             <Ellipse x:Name="ApiDot" Width="9" Height="9" Fill="#8793A5" Margin="0,0,9,0" VerticalAlignment="Center"/>
-            <TextBlock x:Name="ApiState" Text="Checking local API..." FontSize="12" FontWeight="SemiBold" Foreground="#526174"/>
+            <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+              <TextBlock x:Name="ApiState" Text="Checking local API..." FontSize="12" FontWeight="SemiBold" Foreground="#526174"/>
+              <TextBlock x:Name="ApiEndpoint" Text="http://127.0.0.1:8081/v1" FontSize="10" Foreground="#748196" Margin="0,2,0,0"
+                         AutomationProperties.Name="Panda local API endpoint"/>
+            </StackPanel>
           </StackPanel>
         </Border>
       </Grid>
@@ -662,6 +688,17 @@ Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase
 
 $reader = New-Object System.Xml.XmlNodeReader $xaml
 $script:Window = [Windows.Markup.XamlReader]::Load($reader)
+$script:LogoPath = Join-Path (Split-Path -Parent $script:PandaDir) 'panda.png'
+if (Test-Path -LiteralPath $script:LogoPath) {
+  $logoSource = [Windows.Media.Imaging.BitmapImage]::new()
+  $logoSource.BeginInit()
+  $logoSource.UriSource = [Uri]::new($script:LogoPath)
+  $logoSource.CacheOption = [Windows.Media.Imaging.BitmapCacheOption]::OnLoad
+  $logoSource.EndInit()
+  $script:LogoControl = $script:Window.FindName('LogoImage')
+  $script:LogoControl.Source = $logoSource
+  $script:Window.Icon = $logoSource
+}
 $script:MainTabs = $script:Window.FindName('MainTabs')
 $script:PageBadge = $script:Window.FindName('PageBadge')
 $script:CurrentPageLabel = $script:Window.FindName('CurrentPageLabel')

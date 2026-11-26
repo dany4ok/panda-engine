@@ -49,10 +49,13 @@ class PandaGuiContractTests(unittest.TestCase):
         self.assertEqual(tabs[2].attrib["Header"], "Monitor")
 
     def test_gui_launcher_does_not_depend_on_console(self):
-        launcher = (ROOT / "START.bat").read_text(encoding="utf-8-sig")
+        launcher = (ROOT / "panda" / "panda-launcher.cs").read_text(encoding="utf-8-sig")
+        wrapper = (ROOT / "START.bat").read_text(encoding="utf-8-sig")
         helper = (ROOT / "panda" / "launch-gui.vbs").read_text(encoding="utf-8-sig")
         self.assertIn('--console', launcher)
-        self.assertIn('wscript.exe', launcher.lower())
+        self.assertIn('wscript.exe', launcher)
+        self.assertIn('powershell.exe', launcher)
+        self.assertIn('panda.exe', wrapper.lower())
         self.assertIn('shell.Run command, 0, False', helper)
         self.assertIn('[PandaGuiConsole]::FreeConsole()', self.gui)
 
