@@ -119,3 +119,4 @@ are present there; they use port 8081, which is the Model Library API.
 - `panda/settings/` — snapshot of `strata-minicpmv-q4_k_m.json`.
 - `runtime/polystrata/strata-gyro-s.json` — Gyro-S config pointing only inside Panda.
 - `panda.exe` — the double-click entry point, with `panda.ico` (old launchers are in `panda\legacy\`); `START.bat` forwards to it.
+- Rebuild — `powershell -File panda\build-launcher.ps1` recompiles `panda.exe` from `panda\panda-launcher.cs` with `panda.ico` embedded; `python panda\make_panda_icon.py` regenerates `panda.ico` and `panda.png`.
