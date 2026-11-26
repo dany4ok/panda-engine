@@ -1,5 +1,5 @@
 # Rebuild panda.exe from panda/panda-launcher.cs with the Panda icon embedded.
-# Usage: powershell -File panda/build-launcher.ps1 [-Out <path>]
+# Usage: powershell -NoProfile -ExecutionPolicy Bypass -File panda/build-launcher.ps1 [-Out <path>]
 # Requires the .NET Framework C# compiler (csc.exe), shipped with Windows.
 param(
   [string]$Out = (Join-Path (Split-Path -Parent $PSScriptRoot) 'panda.exe')
