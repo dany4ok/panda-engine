@@ -1,0 +1,36 @@
+﻿{
+    "events":  129,
+    "first_event_ms":  1795334737730,
+    "last_event_ms":  1795335186622,
+    "ttft_ms":  1512,
+    "first_text_ms":  1795334739242,
+    "tool_calls":  42,
+    "tool_names":  {
+                       "read":  5,
+                       "shell":  12,
+                       "write":  8,
+                       "edit":  16,
+                       "grep":  1
+                   },
+    "edit_calls":  24,
+    "test_calls":  12,
+    "repair_attempts_heuristic":  24,
+    "tokens":  {
+                   "input":  10817,
+                   "output":  13771,
+                   "reasoning":  17018,
+                   "cache_read":  1271190,
+                   "cache_write":  0
+               },
+    "note":  "null means the JSON event stream did not expose that metric; no values were estimated.",
+    "model":  "panda/gyro-gyro-s",
+    "task":  "D",
+    "batch":  "timeout-guard-b2",
+    "wall_ms":  451677,
+    "start_iso":  "2026-11-22T08:05:35.1121106Z",
+    "end_iso":  "2026-11-22T08:13:07.2807766Z",
+    "exit_code":  0,
+    "timed_out":  false,
+    "vram_max_mib":  15367,
+    "vram_avg_mib":  14391.2
+}

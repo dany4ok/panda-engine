@@ -1,4 +1,5 @@
 import importlib.util
+import io
 import json
 import os
 import pathlib
@@ -214,6 +215,47 @@ class RouterOwnershipTests(unittest.TestCase):
     @unittest.skipUnless(os.name == "nt", "Windows process APIs are required")
     def test_current_process_command_line_is_readable(self):
         self.assertTrue(router._process_command_line(os.getpid()))
+
+
+class RouterBodyTests(unittest.TestCase):
+    def _handler(self, payload, headers):
+        handler = router.Handler.__new__(router.Handler)
+        handler.headers = headers
+        handler.rfile = io.BytesIO(payload)
+        return handler
+
+    def test_chunked_body_with_extension_and_trailer_is_decoded(self):
+        payload = b"5;ext=1\r\nhello\r\n6\r\n world\r\n0\r\nX-Trailer: ok\r\n\r\n"
+        handler = self._handler(payload, {"Transfer-Encoding": "chunked"})
+        self.assertEqual(handler._read_body(), b"hello world")
+
+    def test_invalid_chunk_size_is_rejected(self):
+        handler = self._handler(b"zz\r\ndata\r\n0\r\n\r\n", {"Transfer-Encoding": "chunked"})
+        with self.assertRaises(router._BadRequest) as caught:
+            handler._read_body()
+        self.assertEqual(caught.exception.code, 400)
+
+    def test_missing_chunk_delimiter_is_rejected(self):
+        handler = self._handler(b"4\r\ndataXX0\r\n\r\n", {"Transfer-Encoding": "chunked"})
+        with self.assertRaises(router._BadRequest) as caught:
+            handler._read_body()
+        self.assertEqual(caught.exception.code, 400)
+
+    def test_truncated_chunk_is_rejected(self):
+        handler = self._handler(b"9\r\ndata\r\n0\r\n\r\n", {"Transfer-Encoding": "chunked"})
+        with self.assertRaises(router._BadRequest):
+            handler._read_body()
+
+    def test_oversized_content_length_is_rejected(self):
+        handler = self._handler(b"", {"Content-Length": str(router.MAX_REQUEST_BODY_BYTES + 1)})
+        with self.assertRaises(router._BadRequest) as caught:
+            handler._read_body()
+        self.assertEqual(caught.exception.code, 413)
+
+    def test_invalid_content_length_is_rejected(self):
+        handler = self._handler(b"", {"Content-Length": "many"})
+        with self.assertRaises(router._BadRequest):
+            handler._read_body()
 
 
 if __name__ == "__main__":

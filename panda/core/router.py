@@ -31,11 +31,26 @@ HOP_BY_HOP = {
 }
 
 BACKEND_PORTS = {8181, 8182, 8183}
+MAX_REQUEST_BODY_BYTES = 64 * 1024 * 1024
+MAX_CHUNK_HEADER_BYTES = 8192
+MAX_TRAILER_LINES = 32
+INBOUND_READ_TIMEOUT_SECONDS = 30
+CONNECT_TIMEOUT_SECONDS = 10
+HEALTH_READ_TIMEOUT_SECONDS = 30
+STREAM_READ_TIMEOUT_SECONDS = 600
 DOTNET_TICKS_FROM_FILETIME = 504911232000000000
 TCP_TABLE_OWNER_PID_LISTENER = 3
 TCP_TABLE_OWNER_PID_CONNECTIONS = 4
 AF_INET = 2
 MIB_TCP_STATE_ESTABLISHED = 5
+
+
+class _BadRequest(Exception):
+    """Malformed or oversized request body; code is the HTTP status to return."""
+
+    def __init__(self, message, code=400):
+        super().__init__(message)
+        self.code = code
 
 
 class _MibTcpRowOwnerPid(ctypes.Structure):
@@ -470,10 +485,10 @@ def _connected_listener_pid(sock, port):
     return next(iter(pids))
 
 
-def _open_verified_connection(port, route):
+def _open_verified_connection(port, route, read_timeout=HEALTH_READ_TIMEOUT_SECONDS):
     if int(port) not in BACKEND_PORTS or not _route_owner_valid(route, port):
         return None
-    connection = http.client.HTTPConnection("127.0.0.1", int(port), timeout=600)
+    connection = http.client.HTTPConnection("127.0.0.1", int(port), timeout=CONNECT_TIMEOUT_SECONDS)
     try:
         connection.connect()
         if connection.sock is None:
@@ -488,6 +503,8 @@ def _open_verified_connection(port, route):
         if listener_pid is None or not _route_owner_valid(route, port, listener_pid):
             connection.close()
             return None
+        if connection.sock is not None:
+            connection.sock.settimeout(read_timeout)
         return connection
     except (OSError, http.client.HTTPException):
         connection.close()
@@ -579,6 +596,12 @@ class Handler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
     server_version = "PandaEngine/1.0"
 
+    def setup(self):
+        super().setup()
+        # Bound the time a slow client can hold a worker while its request line
+        # and body are read. It is widened again before the response is streamed.
+        self.connection.settimeout(INBOUND_READ_TIMEOUT_SECONDS)
+
     def log_message(self, fmt, *args):
         pass
 
@@ -610,24 +633,53 @@ class Handler(BaseHTTPRequestHandler):
         })
 
     def _read_body(self):
+        """Read a request body, rejecting malformed framing instead of forwarding junk.
+
+        Chunk extensions are accepted; the CRLF after every chunk is required by
+        RFC 7230 and is now validated. Both framings are size-capped so a broken
+        client cannot pin a worker thread indefinitely.
+        """
+        data = bytearray()
         if "chunked" in self.headers.get("Transfer-Encoding", "").lower():
-            data = bytearray()
             while True:
-                line = self.rfile.readline().strip()
+                line = self.rfile.readline(MAX_CHUNK_HEADER_BYTES).strip()
                 if not line:
-                    break
-                size = int(line.split(b";", 1)[0], 16)
+                    raise _BadRequest("chunked body ended before the final chunk")
+                try:
+                    size = int(line.split(b";", 1)[0], 16)
+                except ValueError:
+                    raise _BadRequest("invalid chunk size")
+                if size < 0:
+                    raise _BadRequest("invalid chunk size")
                 if size == 0:
-                    while True:
-                        trailer = self.rfile.readline()
-                        if trailer in (b"\r\n", b"\n", b""):
+                    for _ in range(MAX_TRAILER_LINES):
+                        if self.rfile.readline(MAX_CHUNK_HEADER_BYTES) in (b"\r\n", b"\n", b""):
                             break
                     break
-                data.extend(self.rfile.read(size))
-                self.rfile.read(2)
+                if len(data) + size > MAX_REQUEST_BODY_BYTES:
+                    raise _BadRequest("request body is too large", 413)
+                chunk = self.rfile.read(size)
+                if len(chunk) != size:
+                    raise _BadRequest("incomplete chunked body")
+                data.extend(chunk)
+                if self.rfile.read(2) != b"\r\n":
+                    raise _BadRequest("invalid chunk delimiter")
             return bytes(data) or None
-        length = int(self.headers.get("Content-Length") or 0)
-        return self.rfile.read(length) if length else None
+        raw_length = self.headers.get("Content-Length") or "0"
+        try:
+            length = int(raw_length)
+        except (TypeError, ValueError):
+            raise _BadRequest("invalid Content-Length")
+        if length < 0:
+            raise _BadRequest("invalid Content-Length")
+        if length > MAX_REQUEST_BODY_BYTES:
+            raise _BadRequest("request body is too large", 413)
+        if not length:
+            return None
+        body = self.rfile.read(length)
+        if len(body) != length:
+            raise _BadRequest("incomplete request body")
+        return body
 
     def _handle(self):
         _, target, name, route = read_route()
@@ -650,8 +702,31 @@ class Handler(BaseHTTPRequestHandler):
             self._json(503, {"error": "backend route changed; retry the request"})
             return
         # BaseHTTPRequestHandler already answers Expect: 100-continue in HTTP/1.1.
-        body = self._read_body()
+        try:
+            body = self._read_body()
+        except _BadRequest as exc:
+            connection.close()
+            self._json(exc.code, {"error": str(exc)})
+            return
+        except (OSError, http.client.HTTPException):
+            # The client stalled or disconnected mid-body: release the verified
+            # upstream connection and do not wait for another HTTP/1.1 request.
+            connection.close()
+            self.close_connection = True
+            return
+        if connection.sock is not None:
+            # Health checks use a short read timeout; generation streams need a long one.
+            connection.sock.settimeout(STREAM_READ_TIMEOUT_SECONDS)
+        if self.connection is not None:
+            # The body is fully read now; do not time out a slow streaming reader.
+            self.connection.settimeout(STREAM_READ_TIMEOUT_SECONDS)
         headers = {k: v for k, v in self.headers.items() if k.lower() not in HOP_BY_HOP}
+        # The proxy re-frames the body. A client-supplied Content-Length would
+        # conflict with the decoded chunked body (or with duplicate values).
+        for key in [key for key in headers if key.lower() == "content-length"]:
+            del headers[key]
+        if "chunked" not in self.headers.get("Transfer-Encoding", "").lower():
+            headers["Content-Length"] = str(len(body)) if body else "0"
         headers["Connection"] = "close"
         _, current_target, _, current_route = read_route()
         if current_target != target or not _same_route_generation(route, current_route):

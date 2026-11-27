@@ -2,7 +2,7 @@
 # Select the model in Panda Engine first and confirm GET /v1/models.
 param(
   [Parameter(Mandatory=$true)][string]$ModelId,
-  [string]$BaseUrl = 'http://127.0.0.1:8080/v1',
+  [string]$BaseUrl = 'http://127.0.0.1:8081/v1',
   [string]$ApiKey = 'panda-local-token',
   [int]$Runs = 2,
   [int]$MaxTokens = 16384,

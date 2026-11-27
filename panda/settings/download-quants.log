@@ -1,0 +1,16 @@
+﻿2026-11-24T12:53:23.3686541+02:00  START inkling-q3kxl -> C:\Users\x1p\Desktop\panda engine\models\Inkling-2-Mini-UD-Q3_K_XL-ninfer-v3.ninfer
+2026-11-24T12:53:24.0530281+02:00  remote_length=14493304576
+2026-11-24T12:53:24.0580278+02:00  curl attempt 1
+2026-11-24T12:59:46.4849655+02:00  curl exit=0
+2026-11-24T12:59:46.4912882+02:00  DONE inkling-q3kxl size=14493304576
+2026-11-24T12:59:46.4927911+02:00  START inkling-iq4xs -> C:\Users\x1p\Desktop\panda engine\models\Inkling-2-Mini-UD-IQ4_XS-ninfer-v3.ninfer
+2026-11-24T12:59:47.1111105+02:00  remote_length=16595277824
+2026-11-24T12:59:47.1131484+02:00  curl attempt 1
+2026-11-24T13:06:28.7023079+02:00  curl exit=0
+2026-11-24T13:06:28.7063035+02:00  DONE inkling-iq4xs size=16595277824
+2026-11-24T13:06:28.7083029+02:00  START inkling-apex -> C:\Users\x1p\Desktop\panda engine\models\Inkling-2-Mini-APEX-I-MiniPlus-V2.1-ninfer-v3.ninfer
+2026-11-24T13:06:29.2934164+02:00  remote_length=13840832768
+2026-11-24T13:06:29.2954197+02:00  curl attempt 1
+2026-11-24T13:12:44.5743324+02:00  curl exit=0
+2026-11-24T13:12:44.5773674+02:00  DONE inkling-apex size=13840832768
+2026-11-24T13:12:44.5804062+02:00  ALL DONE

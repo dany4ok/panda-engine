@@ -1,7 +1,7 @@
 # Reproducible reasoning_effort sweep for inkling-2-mini (NInfer).
 # Covers every section of benchmarks/BENCHMARK-ink-reasoning-effort-1h.txt.
 param(
-  [string]$BaseUrl = 'http://127.0.0.1:8080/v1',
+  [string]$BaseUrl = 'http://127.0.0.1:8081/v1',
   [string]$ApiKey = 'ninfer-local-token',
   [string]$Model = 'inkling-2-mini',
   [int]$Runs = 4,

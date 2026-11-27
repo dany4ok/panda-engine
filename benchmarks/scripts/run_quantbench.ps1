@@ -12,12 +12,13 @@ param(
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 $pandaRoot = Split-Path $root -Parent
+$cat = Get-Content -LiteralPath (Join-Path $pandaRoot 'panda\catalog.json') -Raw -Encoding UTF8 | ConvertFrom-Json
 $progress = Join-Path $root 'quantbench-progress.log'
 function L($s) { $line = (Get-Date).ToString('o') + '  ' + $s; Write-Host $line; $line | Out-File -FilePath $progress -Append -Encoding utf8 }
 $swap = Join-Path $PSScriptRoot 'swap_inkling.ps1'
 $probe = Join-Path $PSScriptRoot 'run_probe.ps1'
 function Test-Endpoint {
-    try { $r = Invoke-RestMethod -Uri 'http://127.0.0.1:8080/v1/models' -TimeoutSec 4; return [bool]$r.data }
+    try { $r = Invoke-RestMethod -Uri ('http://127.0.0.1:' + [int]$cat.ports.infer + '/v1/models') -TimeoutSec 4; return [bool]$r.data }
     catch { return $false }
 }
 function Do-Swap($artifact) {

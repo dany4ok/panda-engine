@@ -7,19 +7,22 @@
 Scope: 6 sarcini (A-F), aceeasi cerinta pentru ambele modele, sesiuni OpenCode reale
 prin CLI (`opencode run`), evaluare independenta determinista dupa executie.
 
-NU se modifica: configul global OpenCode, proiectele reale, agentii globali.
+NU se modifica in timpul probei: configul global OpenCode, proiectele reale, agentii globali.
+Singura exceptie e pasul 0 de mai jos (pregatirea configului), inainte de rulare.
 NU se atinge workspace-ul concurent `...\Temp\opencode\ab-bench`.
 
 ## Modele
 
 | Slot | ID OpenCode | Endpoint | Config |
 |---|---|---|---|
-| Gyro-S | `panda/gyro-gyro-s` | http://127.0.0.1:47831/v1 | global `~/.config/opencode/opencode.json` |
-| MiniCPM | `panda-mini/minicpm-v-4.7-35b-a3b-q4_k_m` | http://127.0.0.1:8080/v1 | `config/mini.opencode.json` copiat in `<work>/.opencode/opencode.json` |
+| Gyro-S | `panda/gyro-gyro-s` | http://127.0.0.1:8081/v1 | global `~/.config/opencode/opencode.json` (trebuie sa contina providerul `panda`) |
+| MiniCPM | `panda-mini/minicpm-v-4.7-35b-a3b-q4_k_m` | http://127.0.0.1:8081/v1 | `config/mini.opencode.json` copiat in `<work>/.opencode/opencode.json` |
 
-Asimetrie necesara si documentata: MiniCPM nu e inregistrat global, deci primeste un
-config LOCAL de workspace. Gyro-S foloseste configul global. Agentii (reviewer etc.)
-si permisiunile raman identice (mostenite din global). Niciunui model nu i se da
+Asimetrie necesara si documentata: MiniCPM primeste un config LOCAL de workspace
+(`panda-mini`), chiar si dupa pasul 0 in care configul global contine acelasi provider;
+scopul e ca fiecare rulare sa foloseasca identitatea si endpointul explicite ale
+harness-ului. Gyro-S foloseste configul global. Agentii (reviewer etc.) si
+permisiunile raman identice (mostenite din global). Niciunui model nu i se da
 variant de reasoning (configul MiniCPM nu defineste variante) -> ambele ruleaza default.
 
 ## Ordine si izolare
@@ -75,17 +78,25 @@ Raportul final foloseste `REPORT_TEMPLATE.txt` si calculeaza diferente procentua
 
 ## Rulare (cand slotul e liber)
 
+`swap_model.ps1` si configul `gyro-mini-bench` sint **legacy** (loader extern Strata pe
+47831 si vechi paths `Desktop\Panda`); nu mai pornesc backend-urile curente. Fluxul
+suportat foloseste Panda Engine insusi:
+
 ```powershell
-$root = 'C:\Users\x1p\AppData\Local\Temp\opencode\gyro-mini-bench'
-# 1) swap la Gyro-S (cere confirmare explicita)
-powershell -ExecutionPolicy Bypass -File "$root\scripts\swap_model.ps1" -Target gyro -Force
-# 2) ruleaza cele 6 probe
+# Ruleaza din arborele curent al proiectului (configurile si scripturile actualizate).
+$root = 'C:\Users\x1p\Desktop\panda engine\benchmarks'
+# 0) configul global trebuie sa contina modelul panda/gyro-gyro-s.
+#    Metoda sigura: copiaza config\opencode.json peste
+#    ~/.config/opencode/opencode.json. Optiunea O din consola doar repointa
+#    provideri deja existenti; nu adauga providerul sau modelul lipsa.
+# 1) selecteaza si porneste modelul din GUI (Model Library -> Start) sau:
+#    panda.exe --console   -> S   (activeaza modelul)
+# 2) ruleaza cele 6 probe prin API-ul unificat de pe 8081
 foreach ($t in 'A','B','C','D','E','F') {
   powershell -ExecutionPolicy Bypass -File "$root\scripts\run_probe.ps1" `
     -Model 'panda/gyro-gyro-s' -Task $t -Batch batch1 -Root $root
 }
-# 3) swap la MiniCPM
-powershell -ExecutionPolicy Bypass -File "$root\scripts\swap_model.ps1" -Target mini -Force
+# 3) repeta pentru MiniCPM dupa selectarea/pornirea lui in Panda Engine
 foreach ($t in 'A','B','C','D','E','F') {
   powershell -ExecutionPolicy Bypass -File "$root\scripts\run_probe.ps1" `
     -Model 'panda-mini/minicpm-v-4.7-35b-a3b-q4_k_m' -Task $t -Batch batch1 -Root $root
@@ -101,7 +112,8 @@ python "$root\scripts\build_report.py" --root $root --batch batch1
   `C:\Users\x1p\AppData\Local\Programs\ai.opencode.desktop\resources\opencode-cli.exe`
   (v2.3.2). CLI-ul V1 instalat prin npm nu poate citi configul V2 si nu poate
   inregistra providerii locali, deci a fost respins. Configul global NU a fost
-  modificat. V2 `run` nu are `--dir`, deci runnerul face `Push-Location` in workdir.
+  modificat in timpul runurilor (pregatirea din pasul 0 e facuta o singura data, inainte
+  de rulare). V2 `run` nu are `--dir`, deci runnerul face `Push-Location` in workdir.
 - MiniCPM e folosit in prezent de testul concurent; GPU-ul e plin. Rularea se face
   DOAR dupa eliberarea slotului (decizia utilizatorului: "Astept, apoi rulez").
 - `ttft_ms` si `time_in_tools_ms` depind de formatul evenimentelor `--format json`;

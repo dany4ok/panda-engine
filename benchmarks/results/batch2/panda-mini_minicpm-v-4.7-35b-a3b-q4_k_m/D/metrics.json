@@ -1,0 +1,36 @@
+﻿{
+    "events":  62,
+    "first_event_ms":  1795317493705,
+    "last_event_ms":  1795317630883,
+    "ttft_ms":  1599,
+    "first_text_ms":  1795317495304,
+    "tool_calls":  19,
+    "tool_names":  {
+                       "read":  5,
+                       "glob":  2,
+                       "write":  4,
+                       "shell":  5,
+                       "edit":  3
+                   },
+    "edit_calls":  7,
+    "test_calls":  5,
+    "repair_attempts_heuristic":  4,
+    "tokens":  {
+                   "input":  10781,
+                   "output":  10383,
+                   "reasoning":  0,
+                   "cache_read":  316867,
+                   "cache_write":  0
+               },
+    "note":  "null means the JSON event stream did not expose that metric; no values were estimated.",
+    "model":  "panda-mini/minicpm-v-4.7-35b-a3b-q4_k_m",
+    "task":  "D",
+    "batch":  "batch2",
+    "wall_ms":  138610,
+    "start_iso":  "2026-11-22T03:18:12.3004152Z",
+    "end_iso":  "2026-11-22T03:20:30.9272609Z",
+    "exit_code":  0,
+    "timed_out":  false,
+    "vram_max_mib":  13637,
+    "vram_avg_mib":  13245.5
+}

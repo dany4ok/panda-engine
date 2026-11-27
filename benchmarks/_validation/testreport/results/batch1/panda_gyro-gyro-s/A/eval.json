@@ -1,0 +1,71 @@
+{
+  "task": "A",
+  "checks": [
+    {
+      "name": "slugify_basic",
+      "passed": true
+    },
+    {
+      "name": "slugify_spaces",
+      "passed": true
+    },
+    {
+      "name": "slugify_unicode",
+      "passed": true
+    },
+    {
+      "name": "slugify_trim",
+      "passed": true
+    },
+    {
+      "name": "slugify_empty",
+      "passed": true
+    },
+    {
+      "name": "slugify_separators",
+      "passed": true
+    },
+    {
+      "name": "slugify_digits",
+      "passed": true
+    },
+    {
+      "name": "slugify_unicode_upper",
+      "passed": true
+    },
+    {
+      "name": "slugify_operators",
+      "passed": true
+    },
+    {
+      "name": "slugify_plain",
+      "passed": true
+    },
+    {
+      "name": "regression_truncate",
+      "passed": true
+    },
+    {
+      "name": "no_unnecessary_new_files",
+      "passed": true,
+      "files": []
+    },
+    {
+      "name": "only_target_file_modified",
+      "passed": true,
+      "changed": [
+        "string_utils.py"
+      ]
+    }
+  ],
+  "passed": 13,
+  "total": 13,
+  "score": 1.0,
+  "bugs_remaining": 0,
+  "bugs_new": 0,
+  "changed_files": [
+    "string_utils.py"
+  ],
+  "new_files": [],
+  "notes": "slugify cases + truncate regression + unnecessary-change audit."
+}

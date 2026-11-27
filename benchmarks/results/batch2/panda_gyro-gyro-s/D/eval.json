@@ -1,0 +1,93 @@
+{
+  "task": "D",
+  "checks": [
+    {
+      "name": "mech_xpNeeded_1",
+      "passed": true
+    },
+    {
+      "name": "mech_xpNeeded_3",
+      "passed": true
+    },
+    {
+      "name": "mech_gainXp_one",
+      "passed": true
+    },
+    {
+      "name": "mech_gainXp_two",
+      "passed": true
+    },
+    {
+      "name": "mech_takeDamage",
+      "passed": true
+    },
+    {
+      "name": "mech_enemy_move",
+      "passed": true
+    },
+    {
+      "name": "mech_spawnWave",
+      "passed": true
+    },
+    {
+      "name": "mech_nearest",
+      "passed": true
+    },
+    {
+      "name": "mech_tryAttack",
+      "passed": true
+    },
+    {
+      "name": "mech_upgrades",
+      "passed": true
+    },
+    {
+      "name": "mech_game_wave",
+      "passed": true
+    },
+    {
+      "name": "mech_game_kill_xp",
+      "passed": true
+    },
+    {
+      "name": "visual_html_loads_scene",
+      "passed": true
+    },
+    {
+      "name": "visual_html_has_hud",
+      "passed": true
+    },
+    {
+      "name": "visual_scene_imports_three",
+      "passed": true
+    },
+    {
+      "name": "visual_scene_uses_game",
+      "passed": true
+    },
+    {
+      "name": "visual_scene_loop",
+      "passed": true
+    },
+    {
+      "name": "visual_scene_renders",
+      "passed": true
+    },
+    {
+      "name": "visual_scene_updates_hud",
+      "passed": true
+    },
+    {
+      "name": "visual_vendor_intact",
+      "passed": true
+    }
+  ],
+  "passed": 20,
+  "total": 20,
+  "score": 1.0,
+  "bugs_remaining": 0,
+  "bugs_new": 0,
+  "changed_files": [],
+  "new_files": [],
+  "notes": "12 hidden mechanics checks + 8 static rendering-wiring checks. Screenshot verification is performed separately and NOT implied by static checks."
+}

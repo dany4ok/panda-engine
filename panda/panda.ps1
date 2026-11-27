@@ -418,19 +418,83 @@ function Get-RemoteInfo($url) {
         if ($line -match '^etag:\s*"([0-9a-fA-F]{64})"') { $sha = $Matches[1].ToLower() }
     }
     if ($curlExit -ne 0 -or $status -ne 200) { $len = [int64]0; $sha = '' }
-    return @{ Length = $len; Sha256 = $sha }
+
+    # A ranged GET supplies a byte prefix whenever no SHA-256 is known. It also
+    # recovers the total size when HEAD gave none. HttpWebRequest follows
+    # redirects and reads at most 1 KiB, so no large temp file is created.
+    $sample = [byte[]]@()
+    if (-not $sha) {
+        try {
+            $request = [System.Net.HttpWebRequest]::Create($url)
+            $request.Timeout = 30000
+            $request.ReadWriteTimeout = 30000
+            $request.AddRange(0, 1023)
+            $response = $request.GetResponse()
+            try {
+                $code = [int]$response.StatusCode
+                if ($code -in @(200, 206)) {
+                    $range = [string]$response.Headers['Content-Range']
+                    if ($range -match 'bytes\s+\d+-\d+/(\d+)') { $len = [int64]$Matches[1] }
+                    elseif ($code -eq 200 -and $response.ContentLength -gt 0) { $len = [int64]$response.ContentLength }
+                    $etag = [string]$response.Headers['ETag']
+                    if ($etag -match '"([0-9a-fA-F]{64})"') { $sha = $Matches[1].ToLowerInvariant() }
+                    $stream = $response.GetResponseStream()
+                    $buffer = New-Object byte[] 1024
+                    $read = $stream.Read($buffer, 0, 1024)
+                    if ($read -gt 0) { $sample = [byte[]]$buffer[0..($read - 1)] }
+                }
+            } finally { $response.Close() }
+        } catch {}
+    }
+    return @{ Length = $len; Sha256 = $sha; Sample = $sample }
+}
+function Test-LocalFileHash([string]$Path, [string]$ExpectedSha256) {
+    if (-not $ExpectedSha256 -or -not (Test-Path -LiteralPath $Path)) { return $false }
+    try {
+        $hash = (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+        return ($hash -eq $ExpectedSha256.ToLowerInvariant())
+    } catch { return $false }
+}
+function Test-FilePrefix([string]$Path, [byte[]]$Sample) {
+    if (-not $Sample -or $Sample.Count -eq 0 -or -not (Test-Path -LiteralPath $Path)) { return $false }
+    try {
+        $stream = [System.IO.File]::OpenRead($Path)
+        try {
+            $buffer = New-Object byte[] $Sample.Count
+            $read = $stream.Read($buffer, 0, $Sample.Count)
+            if ($read -ne $Sample.Count) { return $false }
+            for ($i = 0; $i -lt $Sample.Count; $i++) { if ($buffer[$i] -ne $Sample[$i]) { return $false } }
+            return $true
+        } finally { $stream.Dispose() }
+    } catch { return $false }
 }
 function Invoke-Download($url, $dest) {
     $dir = Split-Path -Parent $dest
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
     $name = Split-Path -Leaf $dest
-    $info = @{ Length = 0; Sha256 = '' }
+    $info = @{ Length = [int64]0; Sha256 = ''; Sample = [byte[]]@() }
     if (-not $DryRun) { $info = Get-RemoteInfo $url }
     $need = $true
     if (Test-Path -LiteralPath $dest) {
         $got = (Get-Item -LiteralPath $dest).Length
-        if ($info.Length -gt 0 -and $got -eq $info.Length) { $need = $false; Write-Host ("  " + $name + ": already complete") }
-        elseif ($info.Length -eq 0) { $need = $false; Write-Host ("  " + $name + ": exists (remote size unavailable)") }
+        $sizeOk = ($info.Length -gt 0 -and $got -eq $info.Length)
+        $contentOk = $false
+        $proof = 'none'
+        if ($info.Sha256) {
+            $contentOk = Test-LocalFileHash $dest $info.Sha256
+            $proof = 'SHA256'
+        } elseif ($info.Sample.Count -gt 0) {
+            $contentOk = Test-FilePrefix $dest $info.Sample
+            $proof = 'remote byte prefix'
+        }
+        if ($sizeOk -and $contentOk) {
+            $need = $false
+            Write-Host ("  " + $name + ": already complete (" + $proof + " verified)")
+        } elseif ($info.Length -gt 0 -and -not $sizeOk) {
+            Write-Host ("  " + $name + ": existing size does not match the remote file; downloading again")
+        } else {
+            Write-Host ("  " + $name + ": local copy could not be verified; downloading again")
+        }
     }
     if ($need) {
         $part = $dest + '.part'
@@ -450,17 +514,34 @@ function Invoke-Download($url, $dest) {
         if ($GuiAction -eq 'Install') { Write-Host 'PANDA_DOWNLOAD_END' }
         if (-not $ok) { throw ("Download failed: " + $url) }
         $got = (Get-Item -LiteralPath $part).Length
+        if ($got -le 0) {
+            Remove-Item -LiteralPath $part -Force
+            throw ("Downloaded file is empty: " + $name)
+        }
         if ($info.Length -gt 0 -and $got -ne $info.Length) {
             Remove-Item -LiteralPath $part -Force
             throw ("Size mismatch for " + $name + ": " + $got + " vs " + $info.Length)
         }
+        # A matching size is necessary but never sufficient on its own.
+        $verified = $false
         if ($info.Sha256 -and $got -le 2199023255552) {
-            $hash = (Get-FileHash -LiteralPath $part -Algorithm SHA256).Hash.ToLower()
-            if ($hash -ne $info.Sha256) {
+            if (-not (Test-LocalFileHash $part $info.Sha256)) {
                 Remove-Item -LiteralPath $part -Force
                 throw ("SHA256 mismatch for " + $name)
             }
+            $verified = $true
             Write-Host ("  SHA256 verified for " + $name)
+        } elseif ($info.Sample.Count -gt 0) {
+            if (-not (Test-FilePrefix $part $info.Sample)) {
+                Remove-Item -LiteralPath $part -Force
+                throw ("Remote byte prefix mismatch for " + $name)
+            }
+            $verified = $true
+            Write-Host ("  Remote byte prefix verified for " + $name)
+        }
+        if (-not $verified) {
+            Remove-Item -LiteralPath $part -Force
+            throw ("Cannot verify " + $name + ": neither SHA256 nor a remote byte prefix is available; the file was not installed")
         }
         Move-Item -LiteralPath $part $dest -Force
     }
@@ -1674,7 +1755,10 @@ function Sync-OpenCodeConfig($m) {
     try { $cfg = Get-Content -LiteralPath $script:OpenCodeCfg -Raw -Encoding UTF8 | ConvertFrom-Json }
     catch { Write-Host '  ERROR: OpenCode config is not valid JSON.'; return $false }
     $api = 'http://127.0.0.1:' + $script:cat.ports.api + '/v1'
-    foreach ($name in @('panda','ninfer','panda-mini','panda','panda')) {
+    # Only providers declared as Panda-managed in the catalog are repointed.
+    # The live OpenCode config also holds unrelated providers (strata, ollama, ...)
+    # that must keep their own endpoints.
+    foreach ($name in @($script:cat.managedProviders)) {
         if ($cfg.providers.PSObject.Properties[$name]) { $cfg.providers.$name.settings.baseURL = $api }
     }
     if ($m -and $m.provider) { $cfg.model = $m.provider }
@@ -1785,8 +1869,8 @@ function Get-GuiStatus {
         context        = [int]$s.context
         gameMode       = [bool]$s.gameMode
         routeModel     = $routeModel
-         routeName      = $(if ($route -and $backendRunning) { [string]$route.name } else { '' })
-         routePort      = $(if ($route -and $backendRunning) { [int]$route.port } else { 0 })
+        routeName      = $(if ($route -and $backendRunning) { [string]$route.name } else { '' })
+        routePort      = $(if ($route -and $backendRunning) { [int]$route.port } else { 0 })
         models         = $models
     }
 }

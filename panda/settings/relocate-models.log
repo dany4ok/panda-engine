@@ -1,0 +1,22 @@
+﻿2026-11-24T13:13:14.7782734+02:00  JUNCTION C:\Users\x1p\Desktop\panda engine\models -> C:\Users\x1p\Desktop\inkling 2 mini\models
+2026-11-24T13:13:14.8206699+02:00  CREATED real folder C:\Users\x1p\Desktop\panda engine\models
+2026-11-24T13:13:14.8333780+02:00  MOVED Inkling-2-Mini-APEX-I-MiniPlus-V2.1-ninfer-v3.ninfer 12.89 GiB
+2026-11-24T13:13:14.8375122+02:00  MOVED Inkling-2-Mini-UD-IQ1_M-ninfer-v3.ninfer 8.18 GiB
+2026-11-24T13:13:14.8395147+02:00  MOVED Inkling-2-Mini-UD-IQ4_XS-ninfer-v3.ninfer 15.46 GiB
+2026-11-24T13:13:14.8432550+02:00  MOVED Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer 9.39 GiB
+2026-11-24T13:13:14.8463516+02:00  MOVED Inkling-2-Mini-UD-Q3_K_XL-ninfer-v3.ninfer 13.5 GiB
+2026-11-24T13:13:14.8505893+02:00  MOVED Qwen3.8-27B-GSQ-RCO-IQ3_S-ninfer-v3.ninfer 13.99 GiB
+2026-11-24T13:13:14.8732555+02:00  JUNCTION C:\Users\x1p\Desktop\inkling 2 mini\models -> C:\Users\x1p\Desktop\panda engine\models
+2026-11-24T13:13:14.8742543+02:00  RELOCATE DONE
+2026-11-24T13:13:14.8939131+02:00  
+Name                                                   GiB
+----                                                   ---
+Inkling-2-Mini-APEX-I-MiniPlus-V2.1-ninfer-v3.ninfer 12.89
+Inkling-2-Mini-UD-IQ1_M-ninfer-v3.ninfer              8.18
+Inkling-2-Mini-UD-IQ4_XS-ninfer-v3.ninfer            15.46
+Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer            9.39
+Inkling-2-Mini-UD-Q3_K_XL-ninfer-v3.ninfer            13.5
+Qwen3.8-27B-GSQ-RCO-IQ3_S-ninfer-v3.ninfer           13.99
+
+
+

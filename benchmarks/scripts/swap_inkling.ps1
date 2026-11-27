@@ -29,7 +29,7 @@ function L($s) { $line = (Get-Date).ToString('o') + '  ' + $s; Write-Host $line;
 
 $sw = [System.Diagnostics.Stopwatch]::StartNew()
 L "SWAP artifact=$Artifact before_VRAM=$(Vram)"
-foreach ($c in @(Get-NetTCPConnection -State Listen -LocalPort 8080 -ErrorAction SilentlyContinue)) {
+foreach ($c in @(Get-NetTCPConnection -State Listen -LocalPort ([int]$cat.ports.infer) -ErrorAction SilentlyContinue)) {
     $p = Get-Process -Id $c.OwningProcess -ErrorAction SilentlyContinue
     if ($p -and $p.ProcessName -match 'ninfer|python') {
         L "STOP PID=$($p.Id) NAME=$($p.ProcessName)"
@@ -44,7 +44,7 @@ $cfg = if (Test-Path -LiteralPath $cfgPath) { Get-Content -LiteralPath $cfgPath 
 $cfg.artifact  = $Artifact
 $cfg.context   = [int]$Context
 $cfg.reasoning = $cat.ninfer.reasoning
-$cfg.port      = [int]$cat.ninfer.port
+$cfg.port      = [int]$cat.ports.infer
 ($cfg | ConvertTo-Json -Depth 5) | Set-Content -LiteralPath $cfgPath -Encoding UTF8
 
 $argLine = '"' + $artPath + '" --model-id inkling-2-mini --max-context ' + [string]$cfg.context +
@@ -64,7 +64,7 @@ for ($i = 0; $i -lt 60; $i++) {
     if ($proc.HasExited) { L "SERVER_EXITED early code=$($proc.ExitCode)"; break }
     Start-Sleep -Seconds 1
     try {
-        $r = Invoke-RestMethod -Uri 'http://127.0.0.1:8080/v1/models' -TimeoutSec 1
+        $r = Invoke-RestMethod -Uri ('http://127.0.0.1:' + [int]$cat.ports.infer + '/v1/models') -TimeoutSec 1
         if ($r.data) { $ready = $true; break }
     } catch {}
 }

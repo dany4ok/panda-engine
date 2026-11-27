@@ -142,6 +142,7 @@ public static class PandaAppIdentity {
         Title="Panda Engine" Width="1240" Height="780" MinWidth="980" MinHeight="640"
         WindowStartupLocation="CenterScreen" Background="#F2F5F9" FontFamily="Segoe UI">
   <Window.Resources>
+    <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
     <Style x:Key="PrimaryButton" TargetType="Button">
       <Setter Property="Height" Value="44"/>
       <Setter Property="Padding" Value="15,8"/>
@@ -531,6 +532,11 @@ public static class PandaAppIdentity {
                       <Button Content="{Binding ActionLabel}" Tag="ModelAction" Style="{StaticResource ModelActionButton}"
                               IsEnabled="{Binding ActionEnabled}" ToolTip="{Binding ActionAccessibleName}"
                               AutomationProperties.Name="{Binding ActionAccessibleName}"/>
+                      <Button Content="Start now" Tag="QuickStart" Style="{StaticResource ModelActionButton}"
+                              Margin="0,6,0,0" Height="30" MinWidth="148" FontSize="11"
+                              Visibility="{Binding QuickStartVisible, Converter={StaticResource BoolToVisibility}}"
+                              IsEnabled="{Binding QuickStartEnabled}" ToolTip="{Binding QuickStartAccessibleName}"
+                              AutomationProperties.Name="{Binding QuickStartAccessibleName}"/>
                     </StackPanel>
                   </Grid>
                 </Border>
@@ -1637,6 +1643,10 @@ function Convert-StatusToRows($Status) {
                 $actionLabel = 'Start model'
                 $actionEnabled = -not [bool]$Status.apiConflict
             }
+            # An installed model can be started directly even when it is not the
+            # next-start selection; starting it also makes it active on success.
+            $quickStartVisible = [bool]($model.installed -and -not $model.active)
+            $quickStartEnabled = [bool]($quickStartVisible -and (-not [bool]$Status.apiConflict) -and (-not [bool]$script:PreviewState))
             [pscustomobject]@{
                 Id            = [string]$model.id
                 Name          = [string]$model.label
@@ -1656,6 +1666,9 @@ function Convert-StatusToRows($Status) {
                 ActionLabel   = [string]$actionLabel
                 ActionEnabled = ([bool]$actionEnabled -and (-not [bool]$script:PreviewState))
                 ActionAccessibleName = [string]($actionLabel + ' for ' + [string]$model.label)
+                QuickStartVisible = $quickStartVisible
+                QuickStartEnabled = $quickStartEnabled
+                QuickStartAccessibleName = [string]('Start now for ' + [string]$model.label)
             }
         }
     )
@@ -1690,6 +1703,26 @@ function Show-ModelDetails($Model) {
     $script:MissingHint.Visibility = if (-not $Model.Installed -and -not $Model.CanInstall) { 'Visible' } else { 'Collapsed' }
 }
 
+function Start-RowModel($Model) {
+    if ($script:PreviewState -or $script:Busy -or -not $Model) { return }
+    if ($script:ApiStatus -and $script:ApiStatus.apiConflict) {
+        Set-ActionMessage 'Another workspace owns the public API port. Resolve that conflict before starting a model here.'
+        return
+    }
+    if ($script:ApiStatus -and $script:ApiStatus.backendRunning -and
+        $script:ApiStatus.routeModel -ne $Model.Id -and [string]$script:ApiStatus.routeModel -ne 'gyro-s') {
+        $switchMessage = 'Starting ' + $Model.Name + ' will stop the currently serving backend and change the Panda Engine API route. Continue?'
+        $answer = [Windows.MessageBox]::Show(
+            $switchMessage,
+            'Confirm backend stop and model switch',
+            [Windows.MessageBoxButton]::YesNo,
+            [Windows.MessageBoxImage]::Warning
+        )
+        if ($answer -ne [Windows.MessageBoxResult]::Yes) { return }
+    }
+    Start-ManagerAction 'Start' ([string]$Model.Id)
+}
+
 function Invoke-ModelAction($Model) {
     if ($script:PreviewState) {
         Set-ActionMessage 'Preview mode is read-only. Close this window to return to the live model library.'
@@ -1709,24 +1742,7 @@ function Invoke-ModelAction($Model) {
         'SetActive' {
             if ($Model.Installed) { Start-ManagerAction 'SetActive' $Model.Id }
         }
-        'Start' {
-            if ($script:ApiStatus -and $script:ApiStatus.apiConflict) {
-                Set-ActionMessage 'Another workspace owns the public API port. Resolve that conflict before starting a model here.'
-                return
-            }
-            if ($script:ApiStatus -and $script:ApiStatus.backendRunning -and
-                $script:ApiStatus.routeModel -ne $Model.Id -and [string]$script:ApiStatus.routeModel -ne 'gyro-s') {
-                $switchMessage = 'Starting ' + $Model.Name + ' will stop the currently serving backend and change the Panda Engine API route. Continue?'
-                $answer = [Windows.MessageBox]::Show(
-                    $switchMessage,
-                    'Confirm backend stop and model switch',
-                    [Windows.MessageBoxButton]::YesNo,
-                    [Windows.MessageBoxImage]::Warning
-                )
-                if ($answer -ne [Windows.MessageBoxResult]::Yes) { return }
-            }
-            Start-ManagerAction 'Start' $Model.Id
-        }
+        'Start' { Start-RowModel $Model }
     }
 }
 
@@ -1789,6 +1805,8 @@ function Set-ApiUnavailable([string]$Message) {
         $model.ActionKind = 'None'
         $model.ActionLabel = 'Status unknown'
         $model.ActionEnabled = $false
+        $model.QuickStartVisible = $false
+        $model.QuickStartEnabled = $false
         $model.StatusSummary = [string]$model.InstallLabel + ' | Status unknown'
     }
     $script:ModelsList.Items.Refresh()
@@ -1849,6 +1867,8 @@ function Update-ApiStatus($Status) {
             $model.ActionLabel = 'Preview only'
             $model.ActionEnabled = $false
             $model.ActionAccessibleName = 'Preview only for ' + $model.Name
+            $model.QuickStartVisible = $false
+            $model.QuickStartEnabled = $false
         }
     }
     Apply-ModelFilter
@@ -2186,9 +2206,10 @@ $script:ModelsList.AddHandler(
     [System.Windows.RoutedEventHandler]{
         param($sender, $eventArgs)
         $button = $eventArgs.OriginalSource
-        if ($button -is [System.Windows.Controls.Button] -and [string]$button.Tag -eq 'ModelAction') {
+        if ($button -is [System.Windows.Controls.Button] -and [string]$button.Tag -in @('ModelAction','QuickStart')) {
             $script:ModelsList.SelectedItem = $button.DataContext
-            Invoke-ModelAction $button.DataContext
+            if ([string]$button.Tag -eq 'QuickStart') { Start-RowModel $button.DataContext }
+            else { Invoke-ModelAction $button.DataContext }
             $eventArgs.Handled = $true
         }
     },

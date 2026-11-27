@@ -1,0 +1,139 @@
+﻿2026-11-24T13:00:05.1452745+02:00  SWAP artifact=Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer before_VRAM=13609, 2387
+2026-11-24T13:00:05.4939013+02:00  STOP PID=6252 NAME=ninfer-serve
+2026-11-24T13:00:10.5590867+02:00  VRAM_after_unload=945, 15051
+2026-11-24T13:13:25.4026960+02:00  SWAP artifact=Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer before_VRAM=983, 15013
+2026-11-24T13:13:30.7326181+02:00  VRAM_after_unload=975, 15021
+2026-11-24T13:13:30.8090638+02:00  SERVER_PID=11900
+2026-11-24T13:13:39.1788537+02:00  SWAP_DONE artifact=Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer load_ms=13778 after_VRAM=14849, 1147
+2026-11-24T13:14:34.9283341+02:00  SWAP artifact=Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer before_VRAM=14879, 1117
+2026-11-24T13:14:35.2575951+02:00  STOP PID=11900 NAME=ninfer-serve
+2026-11-24T13:14:40.3456361+02:00  VRAM_after_unload=975, 15021
+2026-11-24T13:14:40.3896669+02:00  SERVER_PID=3316
+2026-11-24T13:14:47.5587855+02:00  SWAP_DONE artifact=Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer load_ms=12602 after_VRAM=14876, 1120
+2026-11-24T13:48:42.4610528+02:00  SWAP artifact=Inkling-2-Mini-UD-Q3_K_XL-ninfer-v3.ninfer before_VRAM=1198, 14798
+2026-11-24T13:48:47.8342415+02:00  VRAM_after_unload=1186, 14810
+2026-11-24T13:48:47.8958340+02:00  SERVER_PID=3380
+2026-11-24T13:54:19.0698566+02:00  SWAP artifact=Inkling-2-Mini-UD-Q3_K_XL-ninfer-v3.ninfer before_VRAM=1342, 14654
+2026-11-24T13:54:24.4774254+02:00  VRAM_after_unload=1310, 14686
+2026-11-24T13:54:24.5245957+02:00  SERVER_PID=6696
+2026-11-24T13:58:23.1941212+02:00  SWAP artifact=Inkling-2-Mini-UD-Q3_K_XL-ninfer-v3.ninfer before_VRAM=1216, 14780
+2026-11-24T13:58:28.5900846+02:00  VRAM_after_unload=1208, 14788
+2026-11-24T13:58:28.6557204+02:00  SERVER_PID=21040
+2026-11-24T14:00:29.5363129+02:00  ERROR: endpoint not ready. Tail of stderr:
+2026-11-24T14:00:29.5533660+02:00    ninfer-serve: CUDA 13 backend
+2026-11-24T14:00:29.6175049+02:00    2026-11-24 13:58:28.807  INFO  build 2026-11-23.10+5342f9f (nvcc 13.4.92, 75 80 86 89 120a)
+2026-11-24T14:00:29.6190020+02:00    2026-11-24 13:58:28.815  INFO  starting engine
+2026-11-24T14:00:29.6200056+02:00    2026-11-24 13:58:29.009  INFO  engine | device profile nvidia-geforce-rtx-5070-ti-sm120: 115 routed keys (built in: RTX 5070 Ti at 300 W, 2026-10-17; GGUF, NVFP4 W4A8-int and cuBLAS prefill routes at 300 W, 2026-11-19)
+2026-11-24T14:00:29.6215014+02:00    2026-11-24 13:58:29.649  INFO  loading weights | 13.0 GiB
+2026-11-24T14:00:29.6225011+02:00    2026-11-24 13:58:34.229  INFO  weights ready | 13.0 GiB | 4.6s | 2.84 GiB/s
+2026-11-24T14:00:29.6236971+02:00    2026-11-24 13:58:34.388  ERROR startup failed | initializing runtime | 156 ms
+2026-11-24T14:00:29.6252100+02:00    2026-11-24 13:58:34.484  ERROR Inkling 2: the workspace of 579 MiB and 320 MiB for the CUDA graphs need more than the 205 MiB free after the caches; lower --max-concurrency, --max-context or the prompt chunk
+2026-11-24T14:01:27.1727943+02:00  SWAP artifact=Inkling-2-Mini-UD-Q3_K_XL-ninfer-v3.ninfer before_VRAM=1204, 14792
+2026-11-24T14:01:32.5592377+02:00  VRAM_after_unload=1199, 14797
+2026-11-24T14:01:32.6204023+02:00  SERVER_PID=14360
+2026-11-24T14:03:33.7391805+02:00  ERROR: endpoint not ready. Tail of stderr:
+2026-11-24T14:03:33.7677503+02:00    ninfer-serve: CUDA 13 backend
+2026-11-24T14:03:33.7697507+02:00    2026-11-24 14:01:32.761  INFO  build 2026-11-23.10+5342f9f (nvcc 13.4.92, 75 80 86 89 120a)
+2026-11-24T14:03:33.7707502+02:00    2026-11-24 14:01:32.769  INFO  starting engine
+2026-11-24T14:03:33.7727625+02:00    2026-11-24 14:01:32.957  INFO  engine | device profile nvidia-geforce-rtx-5070-ti-sm120: 115 routed keys (built in: RTX 5070 Ti at 300 W, 2026-10-17; GGUF, NVFP4 W4A8-int and cuBLAS prefill routes at 300 W, 2026-11-19)
+2026-11-24T14:03:33.7742616+02:00    2026-11-24 14:01:33.583  INFO  loading weights | 12.6 GiB
+2026-11-24T14:03:33.7752989+02:00    2026-11-24 14:01:37.081  INFO  weights ready | 12.6 GiB | 3.5s | 3.60 GiB/s
+2026-11-24T14:03:33.7767637+02:00    2026-11-24 14:01:38.438  INFO  CUDA graphs ready | 857 ms
+2026-11-24T14:03:33.7777643+02:00    2026-11-24 14:01:38.439  INFO  engine | Inkling 2: 1 sequence(s), prompt chunks of 2048 tokens, mxfp8 KV 556 MiB at most, growing with the sequences beside an elastic expert cache, workspace 1277 MiB
+2026-11-24T14:03:33.7787620+02:00    2026-11-24 14:01:38.439  INFO  engine | Inkling 2: experts in pinned host memory and artifact files, cache 8792 MiB (2319 slots), 2 layer bank(s) 1094 MiB, metadata 0.4 MiB, pinned delivery 136.6 MiB, pinned expert sources 11203 MiB, expert sources in the files 430 MiB (pinned up to what the GPU's shared memory segment can still lock, 15343 MiB, less 4096 MiB for later pins)
+2026-11-24T14:03:33.7797607+02:00    2026-11-24 14:01:38.440  INFO  engine | Inkling 2: missing experts split between copies and 8 pinned threads (by measured speeds); cache seeded from the built-in profile
+2026-11-24T14:03:33.7812605+02:00    2026-11-24 14:01:38.440  INFO  engine | Inkling 2: vision tower on the device (56 MiB of device memory beside the weights, 580 MiB of workspace an image), up to 4096 prompt positions per image
+2026-11-24T14:03:33.7822609+02:00    2026-11-24 14:01:40.064  ERROR startup failed | finalizing engine | 1.6s
+2026-11-24T14:03:33.7837609+02:00    2026-11-24 14:01:41.554  ERROR failed to pin 8192 MiB of host memory (cudaHostRegister failed: cudaErrorMemoryAllocation: out of memory)
+2026-11-24T14:04:04.0902538+02:00  SWAP artifact=Inkling-2-Mini-APEX-I-MiniPlus-V2.1-ninfer-v3.ninfer before_VRAM=1200, 14796
+2026-11-24T14:04:09.4597051+02:00  VRAM_after_unload=1297, 14699
+2026-11-24T14:04:09.5209718+02:00  SERVER_PID=6716
+2026-11-24T14:04:15.5790528+02:00  SERVER_EXITED early code=
+2026-11-24T14:04:15.5805504+02:00  ERROR: endpoint not ready. Tail of stderr:
+2026-11-24T14:04:15.5835494+02:00    ninfer-serve: CUDA 13 backend
+2026-11-24T14:04:15.5850581+02:00    2026-11-24 14:04:09.646  INFO  build 2026-11-23.10+5342f9f (nvcc 13.4.92, 75 80 86 89 120a)
+2026-11-24T14:04:15.5865579+02:00    2026-11-24 14:04:09.652  INFO  starting engine
+2026-11-24T14:04:15.5875574+02:00    2026-11-24 14:04:09.839  INFO  engine | device profile nvidia-geforce-rtx-5070-ti-sm120: 115 routed keys (built in: RTX 5070 Ti at 300 W, 2026-10-17; GGUF, NVFP4 W4A8-int and cuBLAS prefill routes at 300 W, 2026-11-19)
+2026-11-24T14:04:15.5885582+02:00    2026-11-24 14:04:10.501  INFO  loading weights | 12.4 GiB
+2026-11-24T14:04:15.5895587+02:00    2026-11-24 14:04:15.354  INFO  weights ready | 12.4 GiB | 4.9s | 2.55 GiB/s
+2026-11-24T14:04:15.5910579+02:00    2026-11-24 14:04:15.359  ERROR startup failed | initializing runtime | 1.42 ms
+2026-11-24T14:04:15.5920585+02:00    2026-11-24 14:04:15.424  ERROR Inkling 2: the KV caches, histories, checkpoints and drafter state of 1 sequence(s) of 131072 tokens need 2530 MiB beside 512 MiB for the workspace and CUDA graphs, and 1249 MiB are free after the weights; lower --max-concurrency or --max-context
+2026-11-24T14:04:15.9660285+02:00  SWAP artifact=Inkling-2-Mini-APEX-I-MiniPlus-V2.1-ninfer-v3.ninfer before_VRAM=1301, 14695
+2026-11-24T14:04:21.3331793+02:00  VRAM_after_unload=1304, 14692
+2026-11-24T14:04:21.3627160+02:00  SERVER_PID=17744
+2026-11-24T14:04:29.4533844+02:00  SERVER_EXITED early code=
+2026-11-24T14:04:29.4553853+02:00  ERROR: endpoint not ready. Tail of stderr:
+2026-11-24T14:04:29.4693878+02:00    ninfer-serve: CUDA 13 backend
+2026-11-24T14:04:29.4713878+02:00    2026-11-24 14:04:21.465  INFO  build 2026-11-23.10+5342f9f (nvcc 13.4.92, 75 80 86 89 120a)
+2026-11-24T14:04:29.4733877+02:00    2026-11-24 14:04:21.471  INFO  starting engine
+2026-11-24T14:04:29.4818959+02:00    2026-11-24 14:04:21.637  INFO  engine | device profile nvidia-geforce-rtx-5070-ti-sm120: 115 routed keys (built in: RTX 5070 Ti at 300 W, 2026-10-17; GGUF, NVFP4 W4A8-int and cuBLAS prefill routes at 300 W, 2026-11-19)
+2026-11-24T14:04:29.4863996+02:00    2026-11-24 14:04:22.299  INFO  loading weights | 12.4 GiB
+2026-11-24T14:04:29.4878998+02:00    2026-11-24 14:04:27.356  INFO  weights ready | 12.4 GiB | 5.1s | 2.45 GiB/s
+2026-11-24T14:04:29.4894004+02:00    2026-11-24 14:04:27.360  ERROR startup failed | initializing runtime | 150 us
+2026-11-24T14:04:29.4913996+02:00    2026-11-24 14:04:27.646  ERROR Inkling 2: the KV caches, histories, checkpoints and drafter state of 1 sequence(s) of 65536 tokens need 1474 MiB beside 512 MiB for the workspace and CUDA graphs, and 1245 MiB are free after the weights; lower --max-concurrency or --max-context
+2026-11-24T14:04:30.0862178+02:00  SWAP artifact=Inkling-2-Mini-UD-Q3_K_XL-ninfer-v3.ninfer before_VRAM=1226, 14770
+2026-11-24T14:04:35.7581708+02:00  VRAM_after_unload=1226, 14770
+2026-11-24T14:04:35.7886815+02:00  SERVER_PID=19360
+2026-11-24T14:04:41.8556596+02:00  SERVER_EXITED early code=
+2026-11-24T14:04:41.8576673+02:00  ERROR: endpoint not ready. Tail of stderr:
+2026-11-24T14:04:41.8616728+02:00    ninfer-serve: CUDA 13 backend
+2026-11-24T14:04:41.8626668+02:00    2026-11-24 14:04:35.912  INFO  build 2026-11-23.10+5342f9f (nvcc 13.4.92, 75 80 86 89 120a)
+2026-11-24T14:04:41.8641675+02:00    2026-11-24 14:04:35.918  INFO  starting engine
+2026-11-24T14:04:41.8656709+02:00    2026-11-24 14:04:36.094  INFO  engine | device profile nvidia-geforce-rtx-5070-ti-sm120: 115 routed keys (built in: RTX 5070 Ti at 300 W, 2026-10-17; GGUF, NVFP4 W4A8-int and cuBLAS prefill routes at 300 W, 2026-11-19)
+2026-11-24T14:04:41.8666757+02:00    2026-11-24 14:04:36.806  INFO  loading weights | 13.0 GiB
+2026-11-24T14:04:41.8681757+02:00    2026-11-24 14:04:41.576  INFO  weights ready | 13.0 GiB | 4.8s | 2.73 GiB/s
+2026-11-24T14:04:41.8696755+02:00    2026-11-24 14:04:41.581  ERROR startup failed | initializing runtime | 176 us
+2026-11-24T14:04:41.8706751+02:00    2026-11-24 14:04:41.656  ERROR Inkling 2: the KV caches, histories, checkpoints and drafter state of 1 sequence(s) of 65536 tokens need 1474 MiB beside 512 MiB for the workspace and CUDA graphs, and 1317 MiB are free after the weights; lower --max-concurrency or --max-context
+2026-11-24T14:04:42.2470357+02:00  SWAP artifact=Inkling-2-Mini-UD-IQ4_XS-ninfer-v3.ninfer before_VRAM=1226, 14770
+2026-11-24T14:04:47.6196813+02:00  VRAM_after_unload=1226, 14769
+2026-11-24T14:04:47.6712686+02:00  SERVER_PID=304
+2026-11-24T14:04:57.7870397+02:00  SERVER_EXITED early code=
+2026-11-24T14:04:57.7885398+02:00  ERROR: endpoint not ready. Tail of stderr:
+2026-11-24T14:04:57.7925394+02:00    ninfer-serve: CUDA 13 backend
+2026-11-24T14:04:57.7935393+02:00    2026-11-24 14:04:47.785  INFO  build 2026-11-23.10+5342f9f (nvcc 13.4.92, 75 80 86 89 120a)
+2026-11-24T14:04:57.7950395+02:00    2026-11-24 14:04:47.789  INFO  starting engine
+2026-11-24T14:04:57.7960396+02:00    2026-11-24 14:04:47.966  INFO  engine | device profile nvidia-geforce-rtx-5070-ti-sm120: 115 routed keys (built in: RTX 5070 Ti at 300 W, 2026-10-17; GGUF, NVFP4 W4A8-int and cuBLAS prefill routes at 300 W, 2026-11-19)
+2026-11-24T14:04:57.7975393+02:00    2026-11-24 14:04:48.724  INFO  loading weights | 15.0 GiB
+2026-11-24T14:04:57.7990441+02:00    2026-11-24 14:04:56.108  INFO  weights ready | 15.0 GiB | 7.4s | 2.03 GiB/s
+2026-11-24T14:04:57.8000477+02:00    2026-11-24 14:04:56.112  ERROR startup failed | initializing runtime | 150 us
+2026-11-24T14:04:57.8010477+02:00    2026-11-24 14:04:56.188  ERROR Inkling 2: the KV caches, histories, checkpoints and drafter state of 1 sequence(s) of 65536 tokens need 1474 MiB beside 512 MiB for the workspace and CUDA graphs, and 0 MiB are free after the weights; lower --max-concurrency or --max-context
+2026-11-24T14:05:27.5221530+02:00  SWAP artifact=Inkling-2-Mini-APEX-I-MiniPlus-V2.1-ninfer-v3.ninfer before_VRAM=668, 15328
+2026-11-24T14:05:32.9076619+02:00  VRAM_after_unload=659, 15337
+2026-11-24T14:05:32.9705248+02:00  SERVER_PID=17824
+2026-11-24T14:07:34.1650609+02:00  ERROR: endpoint not ready. Tail of stderr:
+2026-11-24T14:07:34.1720603+02:00    ninfer-serve: CUDA 13 backend
+2026-11-24T14:07:34.1735612+02:00    2026-11-24 14:05:33.095  INFO  build 2026-11-23.10+5342f9f (nvcc 13.4.92, 75 80 86 89 120a)
+2026-11-24T14:07:34.1750614+02:00    2026-11-24 14:05:33.101  INFO  starting engine
+2026-11-24T14:07:34.1760652+02:00    2026-11-24 14:05:33.293  INFO  engine | device profile nvidia-geforce-rtx-5070-ti-sm120: 115 routed keys (built in: RTX 5070 Ti at 300 W, 2026-10-17; GGUF, NVFP4 W4A8-int and cuBLAS prefill routes at 300 W, 2026-11-19)
+2026-11-24T14:07:34.1770692+02:00    2026-11-24 14:05:34.047  INFO  loading weights | 5.26 GiB
+2026-11-24T14:07:34.1785694+02:00    2026-11-24 14:05:35.671  INFO  weights ready | 5.26 GiB | 1.6s | 3.24 GiB/s
+2026-11-24T14:07:34.1795692+02:00    2026-11-24 14:05:38.852  INFO  CUDA graphs ready | 2.6s
+2026-11-24T14:07:34.1805694+02:00    2026-11-24 14:05:38.853  INFO  engine | Inkling 2: 1 sequence(s), prompt chunks of 2048 tokens, mxfp8 KV 1480 MiB at most, growing with the sequences beside an elastic expert cache, workspace 1270 MiB
+2026-11-24T14:07:34.1820703+02:00    2026-11-24 14:05:38.853  INFO  engine | Inkling 2: experts in pinned host memory and artifact files, cache 9058 MiB (2488 slots), 2 layer bank(s) 1002 MiB, metadata 0.4 MiB, pinned delivery 136.6 MiB, pinned expert sources 3868 MiB, expert sources in the files 7310 MiB (pinned up to --expert-host-mib)
+2026-11-24T14:07:34.1830691+02:00    2026-11-24 14:05:38.854  INFO  engine | Inkling 2: missing experts split between copies and 8 pinned threads (by measured speeds); cache seeded from the built-in profile
+2026-11-24T14:07:34.1840697+02:00    2026-11-24 14:05:38.854  INFO  engine | Inkling 2: vision tower on the device (56 MiB of device memory beside the weights, 580 MiB of workspace an image), up to 4096 prompt positions per image
+2026-11-24T14:07:34.1855699+02:00    2026-11-24 14:05:39.506  INFO  engine ready | Inkling-2-Mini-APEX-I-MiniPlus-V2.1 | total 6.4s | weights 1.48 GiB | CUDA sync auto
+2026-11-24T14:07:34.1865733+02:00    2026-11-24 14:05:39.506  INFO  capacity | KV 65,536 tokens, mxfp8, explicit | pages 0/0 | runtime 12.5 GiB | free 481.6 MiB
+2026-11-24T14:07:34.1875733+02:00    2026-11-24 14:05:39.507  INFO  context cache | host images 8.00 GiB | disk tier off | prefix cache file off | slots 1
+2026-11-24T14:07:34.1885733+02:00    2026-11-24 14:05:39.507  INFO  media | 16 preprocess workers | cache 1.00 GiB | live 2.00 GiB
+2026-11-24T14:07:34.1895728+02:00    2026-11-24 14:05:39.783  INFO  warmup complete | 276 ms
+2026-11-24T14:07:34.1905733+02:00    2026-11-24 14:05:39.784  INFO  listening on http://127.0.0.1:8181 | model inkling-2-mini | auth disabled
+2026-11-24T14:07:34.1920737+02:00    2026-11-24 14:05:39.785  INFO  api base http://127.0.0.1:8181/v1
+2026-11-24T14:10:16.2967270+02:00  SWAP artifact=Inkling-2-Mini-UD-IQ1_M-ninfer-v3.ninfer before_VRAM=994, 15002
+2026-11-24T14:10:21.9052079+02:00  VRAM_after_unload=937, 15059
+2026-11-24T14:10:21.9673456+02:00  SERVER_PID=19464
+2026-11-24T14:10:28.1365123+02:00  SWAP_DONE artifact=Inkling-2-Mini-UD-IQ1_M-ninfer-v3.ninfer load_ms=11840 after_VRAM=13533, 2463
+2026-11-24T14:15:24.9634762+02:00  SWAP artifact=Inkling-2-Mini-UD-IQ1_M-ninfer-v3.ninfer before_VRAM=824, 15172
+2026-11-24T14:15:30.3469058+02:00  VRAM_after_unload=819, 15177
+2026-11-24T14:15:30.3964372+02:00  SERVER_PID=7916
+2026-11-24T14:15:35.5187585+02:00  SWAP_DONE artifact=Inkling-2-Mini-UD-IQ1_M-ninfer-v3.ninfer load_ms=10555 after_VRAM=13483, 2513
+2026-11-24T14:35:01.0528086+02:00  SWAP artifact=Inkling-2-Mini-UD-IQ1_M-ninfer-v3.ninfer before_VRAM=939, 15057
+2026-11-24T14:35:01.1879412+02:00  STOP PID=20208 NAME=python
+2026-11-24T14:35:06.2343073+02:00  VRAM_after_unload=944, 15052
+2026-11-24T14:35:06.2669026+02:00  SERVER_PID=17240
+2026-11-24T14:35:11.3414613+02:00  SWAP_DONE artifact=Inkling-2-Mini-UD-IQ1_M-ninfer-v3.ninfer load_ms=10297 after_VRAM=13588, 2408
+2026-11-24T14:36:03.2872576+02:00  SWAP artifact=Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer before_VRAM=13653, 2343
+2026-11-24T14:36:03.4494566+02:00  STOP PID=17240 NAME=ninfer-serve
+2026-11-24T14:36:08.5060577+02:00  VRAM_after_unload=1026, 14970
+2026-11-24T14:36:08.5456973+02:00  SERVER_PID=7400
+2026-11-24T14:36:15.6837396+02:00  SWAP_DONE artifact=Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer load_ms=12381 after_VRAM=14928, 1067

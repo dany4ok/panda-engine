@@ -25,6 +25,10 @@ internal static class PandaLauncher
                 else
                     extras += " \"" + arg.Replace("\"", "\\\"") + "\"";
             }
+            // gui.ps1 has no model/runtime switches. Any extra flag belongs to the
+            // console manager, so route there instead of silently discarding it.
+            if (!string.IsNullOrWhiteSpace(extras))
+                console = true;
 
             ProcessStartInfo psi = new ProcessStartInfo();
             psi.WorkingDirectory = root;

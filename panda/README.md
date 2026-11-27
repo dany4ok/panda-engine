@@ -53,8 +53,11 @@ Double-click `panda.exe` in the repository root to open the Model Library and st
 Panda Engine API. Use `panda.exe --console` to open the legacy text menu.
 
 - **First run:** browse the catalog and use **Install** on a model you want. Downloads use
-  `.part` files, resume with `curl -C -`, and are checked against `Content-Length` and,
-  when available, SHA-256. Installing does not automatically start a model.
+  `.part` files and resume with `curl -C -`. A file is accepted only when its size matches
+  the remote (when the server publishes it) **and** it also passes SHA-256 verification
+  (when available) or a byte-prefix comparison against a ranged GET. When neither proof
+  is available the download fails instead of installing an unverified file. Installing
+  does not automatically start a model.
 - **Model Library:** search or filter the four catalog entries, inspect model/provider
   details, set a model active for the next start, or start an installed model. Status
   distinguishes installed, selected-for-next-start and a backend confirmed healthy by
@@ -65,8 +68,9 @@ Panda Engine API. Use `panda.exe --console` to open the legacy text menu.
   `X` stops API + backends, `Q` exits the menu.
 - `O` launches **OpenCode** against the Panda Engine API. It backs up
   `~/.config/opencode/opencode.json`, sets `model` to the active model's OpenCode ID,
-  points the five Panda Engine-managed providers (`panda`, `ninfer`, `panda-mini`,
-  `panda`, `panda`) at `http://127.0.0.1:8081/v1` and leaves the bundled Ollama
+  points the Panda Engine-managed providers declared in `panda/catalog.json`
+  (`ninfer`, `panda-mini` and `panda`) at `http://127.0.0.1:8081/v1`; every other
+  provider (Ollama, Strata, PolyStrata, ...) keeps its own endpoint. It leaves the bundled Ollama
   entry on `http://127.0.0.1:11434`, and starts OpenCode in a
   new terminal (CLI from PATH, or the desktop CLI). Pressing `Q` restores the original
   config byte-for-byte; the backup marker lives in `panda\state\opencode-backup.json`.
@@ -77,6 +81,8 @@ Panda Engine API. Use `panda.exe --console` to open the legacy text menu.
   `panda/gyro-gyro-s` — appear in the CLI's model picker.
 - `-AutoStart` skips the menu and starts the active model; `-ResetState` replays
   first-run setup; `-DryRun` prints actions without downloading or starting anything.
+  These are console-mode switches: passing any of them to `panda.exe` routes the
+  launcher to `panda.exe --console` so the flag is not silently discarded.
 
 ### Game mode (`G`)
 

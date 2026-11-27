@@ -1,0 +1,91 @@
+{
+  "task": "F",
+  "checks": [
+    {
+      "name": "suite_green",
+      "passed": true,
+      "tests": 6,
+      "failures": 0,
+      "tail": "test_help (tests.test_cli.CliTests.test_help) ... ok\ntest_sum (tests.test_cli.CliTests.test_sum) ... ok\ntest_summarize (tests.test_report.ReportTests.test_summarize) ... ok\ntest_mean (tests.test_stats.StatsTests.test_mean) ... ok\ntest_median (tests.test_stats.StatsTests.test_median) ... ok\ntest_percentile (tests.test_stats.StatsTests.test_percentile) ... ok\n\n----------------------------------------------------------------------\nRan 6 tests in 0.001s\n\nOK"
+    },
+    {
+      "name": "tests_untouched",
+      "passed": true,
+      "changed": []
+    },
+    {
+      "name": "extra_mean_empty_raises",
+      "passed": true
+    },
+    {
+      "name": "extra_percentile_0",
+      "passed": true
+    },
+    {
+      "name": "extra_percentile_100",
+      "passed": true
+    },
+    {
+      "name": "extra_summarize_empty",
+      "passed": true
+    },
+    {
+      "name": "extra_cli_single",
+      "passed": true
+    },
+    {
+      "name": "extra_cli_negative",
+      "passed": true
+    },
+    {
+      "name": "extra_cli_help_usage",
+      "passed": true
+    },
+    {
+      "name": "fixes_md_mean",
+      "passed": false
+    },
+    {
+      "name": "fixes_md_median",
+      "passed": false
+    },
+    {
+      "name": "fixes_md_percentile",
+      "passed": false
+    },
+    {
+      "name": "fixes_md_report",
+      "passed": false
+    },
+    {
+      "name": "fixes_md_cli",
+      "passed": false
+    },
+    {
+      "name": "fixes_md_help",
+      "passed": false
+    },
+    {
+      "name": "fixes_md_nonempty",
+      "passed": false
+    },
+    {
+      "name": "minimal_diff",
+      "passed": true,
+      "unexpected": []
+    }
+  ],
+  "passed": 10,
+  "total": 17,
+  "score": 0.5882,
+  "bugs_remaining": 0,
+  "bugs_new": 0,
+  "changed_files": [
+    "BUGS.md",
+    "cli.py",
+    "report.py",
+    "stats.py"
+  ],
+  "new_files": [],
+  "notes": "6 failing seed tests + 7 hidden regressions + test-hash guard + FIXES.md root causes + minimal diff."
+}

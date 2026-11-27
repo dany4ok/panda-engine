@@ -1,0 +1,91 @@
+﻿2026-11-24T12:53:45.1383538+02:00  BENCH START pairs=IQ1M=Inkling-2-Mini-UD-IQ1_M-ninfer-v3.ninfer,Q2KXL=Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer
+2026-11-24T12:53:45.2204493+02:00  === MODEL IQ1M (Inkling-2-Mini-UD-IQ1_M-ninfer-v3.ninfer) batch=qb_iq1m ===
+2026-11-24T12:53:45.7627294+02:00    PROBE IQ1M/A start
+2026-11-24T12:55:13.6535947+02:00    probe: qb_iq1m/ninfer_inkling-2-mini/A wall_ms=84992 exit= tool_calls=56
+2026-11-24T12:55:13.6725988+02:00    PROBE IQ1M/B start
+2026-11-24T12:55:58.1229718+02:00    probe: qb_iq1m/ninfer_inkling-2-mini/B wall_ms=43083 exit= tool_calls=18
+2026-11-24T12:55:58.1359758+02:00    PROBE IQ1M/C start
+2026-11-24T12:56:29.8295626+02:00    probe: qb_iq1m/ninfer_inkling-2-mini/C wall_ms=30540 exit= tool_calls=8
+2026-11-24T12:56:29.8420638+02:00    PROBE IQ1M/D start
+2026-11-24T12:57:49.1195461+02:00    probe: qb_iq1m/ninfer_inkling-2-mini/D wall_ms=76708 exit= tool_calls=14
+2026-11-24T12:57:49.1325602+02:00    PROBE IQ1M/E start
+2026-11-24T12:58:43.4263624+02:00    probe: qb_iq1m/ninfer_inkling-2-mini/E wall_ms=51974 exit= tool_calls=23
+2026-11-24T12:58:43.4441764+02:00    PROBE IQ1M/F start
+2026-11-24T13:00:04.7835572+02:00    probe: qb_iq1m/ninfer_inkling-2-mini/F wall_ms=78938 exit= tool_calls=44
+2026-11-24T13:00:04.7972112+02:00  === MODEL IQ1M DONE ===
+2026-11-24T13:00:04.8074626+02:00  === MODEL Q2KXL (Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer) batch=qb_q2kxl ===
+2026-11-24T13:00:05.1611221+02:00    swap: 2026-11-24T13:00:05.1452745+02:00  SWAP artifact=Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer before_VRAM=13609, 2387
+2026-11-24T13:00:05.4959008+02:00    swap: 2026-11-24T13:00:05.4939013+02:00  STOP PID=6252 NAME=ninfer-serve
+2026-11-24T13:00:10.5600876+02:00    swap: 2026-11-24T13:00:10.5590867+02:00  VRAM_after_unload=945, 15051
+2026-11-24T13:00:10.6878964+02:00    PROBE Q2KXL/A start
+2026-11-24T13:01:41.6907170+02:00    probe: qb_q2kxl/ninfer_inkling-2-mini/A wall_ms=88844 exit= tool_calls=0
+2026-11-24T13:01:41.7273340+02:00    PROBE Q2KXL/B start
+2026-11-24T13:03:10.7365015+02:00    probe: qb_q2kxl/ninfer_inkling-2-mini/B wall_ms=87763 exit= tool_calls=0
+2026-11-24T13:03:10.7493098+02:00    PROBE Q2KXL/C start
+2026-11-24T13:04:39.8835657+02:00    probe: qb_q2kxl/ninfer_inkling-2-mini/C wall_ms=87095 exit= tool_calls=0
+2026-11-24T13:04:39.8962347+02:00    PROBE Q2KXL/D start
+2026-11-24T13:06:07.6911029+02:00    probe: qb_q2kxl/ninfer_inkling-2-mini/D wall_ms=86511 exit= tool_calls=0
+2026-11-24T13:06:07.7051056+02:00    PROBE Q2KXL/E start
+2026-11-24T13:07:37.4660712+02:00    probe: qb_q2kxl/ninfer_inkling-2-mini/E wall_ms=87698 exit= tool_calls=0
+2026-11-24T13:07:37.4878908+02:00    PROBE Q2KXL/F start
+2026-11-24T13:09:09.7726571+02:00    probe: qb_q2kxl/ninfer_inkling-2-mini/F wall_ms=90024 exit= tool_calls=0
+2026-11-24T13:09:09.7846594+02:00  === MODEL Q2KXL DONE ===
+2026-11-24T13:09:09.7856607+02:00  BENCH ALL DONE
+2026-11-24T13:14:34.6359904+02:00  BENCH START pairs=Q2KXL=Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer,Q3KXL=Inkling-2-Mini-UD-Q3_K_XL-ninfer-v3.ninfer,IQ4XS=Inkling-2-Mini-UD-IQ4_XS-ninfer-v3.ninfer,APEX=Inkling-2-Mini-APEX-I-MiniPlus-V2.1-ninfer-v3.ninfer
+2026-11-24T13:14:34.6535548+02:00  === MODEL Q2KXL (Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer) batch=qb_q2kxl ===
+2026-11-24T13:14:34.9343949+02:00    swap: 2026-11-24T13:14:34.9283341+02:00  SWAP artifact=Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer before_VRAM=14879, 1117
+2026-11-24T13:14:35.2585947+02:00    swap: 2026-11-24T13:14:35.2575951+02:00  STOP PID=11900 NAME=ninfer-serve
+2026-11-24T13:14:40.3476368+02:00    swap: 2026-11-24T13:14:40.3456361+02:00  VRAM_after_unload=975, 15021
+2026-11-24T13:14:40.3946708+02:00    swap: 2026-11-24T13:14:40.3896669+02:00  SERVER_PID=3316
+2026-11-24T13:14:47.5599364+02:00    swap: 2026-11-24T13:14:47.5587855+02:00  SWAP_DONE artifact=Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer load_ms=12602 after_VRAM=14876, 1120
+2026-11-24T13:14:47.6091734+02:00    swap: {"artifact":"Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer","load_ms":12602,"vram":"14876, 1120","ts":"2026-11-24T11:14:47.6056310Z"}
+2026-11-24T13:39:58.2252234+02:00    PROBE Q2KXL/A start
+2026-11-24T13:41:18.8327181+02:00    probe: qb_q2kxl/ninfer_inkling-2-mini/A wall_ms=79983 exit= tool_calls=0
+2026-11-24T13:41:18.8587737+02:00    PROBE Q2KXL/B start
+2026-11-24T13:42:49.6895764+02:00    probe: qb_q2kxl/ninfer_inkling-2-mini/B wall_ms=90204 exit= tool_calls=0
+2026-11-24T13:42:49.7165848+02:00    PROBE Q2KXL/C start
+2026-11-24T13:44:12.5679197+02:00    probe: qb_q2kxl/ninfer_inkling-2-mini/C wall_ms=82321 exit= tool_calls=0
+2026-11-24T13:44:12.5829236+02:00    PROBE Q2KXL/D start
+2026-11-24T13:45:41.4681429+02:00    probe: qb_q2kxl/ninfer_inkling-2-mini/D wall_ms=88265 exit= tool_calls=0
+2026-11-24T13:45:41.4816480+02:00    PROBE Q2KXL/E start
+2026-11-24T13:47:13.4512459+02:00    probe: qb_q2kxl/ninfer_inkling-2-mini/E wall_ms=91338 exit= tool_calls=0
+2026-11-24T13:47:13.4637572+02:00    PROBE Q2KXL/F start
+2026-11-24T13:48:42.1561899+02:00    probe: qb_q2kxl/ninfer_inkling-2-mini/F wall_ms=88016 exit= tool_calls=0
+2026-11-24T13:48:42.1727455+02:00  === MODEL Q2KXL DONE ===
+2026-11-24T13:48:42.1747490+02:00  === MODEL Q3KXL (Inkling-2-Mini-UD-Q3_K_XL-ninfer-v3.ninfer) batch=qb_q3kxl ===
+2026-11-24T13:48:42.4690502+02:00    swap: 2026-11-24T13:48:42.4610528+02:00  SWAP artifact=Inkling-2-Mini-UD-Q3_K_XL-ninfer-v3.ninfer before_VRAM=1198, 14798
+2026-11-24T13:48:47.8362573+02:00    swap: 2026-11-24T13:48:47.8342415+02:00  VRAM_after_unload=1186, 14810
+2026-11-24T13:48:47.9043445+02:00    swap: 2026-11-24T13:48:47.8958340+02:00  SERVER_PID=3380
+2026-11-24T14:10:15.9562837+02:00  BENCH START pairs=IQ1M=Inkling-2-Mini-UD-IQ1_M-ninfer-v3.ninfer,Q2KXL=Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer
+2026-11-24T14:10:15.9955035+02:00  === MODEL IQ1M (Inkling-2-Mini-UD-IQ1_M-ninfer-v3.ninfer) batch=qb128_iq1m ===
+2026-11-24T14:10:16.3122303+02:00    swap: 2026-11-24T14:10:16.2967270+02:00  SWAP artifact=Inkling-2-Mini-UD-IQ1_M-ninfer-v3.ninfer before_VRAM=994, 15002
+2026-11-24T14:10:21.9077174+02:00    swap: 2026-11-24T14:10:21.9052079+02:00  VRAM_after_unload=937, 15059
+2026-11-24T14:10:21.9688448+02:00    swap: 2026-11-24T14:10:21.9673456+02:00  SERVER_PID=19464
+2026-11-24T14:10:28.1375125+02:00    swap: 2026-11-24T14:10:28.1365123+02:00  SWAP_DONE artifact=Inkling-2-Mini-UD-IQ1_M-ninfer-v3.ninfer load_ms=11840 after_VRAM=13533, 2463
+2026-11-24T14:10:28.1870366+02:00    swap: {"artifact":"Inkling-2-Mini-UD-IQ1_M-ninfer-v3.ninfer","load_ms":11840,"vram":"13533, 2463","ts":"2026-11-24T12:10:28.1830349Z"}
+2026-11-24T14:15:24.8283228+02:00  BENCH START pairs=IQ1M=Inkling-2-Mini-UD-IQ1_M-ninfer-v3.ninfer,Q2KXL=Inkling-2-Mini-UD-Q2_K_XL-ninfer-v3.ninfer context=131072 residency=device hostmib=0
+2026-11-24T14:15:24.8453810+02:00  === MODEL IQ1M ctx=131072 batch=qb128_iq1m ===
+2026-11-24T14:15:35.5738772+02:00    PROBE IQ1M/A start
+2026-11-24T14:17:20.9215953+02:00    probe: qb128_iq1m/ninfer_inkling-2-mini/A wall_ms=104432 exit= tool_calls=84
+2026-11-24T14:17:20.9256005+02:00    PROBE IQ1M/B start
+2026-11-24T14:17:58.3455940+02:00    probe: qb128_iq1m/ninfer_inkling-2-mini/B wall_ms=36846 exit= tool_calls=10
+2026-11-24T14:17:58.3480941+02:00    PROBE IQ1M/C start
+2026-11-24T14:18:25.3912336+02:00    probe: qb128_iq1m/ninfer_inkling-2-mini/C wall_ms=25008 exit= tool_calls=7
+2026-11-24T14:18:25.3937426+02:00    PROBE IQ1M/D start
+2026-11-24T14:20:00.4348925+02:00    probe: qb128_iq1m/ninfer_inkling-2-mini/D wall_ms=93027 exit= tool_calls=30
+2026-11-24T14:20:00.4368926+02:00    PROBE IQ1M/E start
+2026-11-24T14:35:00.9932761+02:00    probe: qb128_iq1m/ninfer_inkling-2-mini/E wall_ms=900015 exit=-1 tool_calls=15
+2026-11-24T14:35:00.9972800+02:00    server lost before IQ1M/F - re-swapping
+2026-11-24T14:35:11.3975743+02:00    PROBE IQ1M/F start
+2026-11-24T14:36:03.2387404+02:00    probe: qb128_iq1m/ninfer_inkling-2-mini/F wall_ms=50049 exit= tool_calls=23
+2026-11-24T14:36:03.2402391+02:00  === MODEL IQ1M DONE ===
+2026-11-24T14:36:03.2412387+02:00  === MODEL Q2KXL ctx=131072 batch=qb128_q2kxl ===
+2026-11-24T14:36:15.7307901+02:00    PROBE Q2KXL/A start
+2026-11-24T14:38:12.9708691+02:00    probe: qb128_q2kxl/ninfer_inkling-2-mini/A wall_ms=115231 exit= tool_calls=57
+2026-11-24T14:38:12.9723698+02:00    PROBE Q2KXL/B start
+2026-11-24T14:39:25.3131926+02:00    probe: qb128_q2kxl/ninfer_inkling-2-mini/B wall_ms=70238 exit= tool_calls=29
+2026-11-24T14:39:25.3167015+02:00    PROBE Q2KXL/C start
+2026-11-24T14:40:02.6471068+02:00    probe: qb128_q2kxl/ninfer_inkling-2-mini/C wall_ms=36494 exit= tool_calls=12
+2026-11-24T14:40:02.6491069+02:00    PROBE Q2KXL/D start
+2026-11-24T14:42:21.3204826+02:00    probe: qb128_q2kxl/ninfer_inkling-2-mini/D wall_ms=138146 exit= tool_calls=32
+2026-11-24T14:42:21.3229849+02:00    PROBE Q2KXL/E start

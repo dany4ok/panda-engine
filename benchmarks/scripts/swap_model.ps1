@@ -1,3 +1,8 @@
+# LEGACY harness script — kept only for reproducing historical runs.
+# It targets the retired external Strata loader (port 47831) and the old
+# "C:\Users\x1p\Desktop\Panda" paths, none of which exist in the current engine.
+# Current workflow: start the model with panda.exe (GUI Model Library or
+# "panda.exe --console" -> S), then run benchmarks/scripts/run_probe.ps1.
 param(
   [Parameter(Mandatory=$true)][ValidateSet('gyro','mini')][string]$Target,
   [switch]$Force,

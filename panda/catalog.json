@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "managedProviders": ["ninfer", "panda-mini", "panda"],
   "roots": {
     "knownInkling": "C:\\Users\\x1p\\Desktop\\inkling 2 mini",
     "knownMini": "C:\\Users\\x1p\\Desktop\\panda engine\\runtime\\panda",
@@ -17,8 +18,7 @@
     "assetMatch": "ninfer-windows-x64-cuda13.4-*120a*.7z.001",
     "exe": "ninfer-serve.exe",
     "context": 131072,
-    "reasoning": "low",
-    "port": 8080
+    "reasoning": "low"
   },
   "game": {
     "guard": "serve\\vram-guard.ps1",
@@ -47,7 +47,7 @@
       "id": "minicpm-q4km",
       "kind": "mini",
       "label": "MiniCPM-V 4.7 35B (Q4_K_M)",
-      "provider": "panda/minicpm-v-4.7-35b-a3b-q4_k_m",
+      "provider": "panda-mini/minicpm-v-4.7-35b-a3b-q4_k_m",
       "files": [
         {
           "name": "MiniCPM-V-4_7-35B-A3B-Q4_K_M.gguf",

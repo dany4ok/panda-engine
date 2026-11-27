@@ -1,3 +1,4 @@
+import json
 import re
 import unittest
 import xml.etree.ElementTree as ET
@@ -172,6 +173,25 @@ class PandaGuiContractTests(unittest.TestCase):
         self.assertIn("$m.kind -eq 'mini' -and $s.gameMode -and -not (Test-GameGuard)", start_block)
         self.assertIn("MiniCPM was not started in standard mode.", start_block)
         self.assertNotIn("starting MiniCPM in normal mode instead", start_block)
+
+    def test_installed_inactive_model_can_be_started_directly(self):
+        self.assertIn('Tag="QuickStart"', self.gui)
+        self.assertIn('function Start-RowModel(', self.gui)
+        self.assertIn("QuickStartVisible = $quickStartVisible", self.gui)
+        self.assertIn("QuickStartEnabled = $quickStartEnabled", self.gui)
+        self.assertIn("@('ModelAction','QuickStart')", self.gui)
+
+    def test_launcher_routes_extra_flags_to_console(self):
+        launcher = (ROOT / "panda" / "panda-launcher.cs").read_text(encoding="utf-8-sig")
+        marker = 'if (!string.IsNullOrWhiteSpace(extras))'
+        self.assertIn(marker, launcher)
+        self.assertIn('console = true;', launcher[launcher.index(marker):launcher.index(marker) + 120])
+
+    def test_managed_providers_come_from_catalog(self):
+        catalog = json.loads((ROOT / "panda" / "catalog.json").read_text(encoding="utf-8-sig"))
+        self.assertEqual(catalog["managedProviders"], ["ninfer", "panda-mini", "panda"])
+        self.assertIn("@($script:cat.managedProviders)", self.manager)
+        self.assertNotIn("'panda','ninfer','panda-mini','panda','panda'", self.manager)
 
     def test_console_game_mode_toggle_is_next_start_only(self):
         toggle_block = extract_braced_block(self.manager, "function Toggle-GameMode(")
